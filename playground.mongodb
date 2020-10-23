@@ -1,0 +1,2 @@
+use("devlight")
+db.esps.remove({});

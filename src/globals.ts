@@ -1,0 +1,1 @@
+export const lightProjection = { ip: 0, __v: 0, _id: 0 }
