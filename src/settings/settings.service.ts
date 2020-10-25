@@ -9,6 +9,7 @@ import { Esp, EspDocument } from 'src/schemas/esp.schema';
 import { UtilsService } from 'src/utils.service';
 import { Light, PartialLight, StandartResponse } from '../interfaces';
 import UpdateInfoDto from './dto/update.dto';
+import UpdateTagsDto from './dto/update-tags.dto';
 
 @Injectable()
 export class SettingsService {
@@ -63,8 +64,8 @@ export class SettingsService {
     }
 
     async update(id: string, data: UpdateInfoDto, res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
-        const oldLight: Light = await this.espModel.findOne({ uuid: id }, { ip: 0, __v: 0, _id: 0 }).exec() as Light;
-        const newLight: Light = await this.espModel.findOneAndUpdate({ uuid: id }, data, { new: true, projection: { ip: 0, __v: 0, _id: 0 } }).exec() as Light;
+        const oldLight: Light = await this.espModel.findOne({ uuid: id }, lightProjection).exec() as Light;
+        const newLight: Light = await this.espModel.findOneAndUpdate({ uuid: id }, data, { new: true, projection: lightProjection }).exec() as Light;
         console.log(oldLight);
         console.log(newLight);
         if (isEqual(oldLight, newLight)) {
@@ -74,4 +75,66 @@ export class SettingsService {
         return { message: "Succesfully updatet Light!", object: newLight }
     }
 
+    async addTags(id: string, data: UpdateTagsDto, res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
+
+        const oldTags: string[] =  (await this.espModel.findOne({ uuid: id }, { tags: 1, _id: 0 }).exec()).tags;
+
+        const newTags: string[] = [];
+
+        data.tags.forEach((tag: string)=>{
+            if(!oldTags.includes(tag)){
+                newTags.push(tag);
+            }
+        })
+
+        if(!newTags.length){
+            res.status(304).send();
+            return;
+        }
+
+        const newLight: EspDocument = await this.espModel.findOneAndUpdate({uuid: id}, {tags: [...newTags, ...oldTags]}, { new: true, projection: lightProjection }).exec();
+
+        res.send({ message: `Succesfully added the following tags: ${newTags}!`, object: newLight as Light });
+
+        return { message: `Succesfully added the following tags: ${newTags}!`, object: newLight as Light }
+    }
+
+    async removeTags(id: string, data: UpdateTagsDto, res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
+
+        const oldLight: EspDocument = await this.espModel.findOne({ uuid: id }, { tags: 1, _id: 0 }).exec();
+        const oldTags: string[] = [...oldLight.tags];
+
+        const newTags: string[] = [];
+        const remTags: string[] = [];
+
+        oldTags.forEach((tag: string)=>{
+            if(!data.tags.includes(tag)){
+                newTags.push(tag);
+            }else{
+                remTags.push(tag);
+            }
+        })
+
+        if(isEqual(oldLight.tags, newTags)){
+            res.status(304).send();
+            return;
+        }
+
+        const newLight: EspDocument = await this.espModel.findOneAndUpdate({uuid: id}, {tags: newTags}, { new: true, projection: lightProjection }).exec();
+
+        res.send({ message: `Succesfully removed the following tags: ${remTags}!`, object: newLight as Light })
+        
+        return { message: `Succesfully removed the following tags: ${remTags}!`, object: newLight as Light }
+    }
+
+    async getWithTag(tag: string, res: Response<StandartResponse<Light[]>>): Promise<StandartResponse<Light[]>> {
+
+        const light: EspDocument[] = await this.espModel.find({ tags: {$all: [tag]} }, lightProjection);
+
+        console.log(light);
+
+        res.send({ message: `Lights with tag ${tag}!`, object: light as Light[]})
+
+        return { message: `Lights with tag ${tag}!`, object: light as Light[]}
+    }
 }

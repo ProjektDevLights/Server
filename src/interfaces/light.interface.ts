@@ -4,5 +4,6 @@ export default interface Light {
     name: string,
     id: string,
     leds: Leds,
-    count: number
+    count: number,
+    tags?: string[]
 }

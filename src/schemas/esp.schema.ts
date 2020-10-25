@@ -17,6 +17,9 @@ export class Esp {
   @Prop({ required: true, unique: true })
   ip: string
 
+  @Prop({type: [String]})
+  tags: string[]
+
   @Prop({ required: true })
   name: string
 

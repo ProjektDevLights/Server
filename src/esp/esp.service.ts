@@ -32,7 +32,7 @@ export class EspService {
         /* console.log(ids); */
 
         try {
-            await this.espModel.create({ uuid: id, count: 0, name: name, ip: data.ip, leds: { pattern: "plain", colors: ["#1DE9B6"] } })
+            await this.espModel.create({ uuid: id, count: 0, name: name, ip: data.ip, leds: { pattern: "plain", colors: ["#1DE9B6"] }, tags: [] })
         } catch {
             throw new ConflictException("This IP is already in use!")
         }
