@@ -55,8 +55,8 @@ export class ColorsService {
     }
 
     async updateLedsWithTag(tag: string, data: UpdateLedsDto, res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
-        const oldLight: EspDocument = await this.espModel.findOne({ tags: {$all: [tag]} }, { __v: 0, _id: 0 });
-        const newLight: EspDocument = await this.espModel.findOneAndUpdate({ tags: {$all: [tag]} }, { leds: { colors: data.colors ?? undefined, pattern: data.pattern ?? undefined } }, {
+        const oldLight: EspDocument[] = await this.espModel.find({ tags: {$all: [tag]} }, { __v: 0, _id: 0 });
+        const newLight: EspDocument = await this.espModel.updateMany({ tags: {$all: [tag]} }, { leds: { colors: data.colors ?? undefined, pattern: data.pattern ?? undefined } }, {
             new: true, projection: { __v: 0, _id: 0 }
         });
         if (isEqual(oldLight, newLight)) {
