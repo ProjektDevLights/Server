@@ -21,7 +21,7 @@ export class ColorsService {
             new: true, projection: { __v: 0, _id: 0 }
         });
         if (isEqual(oldLight, newLight)) {
-            res.status(304).send();
+            res.status(304);
             return {
                 message: "Nothing changed", object: {
                     count: newLight.count,
@@ -80,7 +80,7 @@ export class ColorsService {
 
         
         if (isEqual(oldLights, newLights)) {
-                res.status(304).send();
+                res.status(304);
                 return {
                     message: "Nothing changed", object: resLights
                 };

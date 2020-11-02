@@ -69,7 +69,7 @@ export class SettingsService {
         console.log(oldLight);
         console.log(newLight);
         if (isEqual(oldLight, newLight)) {
-            res.status(304).send();
+            res.status(304);
         }
         res.send({ message: "Succesfully updatet Light!", object: newLight });
         return { message: "Succesfully updatet Light!", object: newLight }
@@ -88,7 +88,7 @@ export class SettingsService {
         })
 
         if(!newTags.length){
-            res.status(304).send();
+            res.status(304);
             return;
         }
 
@@ -116,7 +116,7 @@ export class SettingsService {
         })
 
         if(isEqual(oldLight.tags, newTags)){
-            res.status(304).send();
+            res.status(304);
             return;
         }
 
