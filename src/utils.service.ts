@@ -58,4 +58,10 @@ export class UtilsService {
         if ((await this.espModel.find({ uuid: id }).exec()).length) return true
         return false
     }
+
+    async isTagValid(tag: string): Promise<boolean> {
+        console.log("vai")
+        if ((await this.espModel.find({ tags: {$all: [tag]} }).exec()).length) return true
+        return false
+    }
 }

@@ -15,9 +15,10 @@ export class ColorsController {
         return this.service.updateLeds(id, data, res);
     }
 
-    @Patch("/tag/:tag")
-    async UpdateLedsWithTag(@Param("tag") tag: string, @Body(new ValidationPipe()) data: UpdateLedsDto, @Res() res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
-        //if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this ID!")
+    @Patch("/tags/:tag")
+    async UpdateLedsWithTag(@Param("tag") tag: string, @Body(new ValidationPipe()) data: UpdateLedsDto, @Res() res: Response<StandartResponse<Light[]>>): Promise<StandartResponse<Light[]>> {
+        console.log(await this.utilsService.isTagValid(tag))
+        if (!await this.utilsService.isTagValid(tag)) throw new NotFoundException("There is no light with this Tag!")
         return this.service.updateLedsWithTag(tag, data, res);
     }
 

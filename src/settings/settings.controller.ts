@@ -6,6 +6,8 @@ import { UtilsService } from '../utils.service';
 import UpdateInfoDto from './dto/update.dto';
 import UpdateTagsDto from './dto/update-tags.dto';
 import { SettingsService } from './settings.service';
+import { EspDocument } from 'src/schemas/esp.schema';
+import { values } from 'lodash';
 
 @Controller('settings')
 export class SettingsController {
@@ -60,7 +62,8 @@ export class SettingsController {
 
     @Get("tags/:tag")
     async getWithTag(@Param("tag") tag: string, @Res() res: Response<StandartResponse<Light[]>>): Promise<StandartResponse<Light[]>> {
-        //if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this ID!")
+        if (!this.utilsService.isTagValid(tag)) throw new NotFoundException("There is no light with this tag!")
         return this.service.getWithTag(tag, res);
+        
     }
 }
