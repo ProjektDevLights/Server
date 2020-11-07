@@ -43,27 +43,52 @@ export class SettingsController {
     }
 
     @Patch(":id")
-    async update(@Param("id") id: string, @Body() data: UpdateInfoDto, @Res() res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
+    async update(@Param("id") id: string, @Body() data: UpdateInfoDto): Promise<StandartResponse<Light>> {
         if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this ID!")
-        return this.service.update(id, data, res);
+        return this.service.update(id, data);
     }
 
+    @Patch(":id/on")
+    async on(@Param("id") id: string) : Promise<StandartResponse<Light>> {
+        if(!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is not light with this ID!")
+        return this.service.on(id);
+    } 
+
+    @Patch(":id/off")
+    async off(@Param("id") id: string) : Promise<StandartResponse<Light>> {
+        if(!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is not light with this ID!")
+        return this.service.off(id);
+    } 
+
     @Post("tags/:id")
-    async addTags(@Param("id") id: string, @Body(new ValidationPipe()) data: UpdateTagsDto, @Res() res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
+    async addTags(@Param("id") id: string, @Body(new ValidationPipe()) data: UpdateTagsDto): Promise<StandartResponse<Light>> {
         if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this ID!")
-        return this.service.addTags(id, data, res);
+        return this.service.addTags(id, data);
     }
 
     @Delete("tags/:id")
-    async removeTags(@Param("id") id: string, @Body(new ValidationPipe()) data: UpdateTagsDto, @Res() res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
+    async removeTags(@Param("id") id: string, @Body(new ValidationPipe()) data: UpdateTagsDto): Promise<StandartResponse<Light>> {
         if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this ID!")
-        return this.service.removeTags(id, data, res);
+        return this.service.removeTags(id, data);
+    }
+
+    @Patch("tags/:tag/on") 
+    async onTags(@Param("tag") tag: string): Promise<StandartResponse<Light[]>> {
+        if (!await this.utilsService.isTagValid(tag)) throw new NotFoundException("There is no light with this tag!")
+        return this.service.startTags(tag);
+    }
+
+    @Patch("tags/:tag/off") 
+    async offTags(@Param("tag") tag: string): Promise<StandartResponse<Light[]>> {
+        if (!await this.utilsService.isTagValid(tag)) throw new NotFoundException("There is no light with this tag!")
+        return this.service.offTags(tag);
     }
 
     @Get("tags/:tag")
-    async getWithTag(@Param("tag") tag: string, @Res() res: Response<StandartResponse<Light[]>>): Promise<StandartResponse<Light[]>> {
-        if (!this.utilsService.isTagValid(tag)) throw new NotFoundException("There is no light with this tag!")
-        return this.service.getWithTag(tag, res);
+    async getWithTag(@Param("tag") tag: string): Promise<StandartResponse<Light[]>> {
+        if (!await this.utilsService.isTagValid(tag)) throw new NotFoundException("There is no light with this tag!")
+        return this.service.getWithTag(tag)
         
     }
+
 }

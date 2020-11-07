@@ -10,6 +10,7 @@ import { UtilsService } from 'src/utils.service';
 import { Light, PartialLight, StandartResponse } from '../interfaces';
 import UpdateInfoDto from './dto/update.dto';
 import UpdateTagsDto from './dto/update-tags.dto';
+import { NothingChangedException } from 'src/exceptions/nothing-changed.exception';
 
 @Injectable()
 export class SettingsService {
@@ -37,7 +38,6 @@ export class SettingsService {
         })
         child_process.execSync(`echo '{"command": "count", "data": "${count}"}' | nc ${queryResult.ip} 2389`);
         setTimeout(() => {
-            console.log(queryResult.leds)
             child_process.execSync(`echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${queryResult.ip} 2389`)
         }, 500)
         return { message: "Succesfully updated LED count", object: newLight }
@@ -52,30 +52,44 @@ export class SettingsService {
         return { message: "Resetting...", object: { name: queryResult.name, id: queryResult.uuid } }
     }
 
+    async on(id: string) : Promise<StandartResponse<Light>> {
+        const queryResult: EspDocument = await this.espModel.findOne({ uuid: id }, {
+            __v: 0, _id: 0
+        }).exec();
+        child_process.execSync(`echo '{"command": "on"}' | nc ${queryResult.ip} 2389`);
+        //console.log(`echo '{"command": "on"}' | nc ${queryResult.ip} 2389`)
+        return { message: "Lights on", object: { name: queryResult.name, id: queryResult.uuid } as Light}
+    }
+
+    async off(id: string) : Promise<StandartResponse<Light>> {
+        const queryResult: EspDocument = await this.espModel.findOne({ uuid: id }, {
+            __v: 0, _id: 0
+        }).exec();
+        child_process.execSync(`echo '{"command": "off"}' | nc ${queryResult.ip} 2389`);
+        //console.log(`echo '{"command": "off"}' | nc ${queryResult.ip} 2389`)
+        return { message: "Lights out", object: { name: queryResult.name, id: queryResult.uuid } as Light}
+    }
+
     async getAll(): Promise<StandartResponse<Light[]>> {
-        console.log("get all");
         const lights: Light[] = await this.espModel.find({}, lightProjection) as Light[];
         return { message: "List of all lights", object: lights };
     }
 
     async get(id: string): Promise<StandartResponse<Light>> {
         const light: Light = await this.espModel.findOne({ uuid: id }, lightProjection) as Light;
-        return { message: "List of all lights", object: light };
+        return { message: "found light", object: light };
     }
 
-    async update(id: string, data: UpdateInfoDto, res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
+    async update(id: string, data: UpdateInfoDto): Promise<StandartResponse<Light>> {
         const oldLight: Light = await this.espModel.findOne({ uuid: id }, lightProjection).exec() as Light;
         const newLight: Light = await this.espModel.findOneAndUpdate({ uuid: id }, data, { new: true, projection: lightProjection }).exec() as Light;
-        console.log(oldLight);
-        console.log(newLight);
         if (isEqual(oldLight, newLight)) {
-            res.status(304);
+            throw new NothingChangedException("Couldn't update light");
         }
-        res.send({ message: "Succesfully updatet Light!", object: newLight });
         return { message: "Succesfully updatet Light!", object: newLight }
     }
 
-    async addTags(id: string, data: UpdateTagsDto, res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
+    async addTags(id: string, data: UpdateTagsDto): Promise<StandartResponse<Light>> {
 
         const oldTags: string[] =  (await this.espModel.findOne({ uuid: id }, { tags: 1, _id: 0 }).exec()).tags;
 
@@ -88,18 +102,36 @@ export class SettingsService {
         })
 
         if(!newTags.length){
-            res.status(304);
+            throw new NothingChangedException("Tag already exists")
             return;
         }
 
         const newLight: EspDocument = await this.espModel.findOneAndUpdate({uuid: id}, {tags: [...newTags, ...oldTags]}, { new: true, projection: lightProjection }).exec();
 
-        res.send({ message: `Succesfully added the following tags: ${newTags}!`, object: newLight as Light });
-
         return { message: `Succesfully added the following tags: ${newTags}!`, object: newLight as Light }
     }
 
-    async removeTags(id: string, data: UpdateTagsDto, res: Response<StandartResponse<Light>>): Promise<StandartResponse<Light>> {
+    async startTags(tag: string): Promise<StandartResponse<Light[]>> {
+        const lights: EspDocument[] = await this.espModel.find({ tags: {$all: [tag]} }, lightProjection);
+
+        lights.forEach((esp: EspDocument) => {
+            child_process.execSync(`echo '{"command": "off"}' | nc ${esp.ip} 2389`);
+            //console.log(`echo '{"command": "on"}' | nc ${esp.ip} 2389`)
+        })
+        return { message: `All Lights with the Tag ${tag} are off now`, object: lights as Light[]}
+    }
+
+    async offTags(tag: string): Promise<StandartResponse<Light[]>> {
+        const lights: EspDocument[] = await this.espModel.find({ tags: {$all: [tag]} }, lightProjection);
+
+        lights.forEach((esp: EspDocument) => {
+            child_process.execSync(`echo '{"command": "off"}' | nc ${esp.ip} 2389`);
+            //console.log(`echo '{"command": "off"}' | nc ${esp.ip} 2389`)
+        })
+        return { message: `All Lights with the Tag ${tag} have been start`, object: lights as Light[]}
+    }
+
+    async removeTags(id: string, data: UpdateTagsDto): Promise<StandartResponse<Light>> {
 
         const oldLight: EspDocument = await this.espModel.findOne({ uuid: id }, { tags: 1, _id: 0 }).exec();
         const oldTags: string[] = [...oldLight.tags];
@@ -116,25 +148,17 @@ export class SettingsService {
         })
 
         if(isEqual(oldLight.tags, newTags)){
-            res.status(304);
+            throw new NothingChangedException("No Tag was removed!")
             return;
         }
 
         const newLight: EspDocument = await this.espModel.findOneAndUpdate({uuid: id}, {tags: newTags}, { new: true, projection: lightProjection }).exec();
-
-        res.send({ message: `Succesfully removed the following tags: ${remTags}!`, object: newLight as Light })
-        
         return { message: `Succesfully removed the following tags: ${remTags}!`, object: newLight as Light }
     }
 
-    async getWithTag(tag: string, res: Response<StandartResponse<Light[]>>): Promise<StandartResponse<Light[]>> {
+    async getWithTag(tag: string): Promise<StandartResponse<Light[]>> {
 
         const light: EspDocument[] = await this.espModel.find({ tags: {$all: [tag]} }, lightProjection);
-
-        console.log(light);
-
-        res.send({ message: `Lights with tag ${tag}!`, object: light as Light[]})
-
         return { message: `Lights with tag ${tag}!`, object: light as Light[]}
     }
 }

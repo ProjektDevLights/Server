@@ -25,11 +25,8 @@ export class EspService {
 
         do {
             id = Math.round(Math.random() * 255) + "." + Math.round(Math.random() * 255);
-            console.log(id);
         } while (existing_ids.includes(id));
         const name = "(new) Devlight";
-
-        /* console.log(ids); */
 
         try {
             await this.espModel.create({ uuid: id, count: 0, name: name, ip: data.ip, leds: { pattern: "plain", colors: ["#1DE9B6"] }, tags: [] })
@@ -49,7 +46,6 @@ export class EspService {
         } catch {
             throw new BadRequestException("This is not a valid ID");
         }
-        console.log(data);
         await this.espModel.findOneAndUpdate({ uuid: data.id }, { ip: data.ip, leds: { colors: ["#000000"], pattern: "plain" } }).exec();
         response.send();
     }

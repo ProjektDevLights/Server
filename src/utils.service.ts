@@ -9,14 +9,9 @@ export class UtilsService {
     constructor(@InjectModel(Esp.name) private espModel: Model<EspDocument>) { }
 
     hexToRgb(hex: string): string {
+        hex = this.makeValidHex(hex);
         let colors: string[] = [];
         switch (hex.length) {
-            case 3:
-                colors = hex.split("");
-                break;
-            case 4:
-                colors = hex.substring(1, 4).split("");
-                break;
             case 6:
                 colors = hex.match(/.{1,2}/g);
                 break;
@@ -36,32 +31,40 @@ export class UtilsService {
         switch (hex.length) {
             case 3:
                 colors = hex.split("");
+                return "#" + colors[0] + "" + colors[0] + ""
+                + colors[1] + "" + colors[1] + ""
+                + colors[2] + "" + colors[2] + ""
                 break;
             case 4:
                 colors = hex.substring(1, 4).split("");
+                return "#" + colors[0] + "" + colors[0] + ""
+                    + colors[1] + "" + colors[1] + ""
+                    + colors[2] + "" + colors[2] + ""
                 break;
             case 6:
                 colors = hex.match(/.{1,3}/g);
+                return "#" + colors[0] + ""
+                    + colors[1] + ""
+                    + colors[2] + ""
                 break;
             case 7:
                 colors = hex.substring(1, 7).match(/.{1,3}/g);
+                return "#" + colors[0] + ""
+                    + colors[1] + ""
+                    + colors[2] + ""
                 break;
 
         }
-        return "#" + colors[0] + ""
-            + colors[1] + ""
-            + colors[2] + ""
+        return "#000000"
     }
 
     async isIdValid(id: string): Promise<boolean> {
-        console.log("vai")
         if ((await this.espModel.find({ uuid: id }).exec()).length) return true
         return false
     }
 
     async isTagValid(tag: string): Promise<boolean> {
-        console.log("vai")
-        if ((await this.espModel.find({ tags: {$all: [tag]} }).exec()).length) return true
-        return false
+        if ((await this.espModel.find({ tags: { $all: [tag] } }).exec()).length <= 0) return false
+        return true
     }
 }
