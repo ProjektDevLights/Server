@@ -30,7 +30,8 @@ export class ColorsService {
             name: newLight.name,
             id: newLight.uuid,
             leds: newLight.leds,
-            tags: newLight.tags
+            tags: newLight.tags,
+            isOn: newLight.isOn,
         }
         const colorArray: string[] = [];
         data.colors.forEach((color: string) => {
@@ -61,7 +62,8 @@ export class ColorsService {
                 name: element.name,
                 id: element.uuid,
                 leds: element.leds,
-                tags: element.tags
+                tags: element.tags,
+                isOn: element.isOn,
             })
         });
 

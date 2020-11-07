@@ -29,6 +29,9 @@ export class Esp {
   }))
   leds: Leds
 
+  @Prop({required: true})
+  isOn: boolean
+
 }
 
 export const EspSchema = SchemaFactory.createForClass(Esp)

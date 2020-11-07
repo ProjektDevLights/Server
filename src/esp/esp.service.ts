@@ -27,9 +27,8 @@ export class EspService {
             id = Math.round(Math.random() * 255) + "." + Math.round(Math.random() * 255);
         } while (existing_ids.includes(id));
         const name = "(new) Devlight";
-
         try {
-            await this.espModel.create({ uuid: id, count: 0, name: name, ip: data.ip, leds: { pattern: "plain", colors: ["#1DE9B6"] }, tags: [] })
+            await this.espModel.create({ uuid: id, count: 0, name: name, ip: data.ip, leds: { pattern: "plain", colors: ["#1DE9B6"] }, tags: [], isOn: false })
         } catch {
             throw new ConflictException("This IP is already in use!")
         }

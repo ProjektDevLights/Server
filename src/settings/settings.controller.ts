@@ -9,7 +9,7 @@ import { SettingsService } from './settings.service';
 import { EspDocument } from 'src/schemas/esp.schema';
 import { values } from 'lodash';
 
-@Controller('settings')
+@Controller('')
 export class SettingsController {
     constructor(private readonly service: SettingsService, private readonly utilsService: UtilsService) { }
 
@@ -31,7 +31,7 @@ export class SettingsController {
         return this.service.reset(id);
     }
 
-    @Get("")
+    @Get("/")
     async getAll(): Promise<StandartResponse<Light[]>> {
         return this.service.getAll();
     }
@@ -60,13 +60,13 @@ export class SettingsController {
         return this.service.off(id);
     } 
 
-    @Post("tags/:id")
+    @Post(":id/tags")
     async addTags(@Param("id") id: string, @Body(new ValidationPipe()) data: UpdateTagsDto): Promise<StandartResponse<Light>> {
         if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this ID!")
         return this.service.addTags(id, data);
     }
 
-    @Delete("tags/:id")
+    @Delete(":id/tags")
     async removeTags(@Param("id") id: string, @Body(new ValidationPipe()) data: UpdateTagsDto): Promise<StandartResponse<Light>> {
         if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this ID!")
         return this.service.removeTags(id, data);
@@ -87,8 +87,6 @@ export class SettingsController {
     @Get("tags/:tag")
     async getWithTag(@Param("tag") tag: string): Promise<StandartResponse<Light[]>> {
         if (!await this.utilsService.isTagValid(tag)) throw new NotFoundException("There is no light with this tag!")
-        return this.service.getWithTag(tag)
-        
+        return this.service.getWithTag(tag);
     }
-
 }
