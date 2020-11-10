@@ -1,0 +1,113 @@
+{
+    "env": {
+        "es2021": true,
+        "node": true
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 12,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "rules": {
+        "indent": [
+            "error",
+            2
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "quotes": [
+            "error",
+            "double"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "curly": ["error", "multi-line"],
+        "no-empty-function": ["error", {
+            "allow": [
+              "arrowFunctions",
+              "functions",
+              "methods",
+              "constructors"
+            ]
+          }],
+          "no-redeclare": "error",
+          "block-spacing": ["error", "always"],
+          "comma-dangle": ["error", {
+            "arrays": "always-multiline",
+            "objects": "always-multiline",
+            "imports": "always-multiline",
+            "exports": "always-multiline",
+            "functions": "always-multiline"
+          }],
+          "@typescript-eslint/no-extra-semi": "off",
+          "lines-between-class-members": ["error", "always", { "exceptAfterSingleLine": false }],
+          "max-len": ["error", 100, 2, {
+            "ignoreUrls": true,
+            "ignoreComments": false,
+            "ignoreRegExpLiterals": true,
+            "ignoreStrings": true,
+            "ignoreTemplateLiterals": true
+          }],
+          "lines-around-directive": ["error", {
+            "before": "always",
+            "after": "always"
+          }],
+          "max-lines": ["off", {
+            "max": 300,
+            "skipBlankLines": true,
+            "skipComments": true
+          }],
+          "multiline-comment-style": ["off", "starred-block"],
+          "no-mixed-spaces-and-tabs": "error",
+          "no-underscore-dangle": ["error", {
+            "allow": [],
+            "allowAfterThis": false,
+            "allowAfterSuper": false,
+            "enforceInMethodNames": true,
+          }],
+          "object-curly-newline": ["error", {
+            "ObjectExpression": { "minProperties": 4, "multiline": true, "consistent": true },
+            "ObjectPattern": { "minProperties": 4, "multiline": true, "consistent": true },
+            "ImportDeclaration": { "minProperties": 4, "multiline": true, "consistent": true },
+            "ExportDeclaration": { "minProperties": 4, "multiline": true, "consistent": true },
+          }],
+          "padded-blocks": ["error", {
+            "blocks": "never",
+            "classes": "never",
+            "switches": "never",
+          }, {
+            "allowSingleLineBlocks": true,
+          }],
+          "space-before-function-paren": ["error", {
+            "anonymous": "always",
+            "named": "never",
+            "asyncArrow": "always"
+          }],
+      
+          // require or disallow spaces inside parentheses
+          "space-in-parens": ["error", "never"],
+      
+          // require spaces around operators
+          "space-infix-ops": "error",
+      
+          // Require or disallow spaces before/after unary operators
+          // https://eslint.org/docs/rules/space-unary-ops
+          "space-unary-ops": ["error", {
+            "words": true,
+            "nonwords": false,
+            "overrides": {
+            },
+          }],
+    }
+}

@@ -1,4 +1,4 @@
 export default interface Leds {
-    colors: string[],
-    pattern: string,
+  colors: string[];
+  pattern: string;
 }
