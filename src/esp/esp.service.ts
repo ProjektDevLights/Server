@@ -45,7 +45,7 @@ export class EspService {
         } catch {
             throw new BadRequestException("This is not a valid ID");
         }
-        await this.espModel.findOneAndUpdate({ uuid: data.id }, { ip: data.ip, leds: { colors: ["#000000"], pattern: "plain" } }).exec();
+        await this.espModel.findOneAndUpdate({ uuid: data.id }, { ip: data.ip }).exec();
         response.send();
     }
 }

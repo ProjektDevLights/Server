@@ -5,6 +5,7 @@ import { Response } from 'express';
 import { isEqual } from 'lodash';
 import { Model } from 'mongoose';
 import { NothingChangedException } from 'src/exceptions/nothing-changed.exception';
+import { OffException } from 'src/exceptions/off.exception';
 import { StandartResponse } from 'src/interfaces';
 import { UtilsService } from 'src/utils.service';
 import Light from '../interfaces/light.interface';
@@ -18,12 +19,16 @@ export class ColorsService {
 
     async updateLeds(id: string, data: UpdateLedsDto): Promise<StandartResponse<Light>> {
         const oldLight: EspDocument = await this.espModel.findOne({ uuid: id }, { __v: 0, _id: 0 });
+        if(!oldLight.isOn){
+            throw new OffException();
+        }
         const newLight: EspDocument = await this.espModel.findOneAndUpdate({ uuid: id }, { leds: { colors: data.colors ?? undefined, pattern: data.pattern ?? undefined } }, {
             new: true, projection: { __v: 0, _id: 0 }
         });
         if (isEqual(oldLight, newLight)) {
             throw new NothingChangedException("The color of the light didn't change!");
         }
+        
 
         const resLight: Light = {
             count: newLight.count,
