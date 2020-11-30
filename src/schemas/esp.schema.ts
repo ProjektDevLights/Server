@@ -2,36 +2,35 @@ import { Prop, raw, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 import Leds from "src/interfaces/led.interface";
 
-
-export type EspDocument = Esp & Document
+export type EspDocument = Esp & Document;
 
 @Schema()
 export class Esp {
-
   @Prop({ required: true })
-  count: number
+  count: number;
 
   @Prop({ required: true, unique: true })
-  uuid: string
+  uuid: string;
 
   @Prop({ required: true, unique: true })
-  ip: string
+  ip: string;
 
-  @Prop({type: [String]})
-  tags: string[]
+  @Prop({ type: [String] })
+  tags: string[];
 
   @Prop({ required: true })
-  name: string
+  name: string;
 
-  @Prop(raw({
-    colors: { type: [String] },
-    pattern: { type: String },
-  }))
-  leds: Leds
+  @Prop(
+    raw({
+      colors: { type: [String] },
+      pattern: { type: String },
+    }),
+  )
+  leds: Leds;
 
-  @Prop({required: true})
-  isOn: boolean
-
+  @Prop({ required: true })
+  isOn: boolean;
 }
 
-export const EspSchema = SchemaFactory.createForClass(Esp)
+export const EspSchema = SchemaFactory.createForClass(Esp);

@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { ColorsController } from './colors.controller';
+import { Test, TestingModule } from "@nestjs/testing";
+import { ColorsController } from "./colors.controller";
 
-describe('ColorsController', () => {
+describe("ColorsController", () => {
   let controller: ColorsController;
 
   beforeEach(async () => {
