@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException, Type } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as child_process from 'child_process';
 import { Response } from 'express';
@@ -109,16 +109,19 @@ export class ColorsService {
       .exec();
 
     const resLights: Light[] = [];
+    const offLights: Light[] = [];
 
     newLights.forEach(element => {
-      resLights.push({
+      if(element.isOn){
+        resLights.push({
         count: element.count,
         name: element.name,
         id: element.uuid,
         leds: element.leds,
         tags: element.tags,
         isOn: element.isOn,
-      });
+        });
+      }
     });
 
     if (isEqual(oldLights, newLights)) {
@@ -147,7 +150,7 @@ export class ColorsService {
     }
     return {
       message: "Succesfully changed the color of the light!",
-      object: resLights,
+      object: resLights
     };
   }
 }
