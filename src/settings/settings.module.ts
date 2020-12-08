@@ -1,3 +1,4 @@
+import { CacheModule } from "@nestjs/common";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Esp, EspSchema } from "src/schemas/esp.schema";
@@ -8,6 +9,6 @@ import { SettingsService } from "./settings.service";
 @Module({
   providers: [SettingsService, UtilsService],
   controllers: [SettingsController],
-  imports: [MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }])],
+  imports: [CacheModule.register() ,MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }])],
 })
 export class SettingsModule {}

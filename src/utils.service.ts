@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { omit } from 'lodash';
 import { Model } from 'mongoose';
+import { lightProjection } from './globals';
 import { Esp, EspDocument } from './schemas/esp.schema';
 
 @Injectable()
@@ -68,4 +69,12 @@ export class UtilsService {
         if ((await this.espModel.find({ tags: { $all: [tag] } }).exec()).length <= 0) return false
         return true
     }
+
+    async getEspsWithTag(tag: string): Promise<EspDocument[]> {
+        const light: EspDocument[] = await this.espModel.find(
+          { tags: { $all: [tag] } },
+          lightProjection,
+        );
+        return light;
+      }
 }

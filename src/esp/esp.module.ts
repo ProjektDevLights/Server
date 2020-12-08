@@ -10,7 +10,5 @@ import { EspService } from "./esp.service";
   imports: [MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }])],
 })
 export class EspModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(EspMiddleware).forRoutes("esp/*");
-  }
+
 }

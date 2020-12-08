@@ -88,6 +88,29 @@ export class SettingsService {
     };
   }
 
+  async resetWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
+
+    const queryResult: EspDocument[] = await this.utilsService.getEspsWithTag(tag);
+
+    const results: PartialLight[] = [];
+
+    queryResult.forEach(element => {
+      results.push({
+        name: element.name,
+        id: element.uuid
+      })
+      this.espModel.findOneAndDelete({ uuid: element.uuid }).exec();
+      child_process.execSync(
+        `echo '{"command": "reset"}' | nc ${element.ip} 2389`,
+      );
+    });
+
+    return {
+      message: "Resetting...",
+      object: results,
+    };
+  }
+
   async on(id: string): Promise<StandartResponse<Light>> {
     const oldLight: EspDocument = await this.espModel
       .findOne({ uuid: id }, { __v: 0, _id: 0 })
@@ -352,6 +375,28 @@ export class SettingsService {
     return {
       message: `Succesfully removed the following tags: ${remTags}!`,
       object: newLight as Light,
+    };
+  }
+
+  async restartWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
+
+    const queryResult: EspDocument[] =  await this.utilsService.getEspsWithTag(tag);
+
+    const returns: PartialLight[] = [];
+
+    queryResult.forEach(element => {
+      returns.push({
+        name: element.name,
+        id: element.uuid
+      })
+      child_process.execSync(
+        `echo '{"command": "restart"}' | nc ${element.ip} 2389`,
+      );
+    });
+
+    return {
+      message: "Restarting...",
+      object: returns,
     };
   }
 

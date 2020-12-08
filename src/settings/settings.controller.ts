@@ -1,3 +1,4 @@
+
 import {
   Body,
   Controller,
@@ -9,7 +10,10 @@ import {
   Patch,
   Post,
   ValidationPipe,
+  CacheInterceptor,
+  UseInterceptors
 } from "@nestjs/common";
+import { HttpCode } from "@nestjs/common/decorators/http/http-code.decorator";
 import { Light, PartialLight, StandartResponse } from "../interfaces/";
 import { UtilsService } from "../utils.service";
 import UpdateTagsDto from "./dto/update-tags.dto";
@@ -32,6 +36,16 @@ export class SettingsController {
     return this.service.restart(id);
   }
 
+  @HttpCode(200)
+  @Post("tags/:tag/restart")
+  async restartWithTag(
+    @Param("tag") tag: string,
+  ): Promise<StandartResponse<PartialLight[]>> {
+    if (!(await this.utilsService.isTagValid(tag)))
+      throw new NotFoundException("There is no Light with this TAG!");
+    return this.service.restartWithTag(tag);
+  }
+
   @Patch("count/:id")
   async count(
     @Param("id") id: string,
@@ -51,11 +65,23 @@ export class SettingsController {
     return this.service.reset(id);
   }
 
+  @HttpCode(200)
+  @Delete("tags/:tag/reset")
+  async resetWithTag(
+    @Param("tag") tag: string,
+  ): Promise<StandartResponse<PartialLight[]>> {
+    if (!(await this.utilsService.isTagValid(tag)))
+      throw new NotFoundException("There is no Light with this TAG!");
+    return this.service.resetWithTag(tag);
+  }
+
+  @UseInterceptors(CacheInterceptor)
   @Get("/")
   async getAll(): Promise<StandartResponse<Light[]>> {
     return this.service.getAll();
   }
 
+  @UseInterceptors(CacheInterceptor)
   @Get(":id")
   async get(@Param("id") id: string): Promise<StandartResponse<Light>> {
     if (!(await this.utilsService.isIdValid(id)))
@@ -121,6 +147,8 @@ export class SettingsController {
     return this.service.offTags(tag);
   }
 
+  @UseInterceptors(CacheInterceptor)
+  @Get("tags/:tag")
   @Get("tags/:tag")
   async getWithTag(
     @Param("tag") tag: string,

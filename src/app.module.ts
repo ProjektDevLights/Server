@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, CacheModule } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { ColorsModule } from './colors/colors.module';
@@ -10,4 +10,5 @@ import { SettingsModule } from './settings/settings.module';
   imports: [EspModule, MongooseModule.forRoot("mongodb://localhost/devlight", { useFindAndModify: false }), MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }]), ColorsModule, SettingsModule],
   controllers: [AppController],
 })
-export class AppModule { }
+export class AppModule { 
+}
