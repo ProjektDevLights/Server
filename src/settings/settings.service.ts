@@ -26,7 +26,7 @@ export class SettingsService {
         { new: true, projection: { __v: 0, _id: 0 } },
       )
       .exec();
-    child_process.execSync(
+    child_process.spawnSync(
       `echo '{"command": "restart"}' | nc ${queryResult.ip} 2389`,
     );
     return {
@@ -57,11 +57,11 @@ export class SettingsService {
     queryResult.leds.colors.forEach((color: string) => {
       colorArray.push('"' + this.utilsService.hexToRgb(color) + '"');
     });
-    child_process.execSync(
+    child_process.spawnSync(
       `echo '{"command": "count", "data": "${count}"}' | nc ${queryResult.ip} 2389`,
     );
     setTimeout(() => {
-      child_process.execSync(
+      child_process.spawnSync(
         `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${queryResult.ip} 2389`,
       );
     }, 500);
@@ -79,7 +79,7 @@ export class SettingsService {
       )
       .exec();
     await this.espModel.findOneAndDelete({ uuid: id }).exec();
-    child_process.execSync(
+    child_process.spawnSync(
       `echo '{"command": "reset"}' | nc ${queryResult.ip} 2389`,
     );
     return {
@@ -100,7 +100,7 @@ export class SettingsService {
         id: element.uuid
       })
       this.espModel.findOneAndDelete({ uuid: element.uuid }).exec();
-      child_process.execSync(
+      child_process.spawnSync(
         `echo '{"command": "reset"}' | nc ${element.ip} 2389`,
       );
     });
@@ -125,7 +125,7 @@ export class SettingsService {
     if (isEqual(oldLight.isOn, newLight.isOn)) {
       throw new NothingChangedException("The light is already on");
     }
-    child_process.execSync(`echo '{"command": "on"}' | nc ${newLight.ip} 2389`);
+    child_process.spawnSync(`echo '{"command": "on"}' | nc ${newLight.ip} 2389`);
     //console.log(`echo '{"command": "on"}' | nc ${newLight.ip} 2389`)
     return {
       message: "Succesfully turned the light on!",
@@ -156,7 +156,7 @@ export class SettingsService {
         )
         .exec(),
     );
-    child_process.execSync(
+    child_process.spawnSync(
       `echo '{"command": "off"}' | nc ${newLight.ip} 2389`,
     );
     //console.log(`echo '{"command": "off"}' | nc ${newLight.ip} 2389`)
@@ -278,7 +278,7 @@ export class SettingsService {
     });
     console.log(rest);
     ips.forEach((ip: string) => {
-      // child_process.execSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
+      // child_process.spawnSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
       console.log(`echo '{"command": "on"}' | nc ${ip} 2389`);
     });
 
@@ -330,7 +330,7 @@ export class SettingsService {
     });
     console.log(rest);
     ips.forEach((ip: string) => {
-      // child_process.execSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
+      // child_process.spawnSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
       console.log(`echo '{"command": "off"}' | nc ${ip} 2389`);
     });
 
@@ -389,7 +389,7 @@ export class SettingsService {
         name: element.name,
         id: element.uuid
       })
-      child_process.execSync(
+      child_process.spawnSync(
         `echo '{"command": "restart"}' | nc ${element.ip} 2389`,
       );
     });
@@ -407,4 +407,13 @@ export class SettingsService {
     );
     return { message: `Lights with tag ${tag}!`, object: light as Light[] };
   }
+
+  async delete(id: string): Promise<StandartResponse<Light>> {
+    const light: EspDocument = await this.espModel.findOneAndRemove(
+      { uuid: id } ,
+      {projection: lightProjection}
+    ).exec();
+    return { message: `Succesfully deleted light!`, object: light as Light };
+  }
+
 }

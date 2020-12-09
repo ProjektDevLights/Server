@@ -23,10 +23,12 @@ export class ColorsService {
     id: string,
     data: UpdateLedsDto,
   ): Promise<StandartResponse<Light>> {
+   
     const oldLight: EspDocument = await this.espModel.findOne(
       { uuid: id },
       { __v: 0, _id: 0 },
     );
+  
     if(!oldLight.isOn){
         throw new OffException();
     }
@@ -64,9 +66,9 @@ export class ColorsService {
     });
     if (data.colors) {
       try {
-        child_process.execSync(
-          `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newLight.ip} 2389`,
-        );
+          child_process.spawnSync(
+            `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newLight.ip} 2389`,
+          );
       } catch {
         throw new ServiceUnavailableException(
           "The Light is not plugged in or not started yet!",
@@ -138,7 +140,7 @@ export class ColorsService {
     if (data.colors) {
       try {
         newLights.forEach(element => {
-          child_process.execSync(
+          child_process.spawnSync(
             `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${element.ip} 2389`,
           );
         });

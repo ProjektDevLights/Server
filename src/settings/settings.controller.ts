@@ -27,7 +27,7 @@ export class SettingsController {
     private readonly utilsService: UtilsService,
   ) {}
 
-  @Post(":id")
+  @Post(":id/restart")
   async restart(
     @Param("id") id: string,
   ): Promise<StandartResponse<PartialLight>> {
@@ -56,7 +56,7 @@ export class SettingsController {
     return this.service.count(id, count);
   }
 
-  @Delete(":id")
+  @Delete(":id/reset")
   async reset(
     @Param("id") id: string,
   ): Promise<StandartResponse<PartialLight>> {
@@ -149,12 +149,20 @@ export class SettingsController {
 
   @UseInterceptors(CacheInterceptor)
   @Get("tags/:tag")
-  @Get("tags/:tag")
   async getWithTag(
     @Param("tag") tag: string,
   ): Promise<StandartResponse<Light[]>> {
     if (!(await this.utilsService.isTagValid(tag)))
       throw new NotFoundException("There is no light with this tag!");
     return this.service.getWithTag(tag);
+  }
+
+  @Delete(":id")
+  async delete(
+    @Param("id") id: string,
+  ): Promise<StandartResponse<Light>> {
+    if (!(await this.utilsService.isIdValid(id)))
+      throw new NotFoundException("There is no light with this id!");
+    return this.service.delete(id);
   }
 }
