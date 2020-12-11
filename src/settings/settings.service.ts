@@ -26,7 +26,7 @@ export class SettingsService {
         { new: true, projection: { __v: 0, _id: 0 } },
       )
       .exec();
-    child_process.spawnSync(
+    child_process.execSync(
       `echo '{"command": "restart"}' | nc ${queryResult.ip} 2389`,
     );
     return {
@@ -39,7 +39,20 @@ export class SettingsService {
     id: string,
     count: number,
   ): Promise<StandartResponse<{ name: string; id: string; count: number }>> {
-    const queryResult: EspDocument = await this.espModel
+    const oldDoc: EspDocument = await this.espModel
+      .findOne(
+        { uuid: id },
+        {
+          projection: { __v: 0, _id: 0 },
+        },
+      )
+      .exec();
+
+      if(oldDoc.count == count){
+        throw new NothingChangedException();
+      }
+
+    const newDoc: EspDocument = await this.espModel
       .findOneAndUpdate(
         { uuid: id },
         { count: count },
@@ -48,21 +61,23 @@ export class SettingsService {
         },
       )
       .exec();
+
     const newLight = {
-      count: queryResult.count,
-      name: queryResult.name,
-      id: queryResult.uuid,
+      count: newDoc.count,
+      name: newDoc.name,
+      id: newDoc.uuid,
     };
+
     const colorArray: string[] = [];
-    queryResult.leds.colors.forEach((color: string) => {
+    newDoc.leds.colors.forEach((color: string) => {
       colorArray.push('"' + this.utilsService.hexToRgb(color) + '"');
     });
-    child_process.spawnSync(
-      `echo '{"command": "count", "data": "${count}"}' | nc ${queryResult.ip} 2389`,
+    child_process.execSync(
+      `echo '{"command": "count", "data": "${count}"}' | nc ${newDoc.ip} 2389`,
     );
     setTimeout(() => {
-      child_process.spawnSync(
-        `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${queryResult.ip} 2389`,
+      child_process.execSync(
+        `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newDoc.ip} 2389`,
       );
     }, 500);
     return { message: "Succesfully updated LED count", object: newLight };
@@ -79,7 +94,7 @@ export class SettingsService {
       )
       .exec();
     await this.espModel.findOneAndDelete({ uuid: id }).exec();
-    child_process.spawnSync(
+    child_process.execSync(
       `echo '{"command": "reset"}' | nc ${queryResult.ip} 2389`,
     );
     return {
@@ -100,7 +115,7 @@ export class SettingsService {
         id: element.uuid
       })
       this.espModel.findOneAndDelete({ uuid: element.uuid }).exec();
-      child_process.spawnSync(
+      child_process.execSync(
         `echo '{"command": "reset"}' | nc ${element.ip} 2389`,
       );
     });
@@ -125,7 +140,7 @@ export class SettingsService {
     if (isEqual(oldLight.isOn, newLight.isOn)) {
       throw new NothingChangedException("The light is already on");
     }
-    child_process.spawnSync(`echo '{"command": "on"}' | nc ${newLight.ip} 2389`);
+    child_process.execSync(`echo '{"command": "on"}' | nc ${newLight.ip} 2389`);
     //console.log(`echo '{"command": "on"}' | nc ${newLight.ip} 2389`)
     return {
       message: "Succesfully turned the light on!",
@@ -156,7 +171,7 @@ export class SettingsService {
         )
         .exec(),
     );
-    child_process.spawnSync(
+    child_process.execSync(
       `echo '{"command": "off"}' | nc ${newLight.ip} 2389`,
     );
     //console.log(`echo '{"command": "off"}' | nc ${newLight.ip} 2389`)
@@ -278,7 +293,7 @@ export class SettingsService {
     });
     console.log(rest);
     ips.forEach((ip: string) => {
-      // child_process.spawnSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
+      // child_process.execSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
       console.log(`echo '{"command": "on"}' | nc ${ip} 2389`);
     });
 
@@ -330,7 +345,7 @@ export class SettingsService {
     });
     console.log(rest);
     ips.forEach((ip: string) => {
-      // child_process.spawnSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
+      // child_process.execSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
       console.log(`echo '{"command": "off"}' | nc ${ip} 2389`);
     });
 
@@ -389,7 +404,7 @@ export class SettingsService {
         name: element.name,
         id: element.uuid
       })
-      child_process.spawnSync(
+      child_process.execSync(
         `echo '{"command": "restart"}' | nc ${element.ip} 2389`,
       );
     });

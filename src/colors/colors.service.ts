@@ -66,7 +66,7 @@ export class ColorsService {
     });
     if (data.colors) {
       try {
-          child_process.spawnSync(
+          child_process.execSync(
             `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newLight.ip} 2389`,
           );
       } catch {
@@ -140,7 +140,7 @@ export class ColorsService {
     if (data.colors) {
       try {
         newLights.forEach(element => {
-          child_process.spawnSync(
+          child_process.execSync(
             `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${element.ip} 2389`,
           );
         });
