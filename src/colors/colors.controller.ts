@@ -21,4 +21,10 @@ export class ColorsController {
     if (!await this.utilsService.isTagValid(tag)) throw new NotFoundException("There is no light with this Tag!");
     return this.service.updateLedsWithTag(tag, data);
   }
+
+  @Patch("/:id/fade")
+  async fadeToColor(@Param("id") id: string, @Body(new ValidationPipe()) data: {color: string, time: number}): Promise<StandartResponse<Light>> {
+    if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this Tag!");
+    return this.service.fadeToColor(id, data);
+  }
 }

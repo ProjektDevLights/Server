@@ -280,16 +280,9 @@ export class SettingsService {
       .exec();
     const ips: string[] = [];
     const rest: Light[] = [];
-    lights.forEach(element => {
+    lights.forEach(async element => {
       ips.push(element.ip);
-      rest.push({
-        leds: element.leds,
-        count: element.count,
-        id: element.uuid,
-        isOn: element.isOn,
-        name: element.name,
-        tags: element.tags,
-      });
+      rest.push(await this.utilsService.espDocToLight(element));
     });
     console.log(rest);
     ips.forEach((ip: string) => {
@@ -332,16 +325,9 @@ export class SettingsService {
       .exec();
     const ips: string[] = [];
     const rest: Light[] = [];
-    lights.forEach(element => {
+    lights.forEach(async element => {
       ips.push(element.ip);
-      rest.push({
-        leds: element.leds,
-        count: element.count,
-        id: element.uuid,
-        isOn: element.isOn,
-        name: element.name,
-        tags: element.tags,
-      });
+      rest.push(await this.utilsService.espDocToLight(element));
     });
     console.log(rest);
     ips.forEach((ip: string) => {

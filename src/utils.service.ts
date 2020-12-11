@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { omit } from 'lodash';
 import { Model } from 'mongoose';
 import { lightProjection } from './globals';
+import { Light } from './interfaces';
 import { Esp, EspDocument } from './schemas/esp.schema';
 
 @Injectable()
@@ -76,5 +77,16 @@ export class UtilsService {
           lightProjection,
         );
         return light;
-      }
+    }
+
+    async espDocToLight(doc: EspDocument){
+        return {
+            count: doc.count,
+            name: doc.name,
+            id: doc.uuid,
+            leds: doc.leds,
+            tags: doc.tags,
+            isOn: doc.isOn,
+        } as Light;
+    }
 }

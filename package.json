@@ -37,6 +37,7 @@
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^6.5.4",
+    "tinycolor2": "^1.4.2",
     "uuid": "^8.3.1"
   },
   "devDependencies": {
@@ -49,6 +50,7 @@
     "@types/mongoose": "^5.7.36",
     "@types/node": "^13.9.1",
     "@types/supertest": "^2.0.8",
+    "@types/tinycolor2": "^1.4.2",
     "@typescript-eslint/eslint-plugin": "^4.7.0",
     "@typescript-eslint/parser": "^4.7.0",
     "eslint": "^7.13.0",
