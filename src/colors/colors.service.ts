@@ -67,9 +67,9 @@ export class ColorsService {
     });
     if (data.colors) {
       try {
-        child_process.execSync(
-          `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newLight.ip} 2389`,
-        );
+        //child_process.execSync(
+        //  `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newLight.ip} 2389`,
+        //);
       } catch {
         throw new ServiceUnavailableException(
           "The Light is not plugged in or not started yet!",
@@ -159,12 +159,12 @@ export class ColorsService {
     data: FadingLedsDto,
   ): Promise<StandartResponse<Light>> {
 
+    data.color = this.utilsService.makeValidHex(data.color);
+
     const oldLight: EspDocument = await this.espModel.findOne(
       { uuid: id },
       { __v: 0, _id: 0 },
     );
-
-
 
     if (oldLight.leds.pattern != "plain") {
         throw new CustomException("Pattern must be Plain!", 400);
@@ -179,7 +179,7 @@ export class ColorsService {
       {
         leds: {
           colors: [data.color] ?? undefined,
-          pattern: "plain"
+          pattern: "fading"
         },
       },
       {
@@ -202,10 +202,23 @@ export class ColorsService {
     let bStep: number =  Math.ceil((colorStart.b - colorTo.b) * delay / data.time); // 30 => 30steps 1000s  // 30 => 30
     console.log({rStep,gStep,bStep})
     let runs: number = Math.ceil(data.time/delay);
-    const runInterval = setInterval(() => {
+    const runInterval = setInterval(async () => {
       if(runs <= 0) {
         child_process.exec(
-          `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorTo).toHexString())}"], "pattern": "fading"}}' | nc ${oldLight.ip} 2389`,
+          `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorTo).toHexString())}"], "pattern": "${oldLight.leds.pattern}"}}' | nc ${oldLight.ip} 2389`,
+        );
+        await this.espModel.updateOne(
+          { uuid: id },
+          {
+            leds: {
+              colors: [data.color] ?? undefined,
+              pattern: oldLight.leds.pattern
+            },
+          },
+          {
+            new: true,
+            projection: { __v: 0, _id: 0 },
+          },
         );
         clearInterval(runInterval);
         return;
@@ -215,7 +228,7 @@ export class ColorsService {
       colorStart.b = colorStart.b - bStep < colorTo.b && bStep >= 0 ? colorTo.b : colorStart.b - bStep > colorTo.b && bStep <= 0 ? colorTo.b : colorStart.b - bStep;
       console.log(colorStart);
       child_process.exec(
-        `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorStart).toHexString())}"], "pattern": "plain"}}' | nc ${oldLight.ip} 2389`,
+        `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorStart).toHexString())}"], "pattern": "fading"}}' | nc ${oldLight.ip} 2389`,
       );
       runs--;
     }, delay)
