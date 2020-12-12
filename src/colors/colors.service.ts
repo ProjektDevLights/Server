@@ -12,6 +12,7 @@ import { UtilsService } from 'src/utils.service';
 import { ColorFormats } from 'tinycolor2';
 import Light from '../interfaces/light.interface';
 import { Esp, EspDocument } from '../schemas/esp.schema';
+import { FadingLedsDto } from './dto/fading-leds.dto';
 import { UpdateLedsDto } from './dto/update-leds.dto';
 var tinycolor = require("tinycolor2");
 
@@ -26,6 +27,10 @@ export class ColorsService {
     id: string,
     data: UpdateLedsDto,
   ): Promise<StandartResponse<Light>> {
+
+    for(let i = 0; i < data.colors.length; i++){
+      data.colors[i] = this.utilsService.makeValidHex(data.colors[i]);
+    }
 
     const oldLight: EspDocument = await this.espModel.findOne(
       { uuid: id },
@@ -81,6 +86,11 @@ export class ColorsService {
     tag: string,
     data: UpdateLedsDto,
   ): Promise<StandartResponse<Light[]>> {
+
+    for(let i = 0; i < data.colors.length; i++){
+      data.colors[i] = this.utilsService.makeValidHex(data.colors[i]);
+    }
+
     const oldLights: EspDocument[] = await this.espModel.find(
       { tags: { $all: [tag] } },
       { __v: 0, _id: 0 },
@@ -146,7 +156,7 @@ export class ColorsService {
 
   async fadeToColor(
     id: string,
-    data: { color: string, time: number },
+    data: FadingLedsDto,
   ): Promise<StandartResponse<Light>> {
 
     const oldLight: EspDocument = await this.espModel.findOne(
@@ -154,7 +164,7 @@ export class ColorsService {
       { __v: 0, _id: 0 },
     );
 
-  
+
 
     if (oldLight.leds.pattern != "plain") {
         throw new CustomException("Pattern must be Plain!", 400);
@@ -195,7 +205,7 @@ export class ColorsService {
     const runInterval = setInterval(() => {
       if(runs <= 0) {
         child_process.exec(
-          `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorTo).toHexString())}"], "pattern": "plain"}}' | nc ${oldLight.ip} 2389`,
+          `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorTo).toHexString())}"], "pattern": "fading"}}' | nc ${oldLight.ip} 2389`,
         );
         clearInterval(runInterval);
         return;
