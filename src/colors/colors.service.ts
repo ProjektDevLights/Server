@@ -294,7 +294,8 @@ export class ColorsService {
     );
     const resLight: Light = await this.utilsService.espDocToLight(resDoc);
 
-    const delay = 1000;
+    if(data.delay<100) data.delay = 100; 
+    const delay = data.delay;
     let runs: number = Math.ceil(data.time/delay);
     let cIndex: number = 0;
     let blinkColor: string;

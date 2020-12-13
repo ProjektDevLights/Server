@@ -29,7 +29,7 @@ export class ColorsController {
   }
 
   @Patch("/:id/blink")
-  async blinkWithColors(@Param("id") id: string, @Body(new ValidationPipe()) data: {colors: string[], time: number}): Promise<StandartResponse<Light>> {
+  async blinkWithColors(@Param("id") id: string, @Body(new ValidationPipe()) data: {colors: string[], time: number, delay: number}): Promise<StandartResponse<Light>> {
     if (!await this.utilsService.isIdValid(id)) throw new NotFoundException("There is no light with this Tag!");
     return this.service.blinkWithColors(id, data);
   }

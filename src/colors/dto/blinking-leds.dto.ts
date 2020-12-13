@@ -10,4 +10,8 @@ export class BlinkingLedsDto {
   @IsInt()
   @IsNotEmpty()
   time: number;
+
+  @IsInt()
+  @IsNotEmpty()
+  delay: number;
 }
