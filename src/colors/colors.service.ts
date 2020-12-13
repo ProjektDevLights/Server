@@ -67,9 +67,9 @@ export class ColorsService {
     });
     if (data.colors) {
       try {
-        //child_process.execSync(
-        //  `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newLight.ip} 2389`,
-        //);
+        child_process.execSync(
+          `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newLight.ip} 2389`,
+        );
       } catch {
         throw new ServiceUnavailableException(
           "The Light is not plugged in or not started yet!",
