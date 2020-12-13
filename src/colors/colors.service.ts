@@ -1,7 +1,6 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as child_process from 'child_process';
-import { time } from 'console';
 import { isEqual } from 'lodash';
 import { Model } from 'mongoose';
 import { CustomException } from 'src/exceptions/custom-exception.exception';
@@ -12,6 +11,7 @@ import { UtilsService } from 'src/utils.service';
 import { ColorFormats } from 'tinycolor2';
 import Light from '../interfaces/light.interface';
 import { Esp, EspDocument } from '../schemas/esp.schema';
+import { BlinkingLedsDto } from './dto/blinking-leds.dto';
 import { FadingLedsDto } from './dto/fading-leds.dto';
 import { UpdateLedsDto } from './dto/update-leds.dto';
 var tinycolor = require("tinycolor2");
@@ -254,6 +254,94 @@ export class ColorsService {
 
     return {
       message: "Fading the color!",
+      object: resLight
+    };
+  }
+
+  async blinkWithColors(
+    id: string,
+    data: BlinkingLedsDto,
+  ): Promise<StandartResponse<Light>> {
+
+    for(let i = 0; i < data.colors.length ?? 0; i++){
+      data.colors[i] = this.utilsService.makeValidHex(data.colors[i]);
+    }
+
+    const oldLight: EspDocument = await this.espModel.findOne(
+      { uuid: id },
+      { __v: 0, _id: 0 },
+    );
+
+    if (oldLight.leds.pattern != "plain") {
+        throw new CustomException("Pattern must be Plain!", 400);
+    }
+
+
+    const resDoc = await this.espModel.findOneAndUpdate(
+      { uuid: id },
+      {
+        leds: {
+          colors: data.colors ?? oldLight.leds.colors,
+          pattern: "blinking"
+        },
+      },
+      {
+        new: true,
+        projection: { __v: 0, _id: 0 },
+      },
+    );
+    const resLight: Light = await this.utilsService.espDocToLight(resDoc);
+
+    const delay = 1000;
+    let runs: number = Math.ceil(data.time/delay);
+    let cIndex: number = 0;
+    let blinkColor: string;
+
+    const runInterval = setInterval(async () => {
+      if(runs <= 0) {
+        const cColors: string[] = [];
+        data.colors.forEach(color => {
+          cColors.push(this.utilsService.hexToRgb(tinycolor(color).toHexString()));
+        });
+        child_process.exec(
+          `echo '{"command": "leds", "data": {"colors": "${cColors}", "pattern": "${oldLight.leds.pattern}"}}' | nc ${oldLight.ip} 2389`
+        );
+        console.log("after")
+        await this.espModel.updateOne(
+          { uuid: id },
+          {
+            leds: {
+              colors: oldLight.leds.colors,
+              pattern: oldLight.leds.pattern
+            },
+          },
+          {
+            new: true,
+            projection: { __v: 0, _id: 0 },
+          },
+        );
+        clearInterval(runInterval);
+        return;
+      }
+
+      let prevColor: string = data.colors[cIndex] ?? oldLight.leds.colors[0];
+      blinkColor = blinkColor != prevColor ? prevColor: "#000000";
+
+      console.log("Blink " + blinkColor)
+
+      child_process.exec(
+        `echo '{"command": "leds", "data": {"colors": ["${blinkColor}"], "pattern": "blinking"}}' | nc ${oldLight.ip} 2389`,
+      );
+      cIndex = cIndex >= data.colors.length ? 0: cIndex+1;
+
+        console.log(cIndex)
+
+      runs--;
+      
+    }, delay)
+    
+    return {
+      message: "Blinking colors!",
       object: resLight
     };
   }
