@@ -263,7 +263,9 @@ export class ColorsService {
     data: BlinkingLedsDto,
   ): Promise<StandartResponse<Light>> {
 
-    for(let i = 0; i < data.colors.length ?? 0; i++){
+    let length: number = data.colors.length ?? 0;
+
+    for(let i = 0; i < length; i++){
       data.colors[i] = this.utilsService.makeValidHex(data.colors[i]);
     }
 
@@ -301,10 +303,11 @@ export class ColorsService {
       if(runs <= 0) {
         const cColors: string[] = [];
         data.colors.forEach(color => {
-          cColors.push(this.utilsService.hexToRgb(tinycolor(color).toHexString()));
+          cColors.push(this.utilsService.hexToRgb(color));
         });
+
         child_process.execSync(
-          `echo '{"command": "leds", "data": {"colors": "${cColors}", "pattern": "${oldLight.leds.pattern}"}}' | nc ${oldLight.ip} 2389`
+          `echo '{"command": "leds", "data": {"colors": "${data.colors}", "pattern": "${oldLight.leds.pattern}"}}' | nc ${oldLight.ip} 2389`
         );
         console.log("after")
         await this.espModel.updateOne(
@@ -325,16 +328,16 @@ export class ColorsService {
       }
 
       let prevColor: string = data.colors[cIndex] ?? oldLight.leds.colors[0];
-      blinkColor = blinkColor != prevColor ? prevColor: "#000000";
+      blinkColor = blinkColor == "#000000" ? prevColor: "#000000";
 
       console.log("Blink " + blinkColor)
 
       child_process.execSync(
-        `echo '{"command": "leds", "data": {"colors": ["${blinkColor}"], "pattern": "blinking"}}' | nc ${oldLight.ip} 2389`,
+        `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(blinkColor)}"], "pattern": "blinking"}}' | nc ${oldLight.ip} 2389`,
       );
       cIndex = cIndex >= data.colors.length ? 0: cIndex+1;
 
-        console.log(cIndex)
+      console.log(cIndex)
 
       runs--;
       
