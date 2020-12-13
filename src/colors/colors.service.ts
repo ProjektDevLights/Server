@@ -205,7 +205,7 @@ export class ColorsService {
     const runInterval = setInterval(async () => {
       if(runs <= 0) {
         child_process.execSync(
-          `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorTo).toHexString())}"], "pattern": "${oldLight.leds.pattern}"}}' | nc ${oldLight.ip} 2389`,
+          `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorTo).toHexString())}"], "pattern": "plain"}}' | nc ${oldLight.ip} 2389`,
         );
         await this.espModel.updateOne(
           { uuid: id },
@@ -228,7 +228,7 @@ export class ColorsService {
       colorStart.b = colorStart.b - bStep < colorTo.b && bStep >= 0 ? colorTo.b : colorStart.b - bStep > colorTo.b && bStep <= 0 ? colorTo.b : colorStart.b - bStep;
       console.log(colorStart);
       child_process.execSync(
-        `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorStart).toHexString())}"], "pattern": "fading"}}' | nc ${oldLight.ip} 2389`,
+        `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorStart).toHexString())}"], "pattern": "plain"}}' | nc ${oldLight.ip} 2389`,
       );
       runs--;
     }, delay)
@@ -308,7 +308,7 @@ export class ColorsService {
         });
 
         child_process.execSync(
-          `echo '{"command": "leds", "data": {"colors": "${data.colors}", "pattern": "${oldLight.leds.pattern}"}}' | nc ${oldLight.ip} 2389`
+          `echo '{"command": "leds", "data": {"colors": "${data.colors}", "pattern": "plain"}}' | nc ${oldLight.ip} 2389`
         );
         console.log("after")
         await this.espModel.updateOne(
@@ -334,7 +334,7 @@ export class ColorsService {
       console.log("Blink " + blinkColor)
 
       child_process.execSync(
-        `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(blinkColor)}"], "pattern": "blinking"}}' | nc ${oldLight.ip} 2389`,
+        `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(blinkColor)}"], "pattern": "plain"}}' | nc ${oldLight.ip} 2389`,
       );
       cIndex = cIndex >= data.colors.length ? 0: cIndex+1;
 
