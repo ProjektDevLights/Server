@@ -286,7 +286,7 @@ export class SettingsService {
     });
     console.log(rest);
     ips.forEach((ip: string) => {
-      child_process.execSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
+      child_process.execSync(`echo '{"command": "on"}' | nc ${ip} 2389`);
       //console.log(`echo '{"command": "on"}' | nc ${ip} 2389`);
     });
 
@@ -331,7 +331,7 @@ export class SettingsService {
     });
     console.log(rest);
     ips.forEach((ip: string) => {
-      child_process.execSync(`echo '{"command": "on"}' | nc ${esp.ip} 2389`);
+      child_process.execSync(`echo '{"command": "off"}' | nc ${ip} 2389`);
       //console.log(`echo '{"command": "off"}' | nc ${ip} 2389`);
     });
 
