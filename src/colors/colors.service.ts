@@ -204,7 +204,7 @@ export class ColorsService {
     let runs: number = Math.ceil(data.time/delay);
     const runInterval = setInterval(async () => {
       if(runs <= 0) {
-        child_process.exec(
+        child_process.execSync(
           `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorTo).toHexString())}"], "pattern": "${oldLight.leds.pattern}"}}' | nc ${oldLight.ip} 2389`,
         );
         await this.espModel.updateOne(
@@ -227,7 +227,7 @@ export class ColorsService {
       colorStart.g = colorStart.g - gStep < colorTo.g && gStep >= 0 ? colorTo.g : colorStart.g - gStep > colorTo.g && gStep <= 0 ? colorTo.g : colorStart.g - gStep;
       colorStart.b = colorStart.b - bStep < colorTo.b && bStep >= 0 ? colorTo.b : colorStart.b - bStep > colorTo.b && bStep <= 0 ? colorTo.b : colorStart.b - bStep;
       console.log(colorStart);
-      child_process.exec(
+      child_process.execSync(
         `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(tinycolor(colorStart).toHexString())}"], "pattern": "fading"}}' | nc ${oldLight.ip} 2389`,
       );
       runs--;
@@ -303,7 +303,7 @@ export class ColorsService {
         data.colors.forEach(color => {
           cColors.push(this.utilsService.hexToRgb(tinycolor(color).toHexString()));
         });
-        child_process.exec(
+        child_process.execSync(
           `echo '{"command": "leds", "data": {"colors": "${cColors}", "pattern": "${oldLight.leds.pattern}"}}' | nc ${oldLight.ip} 2389`
         );
         console.log("after")
@@ -329,7 +329,7 @@ export class ColorsService {
 
       console.log("Blink " + blinkColor)
 
-      child_process.exec(
+      child_process.execSync(
         `echo '{"command": "leds", "data": {"colors": ["${blinkColor}"], "pattern": "blinking"}}' | nc ${oldLight.ip} 2389`,
       );
       cIndex = cIndex >= data.colors.length ? 0: cIndex+1;
