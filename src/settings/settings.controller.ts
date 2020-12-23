@@ -164,13 +164,4 @@ export class SettingsController {
       throw new NotFoundException("There is no light with this tag!");
     return this.service.getWithTag(tag);
   }
-
-  @Delete(":id")
-  async delete(
-    @Param("id") id: string,
-  ): Promise<StandartResponse<Light>> {
-    if (!(await this.utilsService.isIdValid(id)))
-      throw new NotFoundException("There is no light with this id!");
-    return this.service.delete(id);
-  }
 }

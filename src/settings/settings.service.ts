@@ -447,12 +447,4 @@ export class SettingsService {
     return { message: `Lights with tag ${tag}!`, object: lights as Light[] };
   }
 
-  async delete(id: string): Promise<StandartResponse<Light>> {
-    const light: EspDocument = await this.espModel.findOneAndRemove(
-      { uuid: id } ,
-      {projection: lightProjection}
-    ).exec();
-    return { message: `Succesfully deleted light!`, object: light as Light };
-  }
-
 }
