@@ -83,6 +83,44 @@ export class SettingsService {
     return { message: "Succesfully updated LED count", object: newLight };
   }
 
+  async setBrightness(id: string, brightness: number): Promise<StandartResponse<{name: string, id: string, brightness: number}>> {
+    console.log(brightness);
+    const oldDoc: EspDocument = await this.espModel
+      .findOne(
+        { uuid: id },
+        {
+          projection: { __v: 0, _id: 0 },
+        },
+      )
+      .exec();
+
+      if(oldDoc.brightness == brightness){
+        throw new NothingChangedException();
+      }
+
+    const newDoc: EspDocument = await this.espModel
+      .findOneAndUpdate(
+        { uuid: id },
+        { brightness: brightness },
+        {
+          projection: { __v: 0, _id: 0 },
+        },
+      )
+      .exec();
+
+    const newLight = {
+      name: newDoc.name,
+      id: newDoc.uuid,
+      brightness: newDoc.brightness,
+    };
+    /* console.log(newDoc.brightness); */
+    child_process.execSync(
+      `echo '{"command": "brightness", "data": "${brightness}"}' | nc ${newDoc.ip} 2389`,
+    );
+    //console.log( `echo '{"command": "brightness", "data": "${brightness}"}' | nc ${newDoc.ip} 2389`);
+    return {message: "Succesfully updated Lights brightness", object: {name: newDoc.name, id: newDoc.uuid, brightness: newDoc.brightness}}
+  } 
+
   async reset(id: string): Promise<StandartResponse<PartialLight>> {
     const queryResult: EspDocument = await this.espModel
       .findOne(
@@ -402,11 +440,11 @@ export class SettingsService {
   }
 
   async getWithTag(tag: string): Promise<StandartResponse<Light[]>> {
-    const light: EspDocument[] = await this.espModel.find(
+    const lights: EspDocument[] = await this.espModel.find(
       { tags: { $all: [tag] } },
       lightProjection,
     );
-    return { message: `Lights with tag ${tag}!`, object: light as Light[] };
+    return { message: `Lights with tag ${tag}!`, object: lights as Light[] };
   }
 
   async delete(id: string): Promise<StandartResponse<Light>> {

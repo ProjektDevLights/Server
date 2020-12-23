@@ -31,6 +31,9 @@ export class Esp {
 
   @Prop({ required: true })
   isOn: boolean;
+
+  @Prop({required: true})
+  brightness: number;
 }
 
 export const EspSchema = SchemaFactory.createForClass(Esp);

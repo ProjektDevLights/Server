@@ -40,6 +40,7 @@ export class EspService {
         leds: { pattern: "plain", colors: ["#1DE9B6"] },
         tags: [],
         isOn: false,
+        brightness: 30
       });
     } catch {
       throw new ConflictException("This IP is already in use!");

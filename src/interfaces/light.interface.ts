@@ -5,6 +5,7 @@ export default interface Light {
   id: string;
   leds: Leds;
   count: number;
+  brightness: number;
   tags?: string[];
   isOn: boolean;
 }
