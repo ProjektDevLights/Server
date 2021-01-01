@@ -40,27 +40,27 @@ export class SettingsService {
     count: number,
   ): Promise<StandartResponse<{ name: string; id: string; count: number }>> {
     const oldDoc: EspDocument = await this.espModel
-      .findOne(
-        { uuid: id },
-        {
-          projection: { __v: 0, _id: 0 },
-        },
-      )
-      .exec();
-
-      if(oldDoc.count == count){
-        throw new NothingChangedException();
-      }
-
-    const newDoc: EspDocument = await this.espModel
       .findOneAndUpdate(
         { uuid: id },
         { count: count },
         {
-          projection: { __v: 0, _id: 0 },
+          projection: lightProjection,
         },
       )
-      .exec();
+      .exec()
+
+    if(oldDoc.count == count){
+      throw new NothingChangedException();
+    }
+
+    const newDoc: EspDocument = await this.espModel
+      .findOne(
+        { uuid: id },
+        {
+          projection: lightProjection,
+        },
+      )
+      .exec()
 
     const newLight = {
       count: newDoc.count,
