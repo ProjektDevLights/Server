@@ -7,7 +7,7 @@ import { Esp, EspSchema } from './schemas/esp.schema';
 import { SettingsModule } from './settings/settings.module';
 
 @Module({
-  imports: [EspModule, MongooseModule.forRoot("mongodb://localhost/devlight", { useFindAndModify: false }), MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }]), ColorsModule, SettingsModule],
+  imports: [EspModule, MongooseModule.forRoot("mongodb+srv://pi:raspberry@cluster0.o1usx.mongodb.net/devlight?retryWrites=true&w=majority", { useFindAndModify: false }), MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }]), ColorsModule, SettingsModule],
   controllers: [AppController],
 })
 export class AppModule { }

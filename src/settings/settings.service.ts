@@ -16,7 +16,7 @@ export class SettingsService {
   constructor(
     @InjectModel(Esp.name) private espModel: Model<EspDocument>,
     private utilsService: UtilsService,
-  ) {}
+  ) { }
 
   async restart(id: string): Promise<StandartResponse<PartialLight>> {
     const queryResult: EspDocument = await this.espModel
@@ -49,16 +49,13 @@ export class SettingsService {
       )
       .exec()
 
-    if(oldDoc.count == count){
+    if (oldDoc.count == count) {
       throw new NothingChangedException();
     }
 
     const newDoc: EspDocument = await this.espModel
       .findOne(
-        { uuid: id },
-        {
-          projection: lightProjection,
-        },
+        { uuid: id }
       )
       .exec()
 
@@ -83,7 +80,7 @@ export class SettingsService {
     return { message: "Succesfully updated LED count", object: newLight };
   }
 
-  async setBrightness(id: string, brightness: number): Promise<StandartResponse<{name: string, id: string, brightness: number}>> {
+  async setBrightness(id: string, brightness: number): Promise<StandartResponse<{ name: string, id: string, brightness: number }>> {
     console.log(brightness);
     const oldDoc: EspDocument = await this.espModel
       .findOne(
@@ -94,9 +91,9 @@ export class SettingsService {
       )
       .exec();
 
-      if(oldDoc.brightness == brightness){
-        throw new NothingChangedException();
-      }
+    if (oldDoc.brightness == brightness) {
+      throw new NothingChangedException();
+    }
 
     const newDoc: EspDocument = await this.espModel
       .findOneAndUpdate(
@@ -118,8 +115,8 @@ export class SettingsService {
       `echo '{"command": "brightness", "data": "${brightness}"}' | nc ${newDoc.ip} 2389`,
     );
     //console.log( `echo '{"command": "brightness", "data": "${brightness}"}' | nc ${newDoc.ip} 2389`);
-    return {message: "Succesfully updated Lights brightness", object: {name: newDoc.name, id: newDoc.uuid, brightness: newDoc.brightness}}
-  } 
+    return { message: "Succesfully updated Lights brightness", object: { name: newDoc.name, id: newDoc.uuid, brightness: newDoc.brightness } }
+  }
 
   async reset(id: string): Promise<StandartResponse<PartialLight>> {
     const queryResult: EspDocument = await this.espModel
@@ -419,7 +416,7 @@ export class SettingsService {
 
   async restartWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
 
-    const queryResult: EspDocument[] =  await this.utilsService.getEspsWithTag(tag);
+    const queryResult: EspDocument[] = await this.utilsService.getEspsWithTag(tag);
 
     const returns: PartialLight[] = [];
 
