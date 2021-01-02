@@ -1,9 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import * as child_process from "child_process";
 import { isEqual } from "lodash";
 import { Model } from "mongoose";
 import { NothingChangedException } from "src/exceptions/nothing-changed.exception";
+import { OffException } from "src/exceptions/off.exception";
 import { lightProjection } from "src/globals";
 import { Esp, EspDocument } from "src/schemas/esp.schema";
 import { UtilsService } from "src/utils.service";
@@ -16,7 +17,7 @@ export class SettingsService {
   constructor(
     @InjectModel(Esp.name) private espModel: Model<EspDocument>,
     private utilsService: UtilsService,
-  ) { }
+  ) {}
 
   async restart(id: string): Promise<StandartResponse<PartialLight>> {
     const queryResult: EspDocument = await this.espModel
@@ -27,7 +28,7 @@ export class SettingsService {
       )
       .exec();
     child_process.execSync(
-      `echo '{"command": "restart"}' | nc ${queryResult.ip} 2389`,
+      `echo '{"command": "restart"}' | nc ${queryResult.ip} 2389 -w 5`,
     );
     return {
       message: "Restarting...",
@@ -35,53 +36,42 @@ export class SettingsService {
     };
   }
 
-  async count(
-    id: string,
-    count: number,
-  ): Promise<StandartResponse<{ name: string; id: string; count: number }>> {
+  async count(id: string, count: number): Promise<StandartResponse<Light>> {
     const oldDoc: EspDocument = await this.espModel
-      .findOneAndUpdate(
-        { uuid: id },
-        { count: count },
-        {
-          projection: lightProjection,
-        },
-      )
-      .exec()
-
+      .findOne({ uuid: id })
+      .exec();
     if (oldDoc.count == count) {
       throw new NothingChangedException();
     }
 
-    const newDoc: EspDocument = await this.espModel
-      .findOne(
-        { uuid: id }
-      )
-      .exec()
-
-    const newLight = {
-      count: newDoc.count,
-      name: newDoc.name,
-      id: newDoc.uuid,
-    };
-
-    const colorArray: string[] = [];
-    newDoc.leds.colors.forEach((color: string) => {
-      colorArray.push('"' + this.utilsService.hexToRgb(color) + '"');
-    });
-    child_process.execSync(
-      `echo '{"command": "count", "data": "${count}"}' | nc ${newDoc.ip} 2389`,
-    );
-    setTimeout(() => {
+    try {
       child_process.execSync(
-        `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${newDoc.ip} 2389`,
+        `echo '{"command": "count", "data": "${count}"}' | nc ${oldDoc.ip} 2389 -w 5`,
       );
-    }, 500);
-    return { message: "Succesfully updated LED count", object: newLight };
+      const newDoc: EspDocument = await this.espModel
+        .findOneAndUpdate(
+          { uuid: id },
+          { count: count },
+          {
+            projection: lightProjection,
+            new: true,
+          },
+        )
+        .exec();
+
+      const newLight: Light = this.utilsService.espDocToLight(newDoc);
+      return { message: "Succesfully updated LED count", object: newLight };
+    } catch {
+      throw new OffException();
+    }
   }
 
-  async setBrightness(id: string, brightness: number): Promise<StandartResponse<{ name: string, id: string, brightness: number }>> {
-    console.log(brightness);
+  async setBrightness(
+    id: string,
+    brightness: number,
+  ): Promise<
+    StandartResponse<{ name: string; id: string; brightness: number }>
+  > {
     const oldDoc: EspDocument = await this.espModel
       .findOne(
         { uuid: id },
@@ -93,6 +83,14 @@ export class SettingsService {
 
     if (oldDoc.brightness == brightness) {
       throw new NothingChangedException();
+    }
+
+    try {
+      child_process.execSync(
+        `echo '{"command": "brightness", "data": "${brightness}"}' | nc ${oldDoc.ip} 2389 -w 5`,
+      );
+    } catch {
+      throw new OffException();
     }
 
     const newDoc: EspDocument = await this.espModel
@@ -110,12 +108,14 @@ export class SettingsService {
       id: newDoc.uuid,
       brightness: newDoc.brightness,
     };
-    /* console.log(newDoc.brightness); */
-    child_process.execSync(
-      `echo '{"command": "brightness", "data": "${brightness}"}' | nc ${newDoc.ip} 2389`,
-    );
-    //console.log( `echo '{"command": "brightness", "data": "${brightness}"}' | nc ${newDoc.ip} 2389`);
-    return { message: "Succesfully updated Lights brightness", object: { name: newDoc.name, id: newDoc.uuid, brightness: newDoc.brightness } }
+    return {
+      message: "Succesfully updated Lights brightness",
+      object: {
+        name: newDoc.name,
+        id: newDoc.uuid,
+        brightness: newDoc.brightness,
+      },
+    };
   }
 
   async reset(id: string): Promise<StandartResponse<PartialLight>> {
@@ -128,10 +128,14 @@ export class SettingsService {
         },
       )
       .exec();
+    try {
+      child_process.execSync(
+        `echo '{"command": "reset"}' | nc ${queryResult.ip} 2389 -w 5`,
+      );
+    } catch {
+      throw new OffException();
+    }
     await this.espModel.findOneAndDelete({ uuid: id }).exec();
-    child_process.execSync(
-      `echo '{"command": "reset"}' | nc ${queryResult.ip} 2389`,
-    );
     return {
       message: "Resetting...",
       object: { name: queryResult.name, id: queryResult.uuid },
@@ -139,20 +143,25 @@ export class SettingsService {
   }
 
   async resetWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
-
-    const queryResult: EspDocument[] = await this.utilsService.getEspsWithTag(tag);
+    const queryResult: EspDocument[] = await this.utilsService.getEspsWithTag(
+      tag,
+    );
 
     const results: PartialLight[] = [];
 
     queryResult.forEach(element => {
       results.push({
         name: element.name,
-        id: element.uuid
-      })
+        id: element.uuid,
+      });
       this.espModel.findOneAndDelete({ uuid: element.uuid }).exec();
-      child_process.execSync(
-        `echo '{"command": "reset"}' | nc ${element.ip} 2389`,
-      );
+      try {
+        child_process.execSync(
+          `echo '{"command": "reset"}' | nc ${element.ip} 2389 -w 5`,
+        );
+      } catch (error) {
+        throw new OffException();
+      }
     });
 
     return {
@@ -165,6 +174,20 @@ export class SettingsService {
     const oldLight: EspDocument = await this.espModel
       .findOne({ uuid: id }, { __v: 0, _id: 0 })
       .exec();
+
+    if (oldLight.isOn) {
+      throw new NothingChangedException("The light is already on");
+    }
+
+    try {
+      child_process.execSync(
+        `echo '{"command": "on"}' | nc ${oldLight.ip} 2389 -w 5`,
+      );
+    } catch (error) {
+      throw new ServiceUnavailableException(
+        "The Light is not plugged in or started yet",
+      );
+    }
     const newLight: EspDocument = await this.espModel
       .findOneAndUpdate(
         { uuid: id },
@@ -172,11 +195,6 @@ export class SettingsService {
         { new: true, projection: { __v: 0, _id: 0 } },
       )
       .exec();
-    if (isEqual(oldLight.isOn, newLight.isOn)) {
-      throw new NothingChangedException("The light is already on");
-    }
-    child_process.execSync(`echo '{"command": "on"}' | nc ${newLight.ip} 2389`);
-    //console.log(`echo '{"command": "on"}' | nc ${newLight.ip} 2389`)
     return {
       message: "Succesfully turned the light on!",
       object: { name: newLight.name, id: newLight.uuid } as Light,
@@ -187,6 +205,18 @@ export class SettingsService {
     const oldLight: EspDocument = await this.espModel
       .findOne({ uuid: id }, { __v: 0, _id: 0 })
       .exec();
+    if (!oldLight.isOn) {
+      throw new NothingChangedException("The light is already off");
+    }
+
+    try {
+      child_process.execSync(
+        `echo '{"command": "off"}' | nc ${oldLight.ip} 2389 -w 5`,
+      );
+    } catch (error) {
+      throw new OffException();
+    }
+
     const newLight: EspDocument = await this.espModel
       .findOneAndUpdate(
         { uuid: id },
@@ -194,22 +224,6 @@ export class SettingsService {
         { new: true, projection: { __v: 0, _id: 0 } },
       )
       .exec();
-    if (isEqual(oldLight.isOn, newLight.isOn)) {
-      throw new NothingChangedException("The light is already off");
-    }
-    console.log(
-      await this.espModel
-        .findOneAndUpdate(
-          { uuid: id },
-          { isOn: false },
-          { new: true, projection: { __v: 0, _id: 0 } },
-        )
-        .exec(),
-    );
-    child_process.execSync(
-      `echo '{"command": "off"}' | nc ${newLight.ip} 2389`,
-    );
-    //console.log(`echo '{"command": "off"}' | nc ${newLight.ip} 2389`)
     return {
       message: "Successfully turned the light off!",
       object: { name: newLight.name, id: newLight.uuid } as Light,
@@ -246,7 +260,7 @@ export class SettingsService {
       })
       .exec()) as Light;
     if (isEqual(oldLight, newLight)) {
-      throw new NothingChangedException("Couldn't update light");
+      throw new NothingChangedException("No changes were made");
     }
     return { message: "Succesfully updatet Light!", object: newLight };
   }
@@ -268,8 +282,7 @@ export class SettingsService {
     });
 
     if (!newTags.length) {
-      throw new NothingChangedException("Tag already exists");
-      return;
+      throw new NothingChangedException("Tag(s) already added to Light");
     }
 
     const newLight: EspDocument = await this.espModel
@@ -300,6 +313,21 @@ export class SettingsService {
       throw new NothingChangedException("All lights are already on");
     }
 
+    const lights: EspDocument[] = await this.espModel
+      .find({ tags: { $all: [tag] } }, { _id: 0, __v: 0 })
+      .exec();
+    const ips: string[] = [];
+    const rest: Light[] = [];
+    lights.forEach(async element => {
+      ips.push(element.ip);
+      rest.push(await this.utilsService.espDocToLight(element));
+    });
+    ips.forEach((ip: string) => {
+      try {
+        child_process.execSync(`echo '{"command": "on"}' | nc ${ip} 2389 -w 5`);
+      } catch (error) {}
+    });
+
     await this.espModel
       .updateMany(
         { tags: { $all: [tag] } },
@@ -310,20 +338,6 @@ export class SettingsService {
         },
       )
       .exec();
-    const lights: EspDocument[] = await this.espModel
-      .find({ tags: { $all: [tag] } }, { _id: 0, __v: 0 })
-      .exec();
-    const ips: string[] = [];
-    const rest: Light[] = [];
-    lights.forEach(async element => {
-      ips.push(element.ip);
-      rest.push(await this.utilsService.espDocToLight(element));
-    });
-    console.log(rest);
-    ips.forEach((ip: string) => {
-      child_process.execSync(`echo '{"command": "on"}' | nc ${ip} 2389`);
-      //console.log(`echo '{"command": "on"}' | nc ${ip} 2389`);
-    });
 
     return {
       message: `All Lights with the Tag ${tag} are on now!  The following lights have been changed.`,
@@ -345,6 +359,23 @@ export class SettingsService {
       throw new NothingChangedException("All lights are already off!");
     }
 
+    const lights: EspDocument[] = await this.espModel
+      .find({ tags: { $all: [tag] } }, { _id: 0, __v: 0 })
+      .exec();
+    const ips: string[] = [];
+    const rest: Light[] = [];
+    lights.forEach(async element => {
+      ips.push(element.ip);
+      rest.push(await this.utilsService.espDocToLight(element));
+    });
+    ips.forEach((ip: string) => {
+      try {
+        child_process.execSync(
+          `echo '{"command": "off"}' | nc ${ip} 2389 -w 5`,
+        );
+      } catch (error) {}
+    });
+
     await this.espModel
       .updateMany(
         { tags: { $all: [tag] } },
@@ -355,20 +386,6 @@ export class SettingsService {
         },
       )
       .exec();
-    const lights: EspDocument[] = await this.espModel
-      .find({ tags: { $all: [tag] } }, { _id: 0, __v: 0 })
-      .exec();
-    const ips: string[] = [];
-    const rest: Light[] = [];
-    lights.forEach(async element => {
-      ips.push(element.ip);
-      rest.push(await this.utilsService.espDocToLight(element));
-    });
-    console.log(rest);
-    ips.forEach((ip: string) => {
-      child_process.execSync(`echo '{"command": "off"}' | nc ${ip} 2389`);
-      //console.log(`echo '{"command": "off"}' | nc ${ip} 2389`);
-    });
 
     return {
       message: `All Lights with the Tag ${tag} are off now! The following lights have been changed.`,
@@ -398,7 +415,6 @@ export class SettingsService {
 
     if (isEqual(oldLight.tags, newTags)) {
       throw new NothingChangedException("No Tag was removed!");
-      return;
     }
 
     const newLight: EspDocument = await this.espModel
@@ -415,19 +431,26 @@ export class SettingsService {
   }
 
   async restartWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
-
-    const queryResult: EspDocument[] = await this.utilsService.getEspsWithTag(tag);
+    const queryResult: EspDocument[] = await this.utilsService.getEspsWithTag(
+      tag,
+    );
 
     const returns: PartialLight[] = [];
 
     queryResult.forEach(element => {
       returns.push({
         name: element.name,
-        id: element.uuid
-      })
-      child_process.execSync(
-        `echo '{"command": "restart"}' | nc ${element.ip} 2389`,
-      );
+        id: element.uuid,
+      });
+      try {
+        child_process.execSync(
+          `echo '{"command": "restart"}' | nc ${element.ip} 2389 -w 5`,
+        );
+      } catch (error) {
+        throw new ServiceUnavailableException(
+          "The Light is not plugged in or started yet",
+        );
+      }
     });
 
     return {
@@ -443,5 +466,4 @@ export class SettingsService {
     );
     return { message: `Lights with tag ${tag}!`, object: lights as Light[] };
   }
-
 }

@@ -1,10 +1,19 @@
-import { IsArray, IsHexColor, IsInt, IsNotEmpty, IsString } from "class-validator";
+import {
+  IsArray,
+  IsEnum,
+  IsHexColor,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from "class-validator";
+import { Pattern } from "../../types";
 
 export class BlinkingLedsDto {
-
+  @IsOptional()
   @IsArray()
-  @IsString({each: true})
-  @IsHexColor({each: true})
+  @IsString({ each: true })
+  @IsHexColor({ each: true })
   colors?: string[];
 
   @IsInt()

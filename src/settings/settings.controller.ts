@@ -1,4 +1,3 @@
-
 import {
   Body,
   Controller,
@@ -11,7 +10,7 @@ import {
   Post,
   ValidationPipe,
   CacheInterceptor,
-  UseInterceptors
+  UseInterceptors,
 } from "@nestjs/common";
 import { HttpCode } from "@nestjs/common/decorators/http/http-code.decorator";
 import { Light, PartialLight, StandartResponse } from "../interfaces/";
@@ -46,11 +45,11 @@ export class SettingsController {
     return this.service.restartWithTag(tag);
   }
 
-  @Patch("count/:id")
+  @Patch(":id/count")
   async count(
     @Param("id") id: string,
     @Body("count", ParseIntPipe) count: number,
-  ): Promise<StandartResponse<{ name: string; id: string; count: number }>> {
+  ): Promise<StandartResponse<Light>> {
     if (!(await this.utilsService.isIdValid(id)))
       throw new NotFoundException("There is no Light with this ID!");
     return this.service.count(id, count);
@@ -99,12 +98,15 @@ export class SettingsController {
     return this.service.update(id, data);
   }
 
-  @Patch("brightness/:id")
-  async brightness(@Param("id") id: string,  @Body("brightness", ParseIntPipe) brightness: number) {
+  @Patch(":id/brightness")
+  async brightness(
+    @Param("id") id: string,
+    @Body("brightness", ParseIntPipe) brightness: number,
+  ) {
     if (!(await this.utilsService.isIdValid(id))) {
       throw new NotFoundException("There is no light with this ID");
     }
-    return this.service.setBrightness(id,brightness );
+    return this.service.setBrightness(id, brightness);
   }
 
   @Patch(":id/on")

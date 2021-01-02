@@ -1,1 +1,4 @@
-export type Pattern = "plain"
+export enum Pattern {
+  plain = "plain",
+  gradient = "gradient",
+}

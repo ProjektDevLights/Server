@@ -1,4 +1,4 @@
-import { IsHexColor, IsNotEmpty, IsString } from "class-validator";
+import { IsHexColor, IsNotEmpty, IsString, IsEnum } from "class-validator";
 import { Pattern } from "../../types";
 
 export class UpdateLedsDto {
@@ -8,6 +8,7 @@ export class UpdateLedsDto {
   colors: string[];
 
   @IsString()
+  @IsEnum(Pattern)
   @IsNotEmpty()
   pattern: Pattern;
 }

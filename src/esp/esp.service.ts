@@ -20,7 +20,6 @@ export class EspService {
 
   async setup(data: SetupDto): Promise<string> {
     const existing_ids: string[] = await this.espModel.distinct("uuid").exec();
-
     let id: string;
     if (existing_ids.length >= 256 * 256) {
       throw new ConflictException("This IP is already in use!");
@@ -40,7 +39,7 @@ export class EspService {
         leds: { pattern: "plain", colors: ["#1DE9B6"] },
         tags: [],
         isOn: false,
-        brightness: 30
+        brightness: 30,
       });
     } catch {
       throw new ConflictException("This IP is already in use!");
@@ -61,10 +60,7 @@ export class EspService {
       throw new BadRequestException("This is not a valid ID");
     }
     await this.espModel
-      .findOneAndUpdate(
-        { uuid: data.id },
-        { ip: data.ip },
-      )
+      .findOneAndUpdate({ uuid: data.id }, { ip: data.ip })
       .exec();
     response.send();
   }

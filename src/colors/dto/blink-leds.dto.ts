@@ -2,22 +2,15 @@ import {
   IsHexColor,
   IsInt,
   IsNotEmpty,
-  IsOptional,
   IsString,
 } from "class-validator";
-
-export class FadingLedsDto {
+export class BlinkLedsDto {
   @IsString()
-  @IsNotEmpty()
   @IsHexColor()
+  @IsNotEmpty()
   color: string;
 
   @IsInt()
   @IsNotEmpty()
-  time?: number;
-
-  @IsOptional()
-  @IsInt()
-  @IsNotEmpty()
-  delay?: number;
+  time: number;
 }
