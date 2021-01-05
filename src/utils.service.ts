@@ -3,7 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import { omit } from "lodash";
 import { Model } from "mongoose";
 import { lightProjection } from "./globals";
-import { Light } from "./interfaces";
+import { Leds, Light } from "./interfaces";
 import { Esp, EspDocument } from "./schemas/esp.schema";
 
 @Injectable()
@@ -108,6 +108,24 @@ export class UtilsService {
     )
       return false;
     return true;
+  }
+
+  isValidPattern(data: Leds) : boolean{
+    if(data.colors.length > 1) {
+      if(data.pattern == "plain") {
+        return false;
+      } else {
+        return true;
+      }
+    } else if(data.colors.length == 1){
+      if(data.pattern === "gradient") {
+        return false;
+      } else {
+        return true;
+      }
+    } else {
+      return false;
+    }
   }
 
   async getEspsWithTag(tag: string): Promise<EspDocument[]> {

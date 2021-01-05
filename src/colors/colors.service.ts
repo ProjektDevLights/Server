@@ -1,4 +1,4 @@
-import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { BadRequestException, Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import * as child_process from "child_process";
 import { isEqual } from "lodash";
@@ -37,6 +37,10 @@ export class ColorsService {
 
       if(data.colors == oldLight.leds.colors) {
         throw new NothingChangedException("Nothing changed");
+      }
+
+      if(!this.utilsService.isValidPattern(data)) {
+        throw new BadRequestException("Wrong colors or pattern provided");
       }
 
       try {
