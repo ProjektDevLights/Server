@@ -70,14 +70,12 @@ export class SettingsService {
     id: string,
     brightness: number,
   ): Promise<
-    StandartResponse<{ name: string; id: string; brightness: number }>
+    StandartResponse<Light>
   > {
     const oldDoc: EspDocument = await this.espModel
       .findOne(
         { uuid: id },
-        {
-          projection: { __v: 0, _id: 0 },
-        },
+        { __v: 0, _id: 0 }
       )
       .exec();
 
@@ -103,18 +101,9 @@ export class SettingsService {
       )
       .exec();
 
-    const newLight = {
-      name: newDoc.name,
-      id: newDoc.uuid,
-      brightness: newDoc.brightness,
-    };
     return {
       message: "Succesfully updated Lights brightness",
-      object: {
-        name: newDoc.name,
-        id: newDoc.uuid,
-        brightness: newDoc.brightness,
-      },
+      object: this.utilsService.espDocToLight(newDoc)
     };
   }
 

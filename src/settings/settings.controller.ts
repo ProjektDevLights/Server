@@ -102,7 +102,7 @@ export class SettingsController {
   async brightness(
     @Param("id") id: string,
     @Body("brightness", ParseIntPipe) brightness: number,
-  ) {
+  ): Promise<StandartResponse<Light>> {
     if (!(await this.utilsService.isIdValid(id))) {
       throw new NotFoundException("There is no light with this ID");
     }
