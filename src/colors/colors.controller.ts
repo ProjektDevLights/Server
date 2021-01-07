@@ -1,15 +1,18 @@
 import {
   Body,
   Controller,
+
   NotFoundException,
   Param,
   Patch,
   Post,
-  ValidationPipe,
+  ValidationPipe
 } from "@nestjs/common";
+import { Alarm } from "src/schemas/alarm.schema";
 import { UtilsService } from "src/utils.service";
 import { Light, StandartResponse } from "../interfaces";
 import { ColorsService } from "./colors.service";
+import { AlarmDto } from "./dto/alarm.dto";
 import { BlinkLedsDto } from "./dto/blink-leds.dto";
 import { BlinkingLedsDto } from "./dto/blinking-leds.dto";
 import { UpdateLedsDto } from "./dto/update-leds.dto";
@@ -67,4 +70,14 @@ export class ColorsController {
       throw new NotFoundException("There is no light with this id!");
     return this.service.blinkColorLoop(id, data);
   }
+
+
+  //ALAAAARM 
+  @Post("/alarm")
+  async scheduleAlarm(
+    @Body(new ValidationPipe()) data: AlarmDto,
+  ): Promise<StandartResponse<Alarm>> {
+    return this.service.scheduleAlarm(data);
+  }
+
 }

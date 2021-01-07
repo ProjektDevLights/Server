@@ -7,6 +7,7 @@ import { CustomException } from "src/exceptions/custom-exception.exception";
 import { NothingChangedException } from "src/exceptions/nothing-changed.exception";
 import { OffException } from "src/exceptions/off.exception";
 import { StandartResponse } from "src/interfaces";
+import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";
 import { UtilsService } from "src/utils.service";
 import { ColorFormats } from "tinycolor2";
 import Light from "../interfaces/light.interface";
@@ -15,12 +16,14 @@ import { BlinkLedsDto } from "./dto/blink-leds.dto";
 import { BlinkingLedsDto } from "./dto/blinking-leds.dto";
 import { FadingLedsDto } from "./dto/fading-leds.dto";
 import { UpdateLedsDto } from "./dto/update-leds.dto";
+import { AlarmDto } from "./dto/alarm.dto"
 var tinycolor = require("tinycolor2");
 
 @Injectable()
 export class ColorsService {
   constructor(
     @InjectModel(Esp.name) private espModel: Model<EspDocument>,
+    @InjectModel(Alarm.name) private alarmModel: Model<AlarmDocument>,
     private utilsService: UtilsService,
   ) {}
 
@@ -159,11 +162,7 @@ export class ColorsService {
       throw new NothingChangedException();
     }
 
-    let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
-
-    let colorStart: ColorFormats.RGB = tinycolor(
-      oldLight.leds.colors[0],
-    ).toRgb();
+    
     let resLight: Light;
     if (data.delay < 1000 || data.time < 2000) {
       try {
@@ -193,6 +192,41 @@ export class ColorsService {
         },
       );
       resLight = await this.utilsService.espDocToLight(resDoc);
+
+      let color: string = data.color;
+      let time: number = data.time;
+      let delay: number = data.delay
+      this.fading(id, {color, time, delay}, oldLight);
+
+      //10000/2000 = 5;
+      //150 * 2000 / 10 = 30
+      // 30dif => 30steps / 10s  = 3 steps/s
+      // 50dif => 50steps * 2verz / 10s  = 2.5
+      // 100fid => 100steps / 10s = 10 steps/s
+      /*
+    fading(colorStart.r, colorStart.g, colorStart.b);
+
+    async function fading(r: number, g: number, b: number) {
+      if (r == colorTo.r && g == colorTo.g && b == colorTo.b) {
+        return { r, g, b };
+      }
+      return fading(r, g, b);
+    }
+    */
+    }
+    return {
+      message: "Fading the color!",
+      object: resLight,
+    };
+  }
+
+  fading(id: string, data: {color: string, time: number, delay: number}, oldLight: EspDocument){
+    
+      let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
+
+      let colorStart: ColorFormats.RGB = tinycolor(
+        oldLight.leds.colors[0],
+      ).toRgb();
 
       let rStep: number = Math.ceil(
         ((colorStart.r - colorTo.r) * data.delay) / data.time,
@@ -263,28 +297,7 @@ export class ColorsService {
           );
         }
         runs--;
-      }, data.delay);
-
-      //10000/2000 = 5;
-      //150 * 2000 / 10 = 30
-      // 30dif => 30steps / 10s  = 3 steps/s
-      // 50dif => 50steps * 2verz / 10s  = 2.5
-      // 100fid => 100steps / 10s = 10 steps/s
-      /*
-    fading(colorStart.r, colorStart.g, colorStart.b);
-
-    async function fading(r: number, g: number, b: number) {
-      if (r == colorTo.r && g == colorTo.g && b == colorTo.b) {
-        return { r, g, b };
-      }
-      return fading(r, g, b);
-    }
-    */
-    }
-    return {
-      message: "Fading the color!",
-      object: resLight,
-    };
+    }, data.delay);
   }
 
   async blinkColor(
@@ -401,5 +414,51 @@ export class ColorsService {
       message: "Blinking colors!",
       object: resLight,
     };
+  }
+
+  async scheduleAlarm(
+    data: AlarmDto
+  ): Promise<StandartResponse<Alarm>> {
+
+    const espIds = await this.espModel.find({"uuid": {"$in": data.ids} }).distinct("_id").exec();
+    var alarm = new this.alarmModel();
+    alarm.date = data.date;
+    alarm.color = data.color ?? "#ff0000";
+    alarm.days = data.days ?? [];
+    alarm.repeat = data.repeat ?? 0;
+    alarm.esps.push(...espIds);
+    console.log(alarm.esps);
+    alarm = await alarm.save();
+    //console.log(alarm);
+
+    console.log((await this.alarmModel.find({_id: alarm.id}, {_id: 0, __v: 0}).populate("esps", {_id: 0, uuid: 1, name: 1}).exec())[0])
+
+    
+/*    await this.alarmModel.create({
+      date: data.date,
+      days: data.days ?? [],
+      repeat: data.repeat ?? 0,
+      esps: esps,
+    }) */
+
+/*     const oldLight: EspDocument = await this.espModel.findOne(
+      { uuid: id },
+      { __v: 0, _id: 0 },
+    );
+
+    const newLight: EspDocument = await this.espModel.findOneAndUpdate( ALAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARM
+      {uuid: id},
+      {leds: {
+        colors: oldLight.leds.colors,
+        pattern : "waking"
+      }}
+    ) */
+/* 
+    let color: string = oldLight.leds.colors[0];
+    let time: number = data.time ?? 300000;
+    let delay: number = data.delay ?? 500;
+    this.fading(id, {color, time, delay}, oldLight); */
+
+    return {message: "Succesfully scheduled alarm!", object: (await this.alarmModel.find({_id: alarm.id}, {_id: 0, __v: 0}).populate("esps", {_id: 0, uuid: 1, name: 1}).exec())[0]};
   }
 }
