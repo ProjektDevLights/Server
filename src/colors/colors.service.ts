@@ -43,7 +43,9 @@ export class ColorsService {
         throw new BadRequestException("Wrong colors or pattern provided");
       }
 
-      try {
+      if(!oldLight.isOn) throw new OffException();
+
+     try {
         child_process.execSync(
           `echo '{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
             data.colors,
@@ -51,9 +53,9 @@ export class ColorsService {
             oldLight.ip
           } 2389 -w 5`,
         );
-      } catch {
-        throw new OffException();
-      }
+     } catch {
+       throw new OffException();
+     }
     const newLight: EspDocument = await this.espModel.findOneAndUpdate(
       { uuid: id },
       {
@@ -86,6 +88,14 @@ export class ColorsService {
       { tags: { $all: [tag] } },
       { __v: 0, _id: 0 },
     );
+
+    const on : boolean[] =  await this.espModel.find(
+      { tags: { $all: [tag] } },
+      { __v: 0, _id: 0 },
+    ).distinct("isOn");
+
+    if(!on.every((val, i) => val === true)) throw new OffException("At least one light is not on! In order to update with tag please turn them on with '/tags/{{tag}}/on'");
+   
     await this.espModel
       .updateMany(
         { tags: { $all: [tag] } },
@@ -107,7 +117,7 @@ export class ColorsService {
       .find({ tags: { $all: [tag] } })
       .exec();
 
-    const resLights: Light[] = [];
+     const resLights: Light[] = [];
 
     newLights.forEach(async element => {
       if (element.isOn) {

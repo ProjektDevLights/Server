@@ -6,6 +6,6 @@ export async function LoggerMiddleware(
   res: Response,
   next: () => void,
 ) {
-   console.log(req);
+ /*   console.log(req); */
   next();
 }

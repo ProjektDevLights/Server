@@ -44,6 +44,9 @@ export class SettingsService {
       throw new NothingChangedException();
     }
 
+
+    if(!oldDoc.isOn) throw new OffException();
+
     try {
       child_process.execSync(
         `echo '{"command": "count", "data": "${count}"}' | nc ${oldDoc.ip} 2389 -w 5`,
@@ -82,6 +85,8 @@ export class SettingsService {
     if (oldDoc.brightness == brightness) {
       throw new NothingChangedException();
     }
+
+    if(!oldDoc.isOn) throw new OffException();
 
     try {
       child_process.execSync(
