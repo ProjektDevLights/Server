@@ -6,9 +6,10 @@ import { config } from "./config";
 import { EspModule } from './esp/esp.module';
 import { Esp, EspSchema } from './schemas/esp.schema';
 import { SettingsModule } from './settings/settings.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [EspModule, MongooseModule.forRoot(config.database.url, { useFindAndModify: false }), MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }]), ColorsModule, SettingsModule],
+  imports: [EspModule, MongooseModule.forRoot(config.database.url, { useFindAndModify: false }), MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }]), ColorsModule, SettingsModule, ScheduleModule.forRoot()],
   controllers: [AppController],
 })
 export class AppModule { }

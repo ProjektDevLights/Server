@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
+import { CronScheduler } from "src/cronjobs/cron-scheduler";
 import { Alarm, AlarmSchema } from "src/schemas/alarm.schema";
 import { UtilsService } from "src/utils.service";
 import { Esp, EspSchema } from "../schemas/esp.schema";
@@ -7,7 +8,7 @@ import { ColorsController } from "./colors.controller";
 import { ColorsService } from "./colors.service";
 
 @Module({
-  providers: [ColorsService, UtilsService],
+  providers: [ColorsService, UtilsService, CronScheduler],
   controllers: [ColorsController],
   imports: [MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema },  {name: Alarm.name, schema: AlarmSchema}])],
 })
