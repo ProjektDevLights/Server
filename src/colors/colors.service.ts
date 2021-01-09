@@ -325,7 +325,7 @@ export class ColorsService {
     }
     try {
           child_process.execSync(
-      `echo '{"command": "blink", "data": {"color": ${this.utilsService.hexToRgb(data.color)}, "time": ${data.time}}}' | nc ${light.ip} 2389 -w 5`,
+      `echo '{"command": "blink", "data": {"color": "${this.utilsService.hexToRgb(data.color)}", "time": ${data.time}}}' | nc ${light.ip} 2389 -w 5`,
     );
     
     } catch {
