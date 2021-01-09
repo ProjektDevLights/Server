@@ -1,4 +1,4 @@
-import { IsDateString, IsHexColor, IsInt, IsNotEmpty, IsOptional, IsString, Matches } from "class-validator";
+import { IsDateString, IsHexColor, IsInt, IsNotEmpty, IsOptional, IsString, Matches, Max, Min } from "class-validator";
 
 export class AlarmDto {
   @IsDateString()
@@ -6,8 +6,10 @@ export class AlarmDto {
   date: string;
 
   @IsOptional()
+  @Min(0, {each: true})
+  @Max(6, {each: true})
   @IsInt({each: true})
-  days?: number[];
+  days?: number[] = [];
 
   @IsOptional()
   @IsHexColor()
@@ -24,7 +26,8 @@ export class AlarmDto {
 
   @IsOptional()
   @IsInt()
-  repeat?: number;
+  @Min(-1)
+  repeat?: number = 0;
 
   @IsNotEmpty()
   @IsString({each: true})

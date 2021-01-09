@@ -3,6 +3,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import * as child_process from "child_process";
 import { isEqual } from "lodash";
 import { Model } from "mongoose";
+import { CronScheduler } from "src/cronjobs/cron-scheduler";
 import { CustomException } from "src/exceptions/custom-exception.exception";
 import { NothingChangedException } from "src/exceptions/nothing-changed.exception";
 import { OffException } from "src/exceptions/off.exception";
@@ -12,11 +13,11 @@ import { UtilsService } from "src/utils.service";
 import { ColorFormats } from "tinycolor2";
 import Light from "../interfaces/light.interface";
 import { Esp, EspDocument } from "../schemas/esp.schema";
+import { AlarmDto } from "./dto/alarm.dto";
 import { BlinkLedsDto } from "./dto/blink-leds.dto";
 import { BlinkingLedsDto } from "./dto/blinking-leds.dto";
 import { FadingLedsDto } from "./dto/fading-leds.dto";
 import { UpdateLedsDto } from "./dto/update-leds.dto";
-import { AlarmDto } from "./dto/alarm.dto"
 var tinycolor = require("tinycolor2");
 
 @Injectable()
@@ -25,6 +26,7 @@ export class ColorsService {
     @InjectModel(Esp.name) private espModel: Model<EspDocument>,
     @InjectModel(Alarm.name) private alarmModel: Model<AlarmDocument>,
     private utilsService: UtilsService,
+    private cronScheduler: CronScheduler
   ) {}
 
   async updateLeds(
@@ -170,7 +172,7 @@ export class ColorsService {
     );
 
     if (oldLight.leds.pattern != "plain") {
-      throw new CustomException("Pattern must be Plain!", 400);
+      throw new CustomException("Pattern must be Plain!");
     }
     if (oldLight.leds.colors[0] === data.color) {
       throw new NothingChangedException();
@@ -353,7 +355,7 @@ export class ColorsService {
     );
 
     if (oldLight.leds.pattern != "plain") {
-      throw new CustomException("Pattern must be Plain!", 400);
+      throw new CustomException("Pattern must be Plain!");
     }
 
     const resDoc = await this.espModel.findOneAndUpdate(
@@ -443,12 +445,32 @@ export class ColorsService {
     alarm.esps.push(...espIds);
     console.log(alarm.esps);
     alarm = await alarm.save();
-    //console.log(alarm);
 
-    console.log((await this.alarmModel.find({_id: alarm.id}, {_id: 0, __v: 0}).populate("esps", {_id: 0, uuid: 1, name: 1}).exec())[0])
+    const date = new Date(alarm.date);
 
-    
-/*    await this.alarmModel.create({
+    const days = alarm.days.join(",");
+
+    '* * * * * *'
+
+    let repeat = alarm.repeat;
+    if(!alarm.days.length){
+      repeat = 0;
+    } else {
+      if(repeat > 0){
+        repeat = (repeat+1)*alarm.days.length;
+        if(!alarm.days.includes(date.getDay())){
+          repeat++;
+        }
+      }
+    }
+    console.log(repeat);
+    let test = '*/10 * * * * *'
+    let schedulerDate: string = date.getSeconds() +" "+ date.getMinutes() +" "+ date.getHours() +" * * "+ (days ?? "*")
+    //Date.now() + 10 * 1000
+    this.cronScheduler.addCronJob("alarm-" + alarm._id.toString(), schedulerDate, repeat, () => {console.log("wecker")}, date);
+    this.cronScheduler.getAllCrons()
+
+    /*    await this.alarmModel.create({
       date: data.date,
       days: data.days ?? [],
       repeat: data.repeat ?? 0,
@@ -472,6 +494,8 @@ export class ColorsService {
     let time: number = data.time ?? 300000;
     let delay: number = data.delay ?? 500;
     this.fading(id, {color, time, delay}, oldLight); */
+
+    
 
     return {message: "Succesfully scheduled alarm!", object: (await this.alarmModel.find({_id: alarm.id}, {_id: 0, __v: 0}).populate("esps", {_id: 0, uuid: 1, name: 1}).exec())[0]};
   }
