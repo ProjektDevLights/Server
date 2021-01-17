@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
-import { AppModule } from './app.module';
+import { MainModule } from './main.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter());
+  const app = await NestFactory.create<NestFastifyApplication>(MainModule, new FastifyAdapter());
   app.enableCors();
   app.enableShutdownHooks();
   app.register(require('middie'))
