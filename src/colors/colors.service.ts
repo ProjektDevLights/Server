@@ -3,11 +3,13 @@ import { InjectModel } from "@nestjs/mongoose";
 import * as child_process from "child_process";
 import { isEqual } from "lodash";
 import { Model } from "mongoose";
+import { stringify } from "querystring";
 import { CronScheduler } from "src/cronjobs/cron-scheduler";
 import { CustomException } from "src/exceptions/custom-exception.exception";
 import { NothingChangedException } from "src/exceptions/nothing-changed.exception";
 import { OffException } from "src/exceptions/off.exception";
 import { StandartResponse } from "src/interfaces";
+import { EspMiddleware } from "src/middlewares/esp.middleware";
 import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";
 import { TcpService } from "src/tcp/tcp/tcp.service";
 import { UtilsService } from "src/utils.service";
@@ -256,6 +258,7 @@ export class ColorsService {
       let runs: number = Math.ceil(data.time / data.delay);
       const runInterval = setInterval(async () => {
         if (runs <= 0) {
+          /*
           try {
             child_process.execSync(
               `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(
@@ -267,6 +270,7 @@ export class ColorsService {
               "The Light is not plugged in or started yet",
             );
           }
+          */
           await this.espModel.updateOne(
             { uuid: id },
             {
@@ -301,7 +305,7 @@ export class ColorsService {
             : colorStart.b - bStep > colorTo.b && bStep <= 0
             ? colorTo.b
             : colorStart.b - bStep;
-        try {
+        /*try {
           child_process.execSync(
             `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(
               tinycolor(colorStart).toHexString(),
@@ -312,6 +316,7 @@ export class ColorsService {
             "The Light is not plugged in or started yet",
           );
         }
+        */
         runs--;
     }, data.delay);
   }
@@ -434,8 +439,19 @@ export class ColorsService {
     data: AlarmDto
   ): Promise<StandartResponse<Alarm>> {
 
-    const espIds = await this.espModel.find({"uuid": {"$in": data.ids} }).distinct("_id").exec();
+    const oldDocs = await this.espModel.find({"uuid": {"$in": data.ids} }).exec();
+    const espIds: Esp[] = []
+    oldDocs.forEach(element => {
+      espIds.push(element._id);
+    })
+    const oldColors: {colors: string[], id: any}[] = [];
+    oldDocs.forEach(element => {
+      let colors = element.leds.colors;
+      let id = element._id;
+      oldColors.push({colors, id});
+    })
     var alarm = new this.alarmModel();
+
     alarm.date = data.date;
     alarm.color = data.color ?? "#ff0000";
     alarm.days = data.days ?? [];
@@ -448,8 +464,6 @@ export class ColorsService {
 
     const days = alarm.days.join(",");
 
-    '* * * * * *'
-
     let repeat = alarm.repeat;
     if(!alarm.days.length){
       repeat = 0;
@@ -461,12 +475,40 @@ export class ColorsService {
         }
       }
     }
-    console.log(repeat);
-    let test = '*/10 * * * * *'
+  
+    let waking = async (name: string) => {
+      let alarm = await this.alarmModel.findById(name.split("-")[1]).populate("esps").exec();
+
+      console.log("Farbe 000000")
+      alarm.esps.forEach(async esp => {
+        const newEsp: EspDocument  = await this.espModel.findOneAndUpdate({"uuid": esp.uuid}, {leds: {colors: ["#000000"], pattern:"waking"}, isOn: true}, { new: true }).exec();
+        /*
+        try {
+          child_process.execSync(
+            `echo '{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(
+              "#000000",
+            )}"], "pattern": "plain"}}' | nc ${esp.ip} 2389 -w 5`,
+          );
+          child_process.execSync(
+            `echo '{"command": "on"}' | nc ${esp.ip} 2389 -w 5`,
+          );
+        } catch (error) {
+          console.log("error");
+        }
+        */
+        console.log("fading")
+        this.fading(esp.uuid, { color: alarm.color, time: 5000 * 60, delay: 1200 }, newEsp);
+      })
+    }
+
+    let finished = async (name: string) => {
+      console.log("finished")
+      this.alarmModel.findByIdAndRemove(name.split("-")[1]).exec();
+    }
+
+    console.log("scheduling")
     let schedulerDate: string = date.getSeconds() +" "+ date.getMinutes() +" "+ date.getHours() +" * * "+ (days ?? "*")
-    //Date.now() + 10 * 1000
-    this.cronScheduler.addCronJob("alarm-" + alarm._id.toString(), schedulerDate, repeat, () => {console.log("wecker")}, date);
-    this.cronScheduler.getAllCrons()
+    this.cronScheduler.addCronJob("alarm-" + alarm._id.toString(), schedulerDate, repeat, waking, finished, date);
 
     /*    await this.alarmModel.create({
       date: data.date,

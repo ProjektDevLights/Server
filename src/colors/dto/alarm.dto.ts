@@ -2,8 +2,8 @@ import { IsDateString, IsHexColor, IsInt, IsNotEmpty, IsOptional, IsString, Matc
 
 export class AlarmDto {
   @IsDateString()
-  @IsNotEmpty()
-  date: string;
+  @IsOptional()
+  date?: string;
 
   @IsOptional()
   @Min(0, {each: true})
@@ -11,9 +11,8 @@ export class AlarmDto {
   @IsInt({each: true})
   days?: number[] = [];
 
-  @IsOptional()
   @IsHexColor()
-  color?: string;
+  color: string;
 
   /*
   @IsOptional()

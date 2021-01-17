@@ -1,31 +1,34 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Cron, SchedulerRegistry } from '@nestjs/schedule';
-import { CronJob, CronTime } from 'cron';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { SchedulerRegistry } from '@nestjs/schedule';
+import { CronJob } from 'cron';
 import moment from 'moment';
 
 @Injectable()
 export class CronScheduler {
   constructor( 
-    private scheduler: SchedulerRegistry,
+    private scheduler: SchedulerRegistry
   ) { }
 
   private readonly logger = new Logger(CronScheduler.name)
 
 
-  addCronJob(name: string, cronPattern: string | moment.Moment, repeat: number = 0, callback: () => void, startDate?: Date): void {
+  addCronJob(name: string, cronPattern: string | moment.Moment, repeat: number = 0, callback: (name: string) => void, finished: (name: string) => void, startDate?: Date): void {
     const date = new Date();
     date.setSeconds(date.getSeconds() + 2);
     const startJob = new CronJob(startDate ?? date, () => {
-      callback();
+      console.log("starting schedulejob");
+      callback(name);
       const job = new CronJob(cronPattern, () => {
-        this.logger.warn(`date (${cronPattern}) for job ${name} to run!, repeat ${repeat}`);
-        callback();
+        console.log("starting job")
+        callback(name);
+        this.logger.warn(`time for job ${name} to run!, repeat ${repeat}`);
         if (repeat <= -1) {
           return;
         }
         if (repeat == 0) {
           job.stop();
           this.scheduler.deleteCronJob(name)
+          finished(name);
           return;
         }
         repeat--; 
@@ -34,7 +37,7 @@ export class CronScheduler {
       this.scheduler.addCronJob(name, job);
       job.start();
       this.logger.warn(
-        `job ${name} added for date ${cronPattern}!`,
+        `job ${name} is executed!`,
       );
       startJob.stop();
       this.scheduler.deleteCronJob(name+"-start")
@@ -54,6 +57,24 @@ export class CronScheduler {
 
   getCron(name: string): CronJob {
     return this.scheduler.getCronJob(name);
+  }
+
+  getCronKey(name: string): string {
+    const jobs = this.scheduler.getCronJobs();
+    const jobArr: CronJob[] = [];
+    jobs.forEach((value, key, map) => {
+      let next;
+      try {
+        next = value.nextDates().toDate();
+      } catch (e) {
+        next = 'error: next fire date is in the past!';
+      }
+      this.logger.log(`job: ${key} -> next: ${next}`);
+      if(key == name){
+        return key;
+      }
+    });
+    throw new NotFoundException("Corn could not be found");
   }
 
   getAllCrons(): CronJob[] {

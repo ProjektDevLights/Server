@@ -1,4 +1,4 @@
-export type PatternType = "plain" | "gradient" | "blinking" | "fading";
+export type PatternType = "plain" | "gradient" | "blinking" | "fading" | "waking";
 
 export enum Pattern {
   plain = "plain",
