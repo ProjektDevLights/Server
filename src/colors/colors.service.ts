@@ -9,6 +9,7 @@ import { NothingChangedException } from "src/exceptions/nothing-changed.exceptio
 import { OffException } from "src/exceptions/off.exception";
 import { StandartResponse } from "src/interfaces";
 import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";
+import { TcpService } from "src/tcp/tcp/tcp.service";
 import { UtilsService } from "src/utils.service";
 import { ColorFormats } from "tinycolor2";
 import Light from "../interfaces/light.interface";
@@ -26,7 +27,8 @@ export class ColorsService {
     @InjectModel(Esp.name) private espModel: Model<EspDocument>,
     @InjectModel(Alarm.name) private alarmModel: Model<AlarmDocument>,
     private utilsService: UtilsService,
-    private cronScheduler: CronScheduler
+    private cronScheduler: CronScheduler,
+    private tcpService: TcpService
   ) {}
 
   async updateLeds(
@@ -140,12 +142,10 @@ export class ColorsService {
       // eslint-disable-next-line quotes
       colorArray.push('"' + this.utilsService.hexToRgb(color) + '"');
     });
-    if (data.colors) {
+    if (data.colors) {   
       try {
         newLights.forEach(element => {
-          child_process.execSync(
-            `echo '{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}' | nc ${element.ip} 2389 -w 5`,
-          );
+          this.tcpService.sendData(`{"command": "leds", "data": {"colors": [${colorArray}], "pattern": "plain"}}`, element.ip);
         });
       } catch (err) {
         throw new ServiceUnavailableException(
@@ -326,11 +326,9 @@ export class ColorsService {
       throw new OffException();
     }
     try {
-          child_process.execSync(
-      `echo '{"command": "blink", "data": {"color": "${this.utilsService.hexToRgb(data.color)}", "time": ${data.time}}}' | nc ${light.ip} 2389 -w 5`,
-    );
-    
-    } catch {
+      this.tcpService.sendData(`{"command": "blink", "data": {"color": "${this.utilsService.hexToRgb(data.color)}", "time": ${data.time}}}`, light.ip);
+    } catch (e) {
+      console.log(e);
       throw new OffException();
     }
     return {
