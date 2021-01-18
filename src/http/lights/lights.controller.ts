@@ -33,6 +33,12 @@ export class LightsController {
         return this.generalService.get(id);
     }
 
+
+    @Post(":light/pass")
+    async pass(@Param("light") id: string, @Body("command") data: string): Promise<StandartResponse<Light>>{
+        return this.generalService.pass(id,data);
+    }
+
     //control service
     @Patch(":light/on")
     async turnOn(@Param("light") id: string): Promise<StandartResponse<Light>> {
