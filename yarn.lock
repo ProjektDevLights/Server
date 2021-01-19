@@ -1709,7 +1709,7 @@ body-parser@1.19.0:
     raw-body "2.4.0"
     type-is "~1.6.17"
 
-brace-expansion@^1.1.7:
+brace-expansion@^1.1.7, brace-expansion@^1.1.8:
   version "1.1.11"
   resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-1.1.11.tgz#3c7fcbf529d87226f3d2f52b966ff5271eb441dd"
   integrity sha512-iCuPHDFgrHX7H2vEI/5xpz07zSHB00TpugqhmYtVmMO6518mCuRMoOYFldEBl0g187ufozdaHgWKcYFb61qGiA==
@@ -1912,6 +1912,67 @@ cache-manager@^3.4.0:
     lodash "^4.17.20"
     lru-cache "6.0.0"
 
+cachegoose-rayconnect@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/cachegoose-rayconnect/-/cachegoose-rayconnect-1.0.2.tgz#c4adacc1bc6012285ab171d10a5b87681dffedea"
+  integrity sha512-sL9nnBV2QlbYn+xKqLhongnnxW8hi5MrKet90BCCNLQAQYmRpVsTHSBFsab4Tp2W8dB4KgLhM6TlMN5jYHBBQg==
+  dependencies:
+    brace-expansion "^1.1.8"
+    cacheman-rayconnect "^2.2.2"
+    jsosort "0.0.0"
+    sha1 "^1.1.1"
+
+cachegoose@^8.0.0:
+  version "8.0.0"
+  resolved "https://registry.yarnpkg.com/cachegoose/-/cachegoose-8.0.0.tgz#3d06bb61cc1089e2f199a0f6c882d89ef3e68aad"
+  integrity sha512-gAwa/nH2W945PxLU6A1ipQMUpnJcScRJWHBBsaUWuNCyxdhdQ22miUNWfmGa//HC2inlkceKn38hQBm79sEQsw==
+  dependencies:
+    brace-expansion "^1.1.8"
+    cacheman "^2.2.1"
+    cacheman-redis "^1.1.2"
+    jsosort "0.0.0"
+    sha1 "^1.1.1"
+
+cacheman-memory@^1.0.2, cacheman-memory@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/cacheman-memory/-/cacheman-memory-1.1.0.tgz#05047af17f31bfa5286b363f096089f3cd88da7d"
+  integrity sha512-jZ/Sg/LdgkN+T3G0BV3ekYzCAswKwZRBOvOmZ/VYwdhSTtMz6irMOt1JppBGZ7zVdjcBeku9tfOzb49KbXIT2w==
+  dependencies:
+    lru-cache "~4.1.x"
+
+cacheman-rayconnect@^2.2.2:
+  version "2.2.2"
+  resolved "https://registry.yarnpkg.com/cacheman-rayconnect/-/cacheman-rayconnect-2.2.2.tgz#d3e927b84b8f85671e6b383ef434e6462c40adbf"
+  integrity sha512-LsSfLBjaVwjSG14/nZamNWHbZrvVqrY7zl60kMd8wDohl3WniivI9432zDrib8opk9lxmVohUfN5gdOhC8oOYQ==
+  dependencies:
+    cacheman-memory "^1.1.0"
+    cacheman-redis "^2.1.0"
+    ms "^0.7.1"
+
+cacheman-redis@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/cacheman-redis/-/cacheman-redis-1.1.2.tgz#d54454dd492803ff3382ad929fcb8693ea394cb6"
+  integrity sha1-1URU3UkoA/8zgq2Sn8uGk+o5TLY=
+  dependencies:
+    parse-redis-url "0.0.2"
+    redis ">= 2.4.x"
+
+cacheman-redis@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/cacheman-redis/-/cacheman-redis-2.1.0.tgz#4df7ef3c7502c77594e5dbdc0658b36053b736f0"
+  integrity sha512-6FN7XRISgojmpqcJLepkaCLM9mg+YHa5dAXYS6aUtXZVT9SxqKPbR+vmqhkiDecBHoUag8goW2fL/+qNM26bkQ==
+  dependencies:
+    each "1.2.1"
+    parse-redis-url "0.0.2"
+
+cacheman@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/cacheman/-/cacheman-2.2.1.tgz#3510c0def12429d61b780128ff18f9d284bb02b8"
+  integrity sha1-NRDA3vEkKdYbeAEo/xj50oS7Arg=
+  dependencies:
+    cacheman-memory "^1.0.2"
+    ms "^0.7.1"
+
 call-bind@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/call-bind/-/call-bind-1.0.0.tgz#24127054bb3f9bdcb4b1fb82418186072f77b8ce"
@@ -1981,6 +2042,11 @@ chardet@^0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.7.0.tgz#90094849f0937f2eedc2425d0d28a9e5f0cbad9e"
   integrity sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==
+
+"charenc@>= 0.0.1":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/charenc/-/charenc-0.0.2.tgz#c0a1d2f3a7092e03774bfa83f14c0fc5790a8667"
+  integrity sha1-wKHS86cJLgN3S/qD8UwPxXkKhmc=
 
 chokidar@3.4.2:
   version "3.4.2"
@@ -2391,6 +2457,11 @@ cross-spawn@^7.0.0, cross-spawn@^7.0.2:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+"crypt@>= 0.0.1":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/crypt/-/crypt-0.0.2.tgz#88d7ff7ec0dfb86f713dc87bbb42d044d3e6c41b"
+  integrity sha1-iNf/fsDfuG9xPch7u0LQRNPmxBs=
+
 crypto-browserify@^3.11.0:
   version "3.12.0"
   resolved "https://registry.yarnpkg.com/crypto-browserify/-/crypto-browserify-3.12.0.tgz#396cf9f3137f03e4b8e532c58f698254e00f80ec"
@@ -2658,6 +2729,11 @@ duplexify@^3.4.2, duplexify@^3.6.0:
     inherits "^2.0.1"
     readable-stream "^2.0.0"
     stream-shift "^1.0.0"
+
+each@1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/each/-/each-1.2.1.tgz#1ab10811c5141fbb0f8d7ca9b05679b351f70080"
+  integrity sha512-POUbnWaseHgI8I+icHo3jAMrCqoLgVWaI7yqcQ0nat4q2f2BFUVGAndMOvr2UZoHAGAnQqotaM9RI4kZcjtAcg==
 
 ecc-jsbn@~0.1.1:
   version "0.1.2"
@@ -4814,6 +4890,11 @@ jsonfile@^6.0.1:
   optionalDependencies:
     graceful-fs "^4.1.6"
 
+jsosort@0.0.0:
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/jsosort/-/jsosort-0.0.0.tgz#5f5516a2af63bb648e4e525f514e49ade0f899fe"
+  integrity sha1-X1UWoq9ju2SOTlJfUU5JreD4mf4=
+
 jsprim@^1.2.2:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/jsprim/-/jsprim-1.4.1.tgz#313e66bc1e5cc06e438bc1b7499c2e5c56acb6a2"
@@ -5000,6 +5081,14 @@ lru-cache@^5.1.1:
   integrity sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==
   dependencies:
     yallist "^3.0.2"
+
+lru-cache@~4.1.x:
+  version "4.1.5"
+  resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-4.1.5.tgz#8bbe50ea85bed59bc9e33dcab8235ee9bcf443cd"
+  integrity sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==
+  dependencies:
+    pseudomap "^1.0.2"
+    yallist "^2.1.2"
 
 lru-queue@0.1:
   version "0.1.0"
@@ -5348,6 +5437,11 @@ ms@2.1.2, ms@^2.1.1:
   version "2.1.2"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
+
+ms@^0.7.1:
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/ms/-/ms-0.7.3.tgz#708155a5e44e33f5fd0fc53e81d0d40a91be1fff"
+  integrity sha1-cIFVpeROM/X9D8U+gdDUCpG+H/8=
 
 multer@1.4.2:
   version "1.4.2"
@@ -5825,6 +5919,11 @@ parse-json@^5.0.0:
     json-parse-even-better-errors "^2.3.0"
     lines-and-columns "^1.1.6"
 
+parse-redis-url@0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/parse-redis-url/-/parse-redis-url-0.0.2.tgz#13c92a0abbe6f2512006a8c49de6cb7b8dd4b277"
+  integrity sha1-E8kqCrvm8lEgBqjEnebLe43Usnc=
+
 parse5@5.1.1:
   version "5.1.1"
   resolved "https://registry.yarnpkg.com/parse5/-/parse5-5.1.1.tgz#f68e4e5ba1852ac2cadc00f4555fff6c2abb6178"
@@ -6069,6 +6168,11 @@ prr@~1.0.1:
   resolved "https://registry.yarnpkg.com/prr/-/prr-1.0.1.tgz#d3fc114ba06995a45ec6893f484ceb1d78f5f476"
   integrity sha1-0/wRS6BplaRexok/SEzrHXj19HY=
 
+pseudomap@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/pseudomap/-/pseudomap-1.0.2.tgz#f052a28da70e618917ef0a8ac34c1ae5a68286b3"
+  integrity sha1-8FKijacOYYkX7wqKw0wa5aaChrM=
+
 psl@^1.1.28:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/psl/-/psl-1.8.0.tgz#9326f8bcfb013adcc005fdff056acce020e51c24"
@@ -6293,6 +6397,33 @@ rechoir@^0.6.2:
   integrity sha1-hSBLVNuoLVdC4oyWdW70OvUOM4Q=
   dependencies:
     resolve "^1.1.6"
+
+redis-commands@^1.5.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/redis-commands/-/redis-commands-1.6.0.tgz#36d4ca42ae9ed29815cdb30ad9f97982eba1ce23"
+  integrity sha512-2jnZ0IkjZxvguITjFTrGiLyzQZcTvaw8DAaCXxZq/dsHXz7KfMQ3OUJy7Tz9vnRtZRVz6VRCPDvruvU8Ts44wQ==
+
+redis-errors@^1.0.0, redis-errors@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/redis-errors/-/redis-errors-1.2.0.tgz#eb62d2adb15e4eaf4610c04afe1529384250abad"
+  integrity sha1-62LSrbFeTq9GEMBK/hUpOEJQq60=
+
+redis-parser@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/redis-parser/-/redis-parser-3.0.0.tgz#b66d828cdcafe6b4b8a428a7def4c6bcac31c8b4"
+  integrity sha1-tm2CjNyv5rS4pCin3vTGvKwxyLQ=
+  dependencies:
+    redis-errors "^1.0.0"
+
+"redis@>= 2.4.x":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/redis/-/redis-3.0.2.tgz#bd47067b8a4a3e6a2e556e57f71cc82c7360150a"
+  integrity sha512-PNhLCrjU6vKVuMOyFu7oSP296mwBkcE6lrAjruBYG5LgdSqtRBoVQIylrMyVZD/lkF24RSNNatzvYag6HRBHjQ==
+  dependencies:
+    denque "^1.4.1"
+    redis-commands "^1.5.0"
+    redis-errors "^1.2.0"
+    redis-parser "^3.0.0"
 
 reflect-metadata@^0.1.13:
   version "0.1.13"
@@ -6701,6 +6832,14 @@ sha.js@^2.4.0, sha.js@^2.4.8:
   dependencies:
     inherits "^2.0.1"
     safe-buffer "^5.0.1"
+
+sha1@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/sha1/-/sha1-1.1.1.tgz#addaa7a93168f393f19eb2b15091618e2700f848"
+  integrity sha1-rdqnqTFo85PxnrKxUJFhjicA+Eg=
+  dependencies:
+    charenc ">= 0.0.1"
+    crypt ">= 0.0.1"
 
 shebang-command@^1.2.0:
   version "1.2.0"
@@ -7893,6 +8032,11 @@ y18n@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/y18n/-/y18n-4.0.0.tgz#95ef94f85ecc81d007c264e190a120f0a3c8566b"
   integrity sha512-r9S/ZyXu/Xu9q1tYlpsLIsa3EeLXXk0VwlxqTcFRfg9EhMW+17kbt9G0NrgCmhGb5vT2hyhJZLfDGx+7+5Uj/w==
+
+yallist@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/yallist/-/yallist-2.1.2.tgz#1c11f9218f076089a47dd512f93c6699a6a81d52"
+  integrity sha1-HBH5IY8HYImkfdUS+TxmmaaoHVI=
 
 yallist@^3.0.2:
   version "3.1.1"

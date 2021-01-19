@@ -10,11 +10,12 @@ import { UtilsService } from '../../services/utils/utils.service';
 import { LightValidationMiddleware } from 'src/middlewares/light-validation.middleware';
 import { GeneralService } from './general/general.service';
 import { TcpModule } from '../../services/tcp/tcp.module';
+import { DatabaseModule } from 'src/services/database/database.module';
 
 @Module({ 
   controllers: [LightsController],
   providers: [ColorService, SettingsService, ControlService, UtilsService, GeneralService],
-  imports: [TcpModule, MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }])]
+  imports: [DatabaseModule, TcpModule, MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }])]
 })
 
 export class LightsModule implements NestModule {

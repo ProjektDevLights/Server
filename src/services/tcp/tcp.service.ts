@@ -1,6 +1,6 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { find, findIndex } from 'lodash';
-import * as net from "net"
+import * as net from "net";
 
 
 export interface tcpEsp {
@@ -41,7 +41,6 @@ export class TcpService {
 
     sendData(data: string, ip: string): void {
         try {
-            console.log(ip);
             const client: net.Socket = find(this.clients, { ip: ip }).socket;
             client.write(data + "\n", () => { });
         } catch (e) {

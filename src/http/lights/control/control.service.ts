@@ -1,103 +1,78 @@
 import { Injectable } from '@nestjs/common';
-import { Esp, EspDocument } from '../../../schemas/esp.schema';
-import { Light, PartialLight, StandartResponse } from '../../../interfaces';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { UtilsService } from '../../../services/utils/utils.service';
-import { TcpService } from '../../../services/tcp/tcp.service';
+import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
 import { NothingChangedException } from '../../../exceptions/nothing-changed.exception';
-import { lightProjection } from '../../../globals';
-import { isEqual } from 'lodash';
+import { Light, PartialLight, StandartResponse } from '../../../interfaces';
+import { Esp, EspDocument } from '../../../schemas/esp.schema';
+import { TcpService } from '../../../services/tcp/tcp.service';
+
 
 @Injectable()
 export class ControlService {
 
-    constructor(
-        @InjectModel(Esp.name) private espModel: Model<EspDocument>,
-        private utilsService: UtilsService,
-        private tcpService: TcpService
-    ) { }
+  constructor(
+    @InjectModel(Esp.name) private espModel: Model<EspDocument>,
+    private tcpService: TcpService,
+    private databaseService: DatabaseEspService
+  ) { }
 
-    async on(id: string): Promise<StandartResponse<Light>> {
-        const oldLight: EspDocument = await this.espModel
-            .findOne({ uuid: id }, { __v: 0, _id: 0 })
-            .exec();
-        if (oldLight.isOn) {
-            throw new NothingChangedException("The light is already on");
-        }
+  async on(id: string): Promise<StandartResponse<Light>> {
 
-        this.tcpService.sendData(`{"command": "on"}`, oldLight.ip)
+    const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
 
-        const newLight: EspDocument = await this.espModel
-            .findOneAndUpdate(
-                { uuid: id },
-                { isOn: true },
-                { new: true, projection: { __v: 0, _id: 0 } },
-            )
-            .exec();
-        return {
-            message: "Succesfully turned the light on!",
-            object: { name: newLight.name, id: newLight.uuid } as Light,
-        };
-    }
+    if (oldDoc.isOn) throw new NothingChangedException("The light is already on");
 
-    async off(id: string): Promise<StandartResponse<Light>> {
-        const oldLight: EspDocument = await this.espModel
-          .findOne({ uuid: id }, { __v: 0, _id: 0 })
-          .exec();
-        if (!oldLight.isOn) {
-          throw new NothingChangedException("The light is already off");
-        }
-    
-        this.tcpService.sendData(`{"command": "off"}`, oldLight.ip)
-    
-        const newLight: EspDocument = await this.espModel
-          .findOneAndUpdate(
-            { uuid: id },
-            { isOn: false },
-            { new: true, projection: { __v: 0, _id: 0 } },
-          )
-          .exec();
-        return {
-          message: "Successfully turned the light off!",
-          object: { name: newLight.name, id: newLight.uuid } as Light,
-        };
-    }
+    this.tcpService.sendData(`{"command": "on"}`, oldDoc.ip)
 
-    async restart(id: string): Promise<StandartResponse<PartialLight>> {
-        const queryResult: EspDocument = await this.espModel
-          .findOneAndUpdate(
-            { uuid: id },
-            { leds: { colors: ["#000000"], pattern: "plain" } },
-            { new: true, projection: { __v: 0, _id: 0 } },
-          )
-          .exec();
+    const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, { isOn: true });
 
-          this.tcpService.sendData(`{"command": "restart"}`, queryResult.ip);
-          this.tcpService.removeConnection(queryResult.ip);
-        return {
-          message: "Restarting...",
-          object: { name: queryResult.name, id: queryResult.uuid },
-        };
-    } 
+    return {
+      message: "Succesfully turned the light on!",
+      object: this.databaseService.espDocToLight(newDoc),
+    };
+  }
 
-    async reset(id: string): Promise<StandartResponse<PartialLight>> {
-      const queryResult: EspDocument = await this.espModel
-        .findOne(
-          { uuid: id },
-          {
-            __v: 0,
-            _id: 0,
-          },
-        )
-        .exec();
-        this.tcpService.sendData(`{"command": "reset"}`, queryResult.ip);
-  
-      await this.espModel.findOneAndDelete({ uuid: id }).exec();
-      return {
-        message: "Resetting...",
-        object: { name: queryResult.name, id: queryResult.uuid },
-      };
-    }
+  async off(id: string): Promise<StandartResponse<Light>> {
+    const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
+
+    if (!oldDoc.isOn) throw new NothingChangedException("The light is already off");
+
+    this.tcpService.sendData(`{"command": "off"}`, oldDoc.ip);
+
+    const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, { isOn: false });
+
+    return {
+      message: "Successfully turned the light off!",
+      object: this.databaseService.espDocToLight(newDoc),
+    };
+  }
+
+  async restart(id: string): Promise<StandartResponse<PartialLight>> {
+
+    const doc: EspDocument = await this.databaseService.getEspWithId(id);
+
+    this.tcpService.sendData(`{"command": "restart"}`, doc.ip);
+    this.tcpService.removeConnection(doc.ip);
+
+    return {
+      message: "Restarting...",
+      object: this.databaseService.espDocToPartialLight(doc),
+    };
+  }
+
+  async reset(id: string): Promise<StandartResponse<PartialLight>> {
+
+    const doc: EspDocument = await this.databaseService.getEspWithId(id);
+
+    this.tcpService.sendData(`{"command": "reset"}`, doc.ip);
+
+    await this.databaseService.deleteEspWithId(id);
+
+    return {
+      message: "Resetting...",
+      object: this.databaseService.espDocToPartialLight(doc),
+    };
+  }
 
 }

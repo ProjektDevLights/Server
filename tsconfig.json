@@ -13,6 +13,6 @@
     "outDir": "./dist",
     "incremental": true,
     "baseUrl": "./",
-    "include": ["src/**/*"],
+    "include": ["src/**/*"]
   }
 }
