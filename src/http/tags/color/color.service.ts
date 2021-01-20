@@ -58,7 +58,7 @@ export class ColorService {
     if (!areOn.every((val, i) => val === true)) throw new ServiceUnavailableException("At least one light is not on! In order to update with tag please turn them on with '/tags/:tag/on'");
     docs.forEach((doc: EspDocument) => {
       this.tcpService.sendData(JSON.stringify({
-        commmand: "blink",
+        command: "blink",
         data: {
           color: this.utilsService.hexToRgb(data.color),
           time: data.time
