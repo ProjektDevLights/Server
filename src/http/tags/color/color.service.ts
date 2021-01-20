@@ -52,8 +52,12 @@ export class ColorService {
 
   async blink(tag: string, data: BlinkLedsDto): Promise<StandartResponse<Light[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
-    const areOn: boolean[] = await this.databaseService.getEspsWithTag(tag, true).distinct("isOn").exec();
-
+    const areOn: boolean[] = [];
+    // mit absich nicht this.databaseService.getEspsWithTag(tag, true).distinct("isOn").exec();
+    //da die ca 20-30ms schneller ist
+    docs.forEach((doc: EspDocument) => {
+      areOn.push(doc.isOn);
+    })
 
     if (!areOn.every((val, i) => val === true)) throw new ServiceUnavailableException("At least one light is not on! In order to update with tag please turn them on with '/tags/:tag/on'");
     docs.forEach((doc: EspDocument) => {
