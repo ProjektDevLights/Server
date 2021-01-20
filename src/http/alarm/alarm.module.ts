@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { CronModule } from 'src/services/cron/cron.module';
+import { DatabaseModule } from 'src/services/database/database.module';
 import { TcpModule } from 'src/services/tcp/tcp.module';
 import { UtilsService } from 'src/services/utils/utils.service';
 import { Alarm, AlarmSchema } from '../../schemas/alarm.schema';
@@ -12,6 +13,6 @@ import { AlarmService } from './alarm.service';
 @Module({
   controllers: [AlarmController],
   providers: [AlarmService, CronService, UtilsService],
-  imports: [ CronModule, TcpModule, MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }, { name: Alarm.name, schema: AlarmSchema }])]
-}) 
-export class AlarmModule {}
+  imports: [DatabaseModule, CronModule, TcpModule, MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }, { name: Alarm.name, schema: AlarmSchema }])]
+})
+export class AlarmModule { }

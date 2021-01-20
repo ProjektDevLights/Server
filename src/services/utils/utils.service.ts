@@ -1,20 +1,19 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { omit } from "lodash";
 import { Model } from "mongoose";
-import tinycolor from "tinycolor2";
-import { ColorFormats } from "tinycolor2";
-import { lightProjection } from "../../globals";
+import tinycolor, { ColorFormats } from "tinycolor2";
 import { Leds, Light } from "../../interfaces";
 import { Esp, EspDocument } from "../../schemas/esp.schema";
+import { DatabaseEspService } from "../database/esp/database-esp.service";
 import { TcpService } from "../tcp/tcp.service";
 
 @Injectable()
 export class UtilsService {
   constructor(
     @InjectModel(Esp.name) private espModel: Model<EspDocument>,
+    private databaseService: DatabaseEspService,
     private tcpService: TcpService,
-    ) {}
+  ) { }
 
   hexToRgb(hex: string): string {
     hex = this.makeValidHex(hex);
@@ -116,15 +115,15 @@ export class UtilsService {
     return true;
   }
 
-  isValidPattern(data: Leds) : boolean{
-    if(data.colors.length > 1) {
-      if(data.pattern == "plain") {
+  isValidPattern(data: Leds): boolean {
+    if (data.colors.length > 1) {
+      if (data.pattern == "plain") {
         return false;
       } else {
         return true;
       }
-    } else if(data.colors.length == 1){
-      if(data.pattern === "gradient") {
+    } else if (data.colors.length == 1) {
+      if (data.pattern === "gradient") {
         return false;
       } else {
         return true;
@@ -138,10 +137,10 @@ export class UtilsService {
     //TODO sometimes needed without ip
     const light: EspDocument[] = await this.espModel.find(
       { tags: { $all: [tag] } },
-      {__v: 0,_id: 0},
+      { __v: 0, _id: 0 },
     );
     return light;
-  } 
+  }
 
   espDocToLight(doc: EspDocument) {
     return {
@@ -158,69 +157,62 @@ export class UtilsService {
 
     let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
 
+    console.log(colorTo)
     let colorStart: ColorFormats.RGB = tinycolor(
-        oldLight.leds.colors[0],
+      oldLight.leds.colors[0],
     ).toRgb();
+    console.log(colorStart)
+    let rStep: number = this.generateStep(colorStart.r, colorTo.r, data.delay, data.time);
+    let gStep: number = this.generateStep(colorStart.g, colorTo.g, data.delay, data.time);
+    let bStep: number = this.generateStep(colorStart.b, colorTo.b, data.delay, data.time);
 
-    let rStep: number = Math.ceil(
-        ((colorStart.r - colorTo.r) * data.delay) / data.time,
-    ); // 100 100/30 => 10/3 werte/step //100 steps => fertig nach 100
-    let gStep: number = Math.ceil(
-        ((colorStart.g - colorTo.g) * data.delay) / data.time,
-    ); // 50 50/30 => 5/3 werte/step //50 => fertig nach 50
-    let bStep: number = Math.ceil(
-        ((colorStart.b - colorTo.b) * data.delay) / data.time,
-    ); // 30 => 30steps 1000s  // 30 => 30
-    let runs: number = Math.ceil(data.time / data.delay);
- 
-    console.log({rStep,gStep,bStep})
+    let runs: number = Math.round(data.time / data.delay);
+
+    let colorRun: ColorFormats.RGB = colorStart;
+    console.log({ rStep, gStep, bStep })
     const runInterval = setInterval(async () => {
-        if (runs <= 0) {
+      if (runs <= 0) {
 
-            this.tcpService.sendData(`{"command": "leds", "data": {"colors": ["${this.hexToRgb(
-                tinycolor(colorTo).toHexString(),
-            )}"], "pattern": "plain"}}`, oldLight.ip);
-
-            await this.espModel.updateOne(
-                { uuid: id },
-                {
-                    leds: {
-                        colors: [data.color] ?? undefined,
-                        pattern: oldLight.leds.pattern,
-                    },
-                },
-                {
-                    new: true,
-                    projection: { __v: 0, _id: 0 },
-                },
-            );
-            clearInterval(runInterval);
-            return;
-        }
-        colorStart.r =
-            colorStart.r - rStep < colorTo.r && rStep >= 0
-                ? colorTo.r
-                : colorStart.r - rStep > colorTo.r && rStep <= 0
-                    ? colorTo.r
-                    : colorStart.r - rStep;
-        colorStart.g =
-            colorStart.g - gStep < colorTo.g && gStep >= 0
-                ? colorTo.g
-                : colorStart.g - gStep > colorTo.g && gStep <= 0
-                    ? colorTo.g
-                    : colorStart.g - gStep;
-        colorStart.b =
-            colorStart.b - bStep < colorTo.b && bStep >= 0
-                ? colorTo.b
-                : colorStart.b - bStep > colorTo.b && bStep <= 0
-                    ? colorTo.b
-                    : colorStart.b - bStep;
         this.tcpService.sendData(`{"command": "leds", "data": {"colors": ["${this.hexToRgb(
-            tinycolor(colorStart).toHexString(),
+          tinycolor(colorTo).toHexString(),
         )}"], "pattern": "plain"}}`, oldLight.ip);
 
 
-        runs--;
+        await this.databaseService.updateEspWithId(id, {
+          leds: {
+            colors: [data.color],
+            pattern: oldLight.leds.pattern,
+          },
+        })
+        clearInterval(runInterval);
+        return;
+      }
+      colorRun.r = this.applyStep(colorRun.r, rStep, colorTo.r)
+      colorRun.g = this.applyStep(colorRun.g, gStep, colorTo.g)
+      colorRun.b = this.applyStep(colorRun.b, bStep, colorTo.b)
+      console.log(colorRun);
+      this.tcpService.sendData(`{"command": "leds", "data": {"colors": ["${this.hexToRgb(
+        tinycolor(colorRun).toHexString(),
+      )}"], "pattern": "plain"}}`, oldLight.ip);
+
+
+      runs--;
     }, data.delay);
-  }  
+  }
+
+  generateStep(start: number, end: number, delay: number, time: number): number {
+    console.log(((start - end) * delay) / time)
+    const floatStep: number = ((start - end) * delay) / time;
+    if (floatStep > 0) return Math.ceil(floatStep);
+    if (floatStep < 0) return Math.floor(floatStep);
+    return 0;
+  }
+
+  applyStep(start: number, step: number, goal: number) {
+    if (start - step < goal && step >= 0) return goal;
+    if (start - step > goal && step <= 0) return goal;
+    return start - step;
+  }
+
+
 }
