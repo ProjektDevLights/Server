@@ -1,6 +1,5 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, Patch, Post, ValidationPipe } from '@nestjs/common';
-import { Light, PartialLight } from '../../interfaces';
-import { StandartResponse } from '../../interfaces';
+import { Body, Controller, Delete, Get, Param, Patch, Post, ValidationPipe } from '@nestjs/common';
+import { Light, PartialLight, StandartResponse } from '../../interfaces';
 import { BlinkLedsDto } from '../lights/color/dto/blink-leds.dto';
 import { UpdateLedsDto } from '../lights/color/dto/update-leds.dto';
 import { ColorService } from './color/color.service';
@@ -20,7 +19,7 @@ export class TagsController {
   //general service
 
   @Get("")
-  async getTags(): Promise<StandartResponse<string[]>>{
+  async getTags(): Promise<StandartResponse<string[]>> {
     return this.generalService.getTags();
   }
 
@@ -59,5 +58,9 @@ export class TagsController {
   updateColor(@Param("tag") tag: string, @Body(new ValidationPipe()) data: UpdateLedsDto): Promise<StandartResponse<Light[]>> {
     return this.colorService.updateLedsWithTag(tag, data);
   }
-  
+
+  @Post(":tag/blink")
+  async blink(@Param("tag") tag: string, @Body(new ValidationPipe()) data: BlinkLedsDto): Promise<StandartResponse<Light[]>> {
+    return this.colorService.blink(tag, data);
+  }
 }
