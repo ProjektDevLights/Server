@@ -1,15 +1,16 @@
-import { Body, Controller, Delete, Get, NotFoundException, Param, ParseIntPipe, Patch, Post, Put, ValidationPipe } from '@nestjs/common';
-import { UtilsService } from '../../services/utils/utils.service';
-import { Light, StandartResponse } from '../../interfaces';
-import { ControlService } from './control/control.service';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put, ValidationPipe } from '@nestjs/common';
+import { Light, PartialLight, StandartResponse } from '../../interfaces';
 import { ColorService } from './color/color.service';
-import { SettingsService } from './settings/settings.service';
-import UpdateInfoDto from './settings/dto/update.dto';
-import { UpdateLedsDto } from './color/dto/update-leds.dto';
-import UpdateTagsDto from './settings/dto/update-tags.dto';
-import { GeneralService } from './general/general.service';
 import { BlinkLedsDto } from './color/dto/blink-leds.dto';
 import { BlinkingLedsDto } from './color/dto/blinking-leds.dto';
+import { UpdateLedsDto } from './color/dto/update-leds.dto';
+import { ControlService } from './control/control.service';
+import { GeneralService } from './general/general.service';
+import UpdateBrightnessDto from './settings/dto/update-brightness.dto';
+import UpdateCountDto from './settings/dto/update-count.dto';
+import UpdateTagsDto from './settings/dto/update-tags.dto';
+import UpdateInfoDto from './settings/dto/update.dto';
+import { SettingsService } from './settings/settings.service';
 
 @Controller('lights')
 export class LightsController {
@@ -35,8 +36,8 @@ export class LightsController {
 
 
     @Post(":light/pass")
-    async pass(@Param("light") id: string, @Body("command") data: string): Promise<StandartResponse<Light>>{
-        return this.generalService.pass(id,data);
+    async pass(@Param("light") id: string, @Body("command") data: string): Promise<StandartResponse<Light>> {
+        return this.generalService.pass(id, data);
     }
 
     //control service
@@ -51,12 +52,12 @@ export class LightsController {
     }
 
     @Post(":light/restart")
-    async restart(@Param("light") id: string) {
+    async restart(@Param("light") id: string): Promise<StandartResponse<PartialLight>> {
         return this.controlService.restart(id);
     }
 
     @Delete(":light/reset")
-    async reset(@Param("light") id: string) {
+    async reset(@Param("light") id: string): Promise<StandartResponse<PartialLight>> {
         return this.controlService.reset(id);
     }
 
@@ -73,17 +74,17 @@ export class LightsController {
     @Patch(":light/brightness")
     async brightness(
         @Param("light") id: string,
-        @Body("brightness", ParseIntPipe) brightness: number,
+        @Body(new ValidationPipe()) data: UpdateBrightnessDto,
     ): Promise<StandartResponse<Light>> {
-        return this.settingsService.setBrightness(id, brightness);
+        return this.settingsService.setBrightness(id, data.brightness);
     }
 
     @Patch(":light/count")
     async count(
         @Param("light") id: string,
-        @Body("count", ParseIntPipe) count: number,
+        @Body(new ValidationPipe()) data: UpdateCountDto,
     ): Promise<StandartResponse<Light>> {
-        return this.settingsService.count(id, count);
+        return this.settingsService.count(id, data.count);
     }
 
     @Put(":light/tags")
@@ -113,22 +114,22 @@ export class LightsController {
     async fadeToColor(
         @Param("light") id: string,
         @Body(new ValidationPipe()) data: { color: string; time: number },
-      ): Promise<StandartResponse<Light>> {
+    ): Promise<StandartResponse<Light>> {
         return this.colorService.fadeToColor(id, data);
     }
 
     @Post("/:light/blink")
     async blinkColor(@Param("light") id: string, @Body(new ValidationPipe()) data: BlinkLedsDto): Promise<StandartResponse<Light>> {
-        return this.colorService.blinkColor(id,data);
+        return this.colorService.blinkColor(id, data);
     }
 
     @Post("/:light/blink/fancy")
     async blinkColorLoop(
         @Param("light") id: string,
         @Body(new ValidationPipe()) data: BlinkingLedsDto,
-      ): Promise<StandartResponse<Light>> {
+    ): Promise<StandartResponse<Light>> {
         return this.colorService.blinkColorLoop(id, data);
-      }
+    }
 
-    
+
 }

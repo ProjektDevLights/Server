@@ -1,6 +1,7 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { find, findIndex } from 'lodash';
 import * as net from "net";
+import { EspDocument } from 'src/schemas/esp.schema';
 
 
 export interface tcpEsp {
@@ -48,6 +49,16 @@ export class TcpService {
             throw new ServiceUnavailableException("The Light is not plugged in or started yet!");
         }
         return;
+    }
+
+    batchSendData(data: string, esps: EspDocument[]) {
+        try {
+            esps.forEach((esp: EspDocument) => {
+                this.sendData(data, esp.ip);
+            })
+        } catch {
+            throw new ServiceUnavailableException("At least one light is not plugged in or started yet!");
+        }
     }
 
 

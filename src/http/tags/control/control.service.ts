@@ -1,151 +1,83 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
 import { NothingChangedException } from 'src/exceptions/nothing-changed.exception';
+import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
 import { Light, PartialLight, StandartResponse } from '../../../interfaces';
-import { Esp, EspDocument } from '../../../schemas/esp.schema';
+import { EspDocument } from '../../../schemas/esp.schema';
 import { TcpService } from '../../../services/tcp/tcp.service';
-import { UtilsService } from '../../../services/utils/utils.service';
 
 @Injectable()
 export class ControlService {
 
   constructor(
-    @InjectModel(Esp.name) private espModel: Model<EspDocument>,
-    private utilsService: UtilsService,
+    private databaseService: DatabaseEspService,
     private tcpService: TcpService
   ) { }
 
   async onTags(tag: string): Promise<StandartResponse<Light[]>> {
-    const oldLights: EspDocument[] = await this.espModel
-      .find({ tags: { $all: [tag] } }, { _id: 0, __v: 0 })
-      .exec();
+    const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
     const newLights: Light[] = [];
-    oldLights.forEach((light: EspDocument) => {
-      if (!light.isOn) {
-        newLights.push(light as Light);
+    oldDocs.forEach((doc: EspDocument) => {
+      if (!doc.isOn) {
+        newLights.push(this.databaseService.espDocToLight(doc));
       }
     });
     if (newLights.length <= 0) {
       throw new NothingChangedException("All lights are already on");
     }
+    this.tcpService.batchSendData(`{"command": "on"}`, oldDocs);
 
-    const lights: EspDocument[] = await this.espModel
-      .find({ tags: { $all: [tag] } }, { _id: 0, __v: 0 })
-      .exec();
-    const ips: string[] = [];
-    const rest: Light[] = [];
-    lights.forEach(async element => {
-      ips.push(element.ip);
-      rest.push(await this.utilsService.espDocToLight(element));
-    });
-    ips.forEach((ip: string) => {
-      this.tcpService.sendData(`{"command": "on"}`, ip)
-    });
-
-    await this.espModel
-      .updateMany(
-        { tags: { $all: [tag] } },
-        { $set: { isOn: true } },
-        {
-          new: true,
-          projection: { __v: 0, _id: 0 },
-        },
-      )
-      .exec();
+    const newDocs: EspDocument[] = await this.databaseService.updateEspsWithTag(tag, { isOn: true });
 
     return {
       message: `All Lights with the Tag ${tag} are on now!  The following lights have been changed.`,
-      object: rest as Light[],
+      object: this.databaseService.espDocsToLights(newDocs),
     };
   }
 
   async offTags(tag: string): Promise<StandartResponse<Light[]>> {
-    const oldLights: EspDocument[] = await this.espModel
-      .find({ tags: { $all: [tag] } }, { _id: 0, __v: 0 })
-      .exec();
+    const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
     const newLights: Light[] = [];
-    oldLights.forEach((light: EspDocument) => {
-      if (light.isOn) {
-        newLights.push(light as Light);
+    oldDocs.forEach((doc: EspDocument) => {
+      if (doc.isOn) {
+        newLights.push(this.databaseService.espDocToLight(doc));
       }
     });
     if (newLights.length <= 0) {
-      throw new NothingChangedException("All lights are already off!");
+      throw new NothingChangedException("All lights are already off");
     }
 
-    const lights: EspDocument[] = await this.espModel
-      .find({ tags: { $all: [tag] } }, { _id: 0, __v: 0 })
-      .exec();
-    const ips: string[] = [];
-    const rest: Light[] = [];
-    lights.forEach(async element => {
-      ips.push(element.ip);
-      rest.push(await this.utilsService.espDocToLight(element));
-    });
-    ips.forEach((ip: string) => {
-      this.tcpService.sendData(`{"command": "off"}`, ip)
-    });
+    this.tcpService.batchSendData(`{"command": "off"}`, oldDocs);
 
-    await this.espModel
-      .updateMany(
-        { tags: { $all: [tag] } },
-        { $set: { isOn: false } },
-        {
-          new: true,
-          projection: { __v: 0, _id: 0 },
-        },
-      )
-      .exec();
+
+    const newDocs: EspDocument[] = await this.databaseService.updateEspsWithTag(tag, { isOn: false });
 
     return {
-      message: `All Lights with the Tag ${tag} are off now! The following lights have been changed.`,
-      object: rest as Light[],
+      message: `All Lights with the Tag ${tag} are off now!  The following lights have been changed.`,
+      object: this.databaseService.espDocsToLights(newDocs),
     };
   }
 
   async restartWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
-    const queryResult: EspDocument[] = await this.utilsService.getEspsWithTag(
-      tag,
-    );
-    console.log(queryResult)
-    const returns: PartialLight[] = [];
+    const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 
-    queryResult.forEach(element => {
-      returns.push({
-        name: element.name,
-        id: element.uuid,
-      });
-      this.tcpService.sendData(`{"command": "restart"}`, element.ip);
-      this.tcpService.removeConnection(element.ip);
-    });
+    this.tcpService.batchSendData(`{"command": "restart"}`, docs);
 
     return {
       message: "Restarting...",
-      object: returns,
+      object: this.databaseService.espDocsToPartialLights(docs),
     };
   }
 
   async resetWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
-    const queryResult: EspDocument[] = await this.utilsService.getEspsWithTag(
-      tag,
-    );
+    const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 
-    const results: PartialLight[] = [];
+    this.databaseService.deleteEspsWithTag(tag)
 
-    queryResult.forEach(element => {
-      results.push({
-        name: element.name,
-        id: element.uuid,
-      });
-      this.espModel.findOneAndDelete({ uuid: element.uuid }).exec();
-      this.tcpService.sendData(`{"command": "reset"}`, element.ip);
-      this.tcpService.removeConnection(element.ip);
-    });
+    this.tcpService.batchSendData(`{"command": "reset"}`, docs);
 
     return {
       message: "Resetting...",
-      object: results,
+      object: this.databaseService.espDocsToPartialLights(docs),
     };
   }
 
