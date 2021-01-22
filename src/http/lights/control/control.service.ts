@@ -75,4 +75,14 @@ export class ControlService {
     };
   }
 
+  async delete(id: string): Promise<StandartResponse<Light>> {
+
+    const doc: EspDocument = await this.databaseService.deleteEspWithId(id);
+
+    return {
+      message: "Resetting...",
+      object: this.databaseService.espDocToLight(doc),
+    };
+  }
+
 }

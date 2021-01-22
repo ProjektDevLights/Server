@@ -7,7 +7,6 @@ import { Light, PartialLight } from '../../../interfaces';
 import { Esp, EspDocument } from '../../../schemas/esp.schema';
 
 
-
 type GetReturnS = Promise<EspDocument> | DocumentQuery<EspDocument, EspDocument>
 type GetReturnM = Promise<EspDocument[]> | DocumentQuery<EspDocument[], EspDocument>;
 
@@ -48,33 +47,36 @@ export class DatabaseEspService {
 
     async updateEspWithId(id: string, updateQuery: MongooseUpdateQuery<Light>): Promise<EspDocument> {
 
-        await this.clear("esp-id-" + id);
-        await this.clear("esp-all");
-        return await this.espModel.findOneAndUpdate(
+        await this.clear("id-" + id);
+        this.clear("all");
+        const updated: EspDocument = await this.espModel.findOneAndUpdate(
             { uuid: id },
             updateQuery,
             { new: true }
             //@ts-ignore 
-        ).cache(0, "esp-id-" + id).exec(function (err, records) {
-
-        });
+        ).cache(0, "esp-id-" + id).exec();
+        updated?.tags.forEach((tag: string) => {
+            this.clear("tag-" + tag);
+        })
+        return updated
     }
 
-    async deleteEspWithId(id: string): Promise<boolean> {
-        try {
-            this.espModel.findOneAndDelete(
-                { uuid: id }
-            ).exec();
-            await this.clear("esp-id-" + id);
-            await this.clear("esp-all");
-            return true;
-        } catch {
-            return false;
-        }
+    async deleteEspWithId(id: string): Promise<EspDocument> {
+
+        const deleted: EspDocument = await this.espModel.findOneAndDelete(
+            { uuid: id }
+        ).exec();
+        await this.clear("id-" + id);
+        await this.clear("all");
+        deleted?.tags.forEach((tag: string) => {
+            this.clear("tag-" + tag);
+        })
+
+        return deleted;
     }
 
     async addEsp(data: Esp): Promise<EspDocument> {
-        await this.clear("esp-all");
+        await this.clear("all");
         const newEsp: EspDocument = await this.espModel.create(data);
         this.getEspWithId(newEsp.uuid);
         return newEsp;
@@ -94,7 +96,7 @@ export class DatabaseEspService {
 
     async updateEspsWithTag(tag: string, updateQuery: MongooseUpdateQuery<Light>): Promise<EspDocument[]> {
         const oldDocs: EspDocument[] = await this.getEspsWithTag(tag);
-        await this.clear("esp-tag-" + tag);
+        await this.clear("tag-" + tag);
         await this.espModel.updateMany(
             { tags: { $all: [tag] } },
             updateQuery,
@@ -110,8 +112,8 @@ export class DatabaseEspService {
             );
         }
         newDocs.forEach((doc: EspDocument) => {
-            this.clear("esp-all");
-            this.clear("esp-id-" + doc.uuid)
+            this.clear("all");
+            this.clear("id-" + doc.uuid)
         })
 
 
@@ -122,12 +124,12 @@ export class DatabaseEspService {
         try {
             this.getEspsWithTag(tag).then((deletedEsps: EspDocument[]) => {
                 deletedEsps.forEach((esp: EspDocument) => {
-                    this.clear("esp-id-" + esp.uuid)
+                    this.clear("id-" + esp.uuid)
                 })
             });
             await this.espModel.deleteMany({ tags: { $in: [tag] } }).exec();
-            this.clear("esp-tag-" + tag);
-            this.clear("esp-all");
+            this.clear("tag-" + tag);
+            this.clear("all");
             return true;
         } catch {
             return false;
@@ -171,6 +173,6 @@ export class DatabaseEspService {
         }
     }
 
-    clear = (key: string) => new Promise(resolve => cachegoose.clearCache(key, resolve))
+    clear = (key: string) => new Promise(resolve => cachegoose.clearCache("esp-" + key, resolve));
 
 }
