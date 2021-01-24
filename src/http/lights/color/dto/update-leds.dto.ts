@@ -1,5 +1,6 @@
-import { IsHexColor, IsNotEmpty, IsString, IsEnum } from "class-validator";
-import { Pattern } from "../../../../interfaces/types";
+import { IsHexColor, IsNotEmpty, IsString } from "class-validator";
+import { IsPattern } from "src/decorators/is-pattern.decorator";
+import { Pattern } from "../../../../interfaces/patterns/pattern.type";
 
 export class UpdateLedsDto {
   @IsString({ each: true })
@@ -7,8 +8,8 @@ export class UpdateLedsDto {
   @IsHexColor({ each: true })
   colors: string[];
 
+  @IsPattern()
   @IsString()
-  @IsEnum(Pattern)
   @IsNotEmpty()
   pattern: Pattern;
 }

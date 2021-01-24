@@ -18,9 +18,6 @@ export class AlarmDto {
   color: string;
 
   /*
-  @IsOptional()
-  @IsInt()
-  delay?: number;
 
   @IsOptional()
   @IsInt()

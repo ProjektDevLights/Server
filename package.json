@@ -89,5 +89,10 @@
     "roots": [
       "<rootDir>/apps/"
     ]
+  },
+  "bit": {
+    "env": {},
+    "componentsDefaultDirectory": "src/interfaces/{name}",
+    "packageManager": "yarn"
   }
 }

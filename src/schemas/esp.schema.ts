@@ -1,6 +1,6 @@
 import { Prop, raw, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
-import Leds from "src/interfaces/led.interface";
+import Leds from "../interfaces/led.interface";
 
 export type EspDocument = Esp & Document;
 
@@ -32,7 +32,7 @@ export class Esp {
   @Prop({ required: true })
   isOn: boolean;
 
-  @Prop({required: true})
+  @Prop({ required: true })
   brightness: number;
 }
 
