@@ -1,72 +1,70 @@
-import { Injectable, ServiceUnavailableException } from '@nestjs/common';
-import { find, findIndex } from 'lodash';
+import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { find, findIndex } from "lodash";
 import * as net from "net";
-import { EspDocument } from 'src/schemas/esp.schema';
-
+import { EspDocument } from "src/schemas/esp.schema";
 
 export interface tcpEsp {
-    ip: string,
-    socket: net.Socket;
+  ip: string;
+  socket: net.Socket;
 }
 @Injectable()
 export class TcpService {
+  private server: net.Server;
+  private clients: tcpEsp[] = [];
 
+  private onApplicationBootstrap() {
+    this.server = net.createServer();
+    this.server.on("connection", c => {
+      console.log(c.remoteAddress);
+      const ip: string = c.remoteAddress.substr(7);
+      if (find(this.clients, { ip: ip })) {
+        this.removeConnection(ip);
+      }
+      this.clients.push({
+        ip: ip,
+        socket: c,
+      });
+      c.on("close", () => {
+        console.log("closed");
+      });
+    });
+    this.server.listen(2389, () => {});
+  }
 
-    private server: net.Server;
-    private clients: tcpEsp[] = [];
+  removeConnection(ip: string) {
+    const client: number = findIndex(this.clients, { ip: ip });
+    this.clients.splice(client, 1);
+  }
 
-    private onApplicationBootstrap() {
-        this.server = net.createServer();
-        this.server.on("connection", (c) => {
-            console.log(c.remoteAddress);
-            if (!find(this.clients, { ip: c.remoteAddress.substr(7) })) {
-                console.log("new client")
-                this.clients.push({
-                    ip: c.remoteAddress?.substr(7),
-                    socket: c,
-                })
-                c.on("close", () => {
-                    console.log("closed");
-                })
-
-            }
-        });
-        this.server.listen(2389, () => {
-        })
+  sendData(data: string, ip: string): void {
+    try {
+      const client: net.Socket = find(this.clients, { ip: ip }).socket;
+      client.write(data + "\n", () => {});
+    } catch (e) {
+      console.error(e);
+      throw new ServiceUnavailableException(
+        "The Light is not plugged in or started yet!",
+      );
     }
+    return;
+  }
 
-    removeConnection(ip: string) {
-        const client: number = findIndex(this.clients, { ip: ip });
-        this.clients.splice(client, 1);
+  batchSendData(data: string, esps: EspDocument[]) {
+    try {
+      esps.forEach((esp: EspDocument) => {
+        this.sendData(data, esp.ip);
+      });
+    } catch {
+      throw new ServiceUnavailableException(
+        "At least one light is not plugged in or started yet!",
+      );
     }
+  }
 
-    sendData(data: string, ip: string): void {
-        try {
-            const client: net.Socket = find(this.clients, { ip: ip }).socket;
-            client.write(data + "\n", () => { });
-        } catch (e) {
-            console.error(e);
-            throw new ServiceUnavailableException("The Light is not plugged in or started yet!");
-        }
-        return;
-    }
-
-    batchSendData(data: string, esps: EspDocument[]) {
-        try {
-            esps.forEach((esp: EspDocument) => {
-                this.sendData(data, esp.ip);
-            })
-        } catch {
-            throw new ServiceUnavailableException("At least one light is not plugged in or started yet!");
-        }
-    }
-
-
-    private beforeApplicationShutdown() {
-        console.log("shutdown")
-        this.clients.forEach(c => {
-            c.socket.write('{"command": "serverRestart"}\n');
-        })
-    }
-
+  private beforeApplicationShutdown() {
+    console.log("shutdown");
+    this.clients.forEach(c => {
+      c.socket.write('{"command": "serverRestart"}\n');
+    });
+  }
 }

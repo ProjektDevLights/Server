@@ -6,11 +6,11 @@ export type EspDocument = Esp & Document;
 
 @Schema()
 export class Esp {
-  @Prop({ required: true })
-  count: number;
-
   @Prop({ required: true, unique: true })
   uuid: string;
+
+  @Prop({ required: true })
+  count: number;
 
   @Prop({ required: true, unique: true })
   ip: string;

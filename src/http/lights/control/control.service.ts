@@ -1,31 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
-import { NothingChangedException } from '../../../exceptions/nothing-changed.exception';
-import { Light, PartialLight, StandartResponse } from '../../../interfaces';
-import { Esp, EspDocument } from '../../../schemas/esp.schema';
-import { TcpService } from '../../../services/tcp/tcp.service';
-
+import { Injectable } from "@nestjs/common";
+import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
+import { NothingChangedException } from "../../../exceptions/nothing-changed.exception";
+import { Light, PartialLight, StandartResponse } from "../../../interfaces";
+import { EspDocument } from "../../../schemas/esp.schema";
+import { TcpService } from "../../../services/tcp/tcp.service";
 
 @Injectable()
 export class ControlService {
-
   constructor(
-    @InjectModel(Esp.name) private espModel: Model<EspDocument>,
     private tcpService: TcpService,
-    private databaseService: DatabaseEspService
-  ) { }
+    private databaseService: DatabaseEspService,
+  ) {}
 
   async on(id: string): Promise<StandartResponse<Light>> {
-
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
 
-    if (oldDoc.isOn) throw new NothingChangedException("The light is already on");
+    if (oldDoc.isOn)
+      throw new NothingChangedException("The light is already on");
 
-    this.tcpService.sendData(`{"command": "on"}`, oldDoc.ip)
+    this.tcpService.sendData(`{"command": "on"}`, oldDoc.ip);
 
-    const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, { isOn: true });
+    const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, {
+      isOn: true,
+    });
 
     return {
       message: "Succesfully turned the light on!",
@@ -36,11 +33,14 @@ export class ControlService {
   async off(id: string): Promise<StandartResponse<Light>> {
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
 
-    if (!oldDoc.isOn) throw new NothingChangedException("The light is already off");
+    if (!oldDoc.isOn)
+      throw new NothingChangedException("The light is already off");
 
     this.tcpService.sendData(`{"command": "off"}`, oldDoc.ip);
 
-    const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, { isOn: false });
+    const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, {
+      isOn: false,
+    });
 
     return {
       message: "Successfully turned the light off!",
@@ -49,7 +49,6 @@ export class ControlService {
   }
 
   async restart(id: string): Promise<StandartResponse<PartialLight>> {
-
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
 
     this.tcpService.sendData(`{"command": "restart"}`, doc.ip);
@@ -62,9 +61,7 @@ export class ControlService {
   }
 
   async reset(id: string): Promise<StandartResponse<PartialLight>> {
-
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
-
     this.tcpService.sendData(`{"command": "reset"}`, doc.ip);
 
     await this.databaseService.deleteEspWithId(id);
@@ -76,7 +73,6 @@ export class ControlService {
   }
 
   async delete(id: string): Promise<StandartResponse<Light>> {
-
     const doc: EspDocument = await this.databaseService.deleteEspWithId(id);
 
     return {
@@ -84,5 +80,4 @@ export class ControlService {
       object: this.databaseService.espDocToLight(doc),
     };
   }
-
 }
