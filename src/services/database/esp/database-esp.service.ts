@@ -43,7 +43,7 @@ export class DatabaseEspService {
     }
     return (
       this.espModel
-        .findById(id)
+        .findOne({ uuid: id })
         //@ts-ignore
         .cache(0, "esp-id-" + id)
         .exec()
