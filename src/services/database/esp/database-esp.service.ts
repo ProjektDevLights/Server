@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+//@ts-ignore
 import cachegoose from "cachegoose";
 import { DocumentQuery, Model, MongooseUpdateQuery } from "mongoose";
 import { NothingChangedException } from "../../../exceptions/nothing-changed.exception";
@@ -69,7 +70,7 @@ export class DatabaseEspService {
     await this.clear("id-" + id);
     this.clear("all");
     const updated: EspDocument = await this.espModel
-      .findOneAndUpdate({ uuid: id }, updateQuery, { new: true })
+      .findOneAndUpdate({ uuid: id }, updateQuery, { new: true, omitUndefined: true })
       //@ts-ignore
       .cache(0, "esp-id-" + id)
       .exec();
@@ -138,7 +139,7 @@ export class DatabaseEspService {
       .updateMany(
         { tags: { $all: [tag] } },
         updateQuery,
-        { new: true },
+        { new: true, omitUndefined: true  },
         //@ts-ignore
       )
       .exec();

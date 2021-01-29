@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+//@ts-ignore
 import cachegoose from "cachegoose";
 import { Model, MongooseUpdateQuery } from "mongoose";
 import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";

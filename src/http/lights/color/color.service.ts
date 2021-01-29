@@ -31,20 +31,31 @@ export class ColorService {
     data.colors = this.utilsService.makeValidHexArray(data.colors);
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
 
-    if (isEqual(data.colors, oldDoc.leds.colors)) throw new NothingChangedException("Nothing changed");
+    if (isEqual(data.colors, oldDoc.leds.colors) && isEqual(data.pattern, oldDoc.leds.pattern) && isEqual(data.timeout, oldDoc.leds.timeout)) throw new NothingChangedException("Nothing changed");
     if (!this.utilsService.isValidPattern(data)) throw new BadRequestException("Wrong colors or pattern provided");
     if (!oldDoc.isOn) throw new OffException();
 
-    this.tcpService.sendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-      data.colors,
-    )}, "pattern": "${oldDoc.leds.pattern}"}}`, oldDoc.ip);
+    this.tcpService.sendData(JSON.stringify({
+      command: "leds",
+      data: {
+        colors: this.utilsService.hexArrayToRgb(
+        data.colors,
+        ),
+        pattern: oldDoc.leds.pattern,
+        timeout: data.timeout
+      }
+    }), oldDoc.ip);
+
+    console.log(data.timeout)
 
     const newDoc = await this.databaseService.updateEspWithId(id, {
       leds: {
         colors: data.colors,
         pattern: data.pattern,
+        timeout: data.timeout == null ? undefined : data.timeout
       },
     });
+
     return {
       message: "Succesfully changed the color of the light!",
       object: this.databaseService.espDocToLight(newDoc),

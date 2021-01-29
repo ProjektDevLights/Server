@@ -12,6 +12,9 @@ import { TagsModule } from "./http/tags/tags.module";
     EspModule,
     MongooseModule.forRoot(config.database.url, {
       useFindAndModify: false,
+      db: {
+        ignoreUndefined: true
+      },
       connectionFactory: (connection, name) => {
         cachegoose(connection.base, {
           engine: "redis",
@@ -21,9 +24,9 @@ import { TagsModule } from "./http/tags/tags.module";
         return connection;
       },
     }),
+    AlarmModule,
     LightsModule,
     TagsModule,
-    AlarmModule,
   ],
 })
 export class MainModule {}

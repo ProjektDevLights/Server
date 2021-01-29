@@ -30,7 +30,8 @@ export class ColorService {
       $set: {
         leds: {
           colors: data.colors,
-          pattern: data.pattern
+          pattern: data.pattern,
+          timeout: data.timeout ?? undefined,
         }
       }
     });
@@ -38,7 +39,8 @@ export class ColorService {
       command: "leds",
       data: {
         colors: this.utilsService.hexArrayToRgb(data.colors),
-        pattern: data.pattern
+        pattern: data.pattern,
+        timeout: data.timeout,
       }
     }), newDocs);
     return {

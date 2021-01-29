@@ -33,7 +33,7 @@ export class EspService {
         count: 0,
         name: name,
         ip: data.ip,
-        leds: { pattern: "plain", colors: ["#1DE9B6"] },
+        leds: { pattern: "plain", colors: ["#1DE9B6"]},
         tags: [],
         isOn: true,
         brightness: 255,

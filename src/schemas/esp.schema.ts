@@ -25,6 +25,7 @@ export class Esp {
     raw({
       colors: { type: [String] },
       pattern: { type: String },
+      timeout: { type: Number, required: false },
     }),
   )
   leds: Leds;
