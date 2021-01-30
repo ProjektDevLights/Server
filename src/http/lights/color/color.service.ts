@@ -35,18 +35,14 @@ export class ColorService {
     if (!this.utilsService.isValidPattern(data)) throw new BadRequestException("Wrong colors or pattern provided");
     if (!oldDoc.isOn) throw new OffException();
 
-    this.tcpService.sendData(JSON.stringify({
-      command: "leds",
-      data: {
-        colors: this.utilsService.hexArrayToRgb(
-        data.colors,
-        ),
-        pattern: oldDoc.leds.pattern,
-        timeout: data.timeout
-      }
-    }), oldDoc.ip);
+    this.tcpService.sendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
+      data.colors,
+    )}, "pattern": "${data.pattern}", "timeout": ${data.timeout}}}`, oldDoc.ip);
 
-    console.log(data.timeout)
+
+
+
+    console.log("timeout: " + data.timeout)
 
     const newDoc = await this.databaseService.updateEspWithId(id, {
       leds: {

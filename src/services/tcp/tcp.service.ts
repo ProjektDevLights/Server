@@ -41,11 +41,10 @@ export class TcpService {
       const client: net.Socket = find(this.clients, { ip: ip }).socket;
       client.write(data + "\n", () => {});
     } catch (e) {
-      //console.error(e);
-      console.log(data)
-      //throw new ServiceUnavailableException(
-      //  "The Light is not plugged in or started yet!",
-      //);
+      console.error(e);
+      throw new ServiceUnavailableException(
+        "The Light is not plugged in or started yet!",
+      );
     }
     return;
   }
