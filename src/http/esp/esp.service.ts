@@ -13,19 +13,31 @@ export class EspService {
   constructor(private databaseService: DatabaseEspService) {}
 
   async setup(data: SetupDto): Promise<string> {
-    const ids: string[] = await this.databaseService
+    const ips: string[] = await this.databaseService
       .getEsps(true)
-      .distinct("_id")
+      .distinct("ip")
       .exec();
-    let id: string;
-    if (ids.length >= 256 * 256) {
-      throw new ConflictException("This IP is already in use!");
+
+    if(ips.includes(data.ip)){
+      return "This IP is already in use!";
     }
 
+    if (ips.length >= 256 * 256) {
+      //throw new ConflictException("This IP is already in use!");
+      return "This IP is already in use!";
+    }
+
+    let id: string= "";
+
+    const ids: string[] = await this.databaseService
+      .getEsps(true)
+      .distinct("ip")
+      .exec();
+
     do {
-      id =
-        Math.round(Math.random() * 255) + "." + Math.round(Math.random() * 255);
+      id = Math.round(Math.random() * 255) + "." + Math.round(Math.random() * 255);
     } while (ids.includes(id));
+
     const name = "(new) Devlight";
     try {
       this.databaseService.addEsp({
@@ -40,7 +52,7 @@ export class EspService {
       });
     } catch (e) {
       console.log(e);
-      throw new ConflictException("This IP is already in use!");
+      return "Something went wrong!";
     }
     return id;
   }
