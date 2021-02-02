@@ -52,7 +52,6 @@ export class UtilsService {
           colors[2] +
           ""
         );
-        break;
       case 4:
         colors = hex.substring(1, 4).split("");
         return (
@@ -70,20 +69,18 @@ export class UtilsService {
           colors[2] +
           ""
         );
-        break;
       case 6:
         colors = hex.match(/.{1,2}/g);
         return "#" + colors[0] + "" + colors[1] + "" + colors[2] + "";
-        break;
       case 7:
         colors = hex.substring(1, 7).match(/.{1,2}/g);
         return "#" + colors[0] + "" + colors[1] + "" + colors[2] + "";
-        break;
     }
     return "#000000";
   }
 
   hexArrayToRgb(colors: string[]): string {
+    if(colors.length == 0) return "[]";
     let rgb: string[] = [];
     colors.forEach(color => {
       rgb.push(this.hexToRgb(color));
@@ -92,6 +89,7 @@ export class UtilsService {
   }
 
   makeValidHexArray(colors: string[]): string[] {
+    if(colors.length == 0) return [];
     let hex: string[] = [];
     colors.forEach(color => {
       hex.push(this.makeValidHex(color));
@@ -108,22 +106,36 @@ export class UtilsService {
     return (await this.databaseService.getTags()).includes(tag);
   }
 
+
+
   isValidPattern(data: Leds): boolean {
-    if (data.colors.length > 1) {
-      if (data.pattern == "plain") {
-        return false;
-      } else {
-        return true;
+
+    // length > 1 => gradient
+    // length == 1 => plain or runner
+    // length == 0 => fading or rainbow
+
+    switch(data.colors.length){
+      case 0: {
+        switch(data.pattern){
+          case "fading": {
+            return !(!data.timeout);
+          }
+          case "rainbow": {
+            return !(!data.timeout);
+          }
+          default: return false;
+        }
       }
-    } else if (data.colors.length == 1) {
-      if (data.pattern === "gradient") {
-        return false;
-      } else {
-        return true;
+      case 1:{
+        return (data.pattern === "plain" && !data.timeout) || (data.pattern === "runner" && !(!data.timeout))
       }
-    } else {
-      return false;
+      case 2:{
+        return data.pattern === "gradient" && !data.timeout;
+      }
+      default: return false;
     }
+
+
   }
 
   fading(

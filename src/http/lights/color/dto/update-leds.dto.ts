@@ -1,4 +1,4 @@
-import { IsHexColor, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from "class-validator";
+import { IsHexColor, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 import { IsPattern } from "src/decorators/is-pattern.decorator";
 import { Pattern } from "../../../../interfaces/patterns/pattern.type";
 
@@ -17,5 +17,6 @@ export class UpdateLedsDto {
   @IsOptional()
   @IsNotEmpty()
   @Min(0)
+  @Max(30000)
   timeout: number;
 }

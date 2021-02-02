@@ -39,11 +39,6 @@ export class ColorService {
       data.colors,
     )}, "pattern": "${data.pattern}", "timeout": ${data.timeout}}}`, oldDoc.ip);
 
-
-
-
-    console.log("timeout: " + data.timeout)
-
     const newDoc = await this.databaseService.updateEspWithId(id, {
       leds: {
         colors: data.colors,
