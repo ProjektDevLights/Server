@@ -23,14 +23,19 @@ export class DatabaseAlarmService {
   }
 
   async getAlarmWithId(id: string): Promise<AlarmDocument> {
-    return (
-      this.alarmModel
-        .findById(id)
-        .populate("esps")
-        //@ts-ignore
-        .cache(0, "alarm-id-" + id)
-        .exec()
-    );
+
+    const alarmDoc: AlarmDocument = this.alarmModel
+    .findById(id)
+    .populate({
+      path: "esps",
+      select: '-__v -ip -_id'
+    })
+    //@ts-ignore
+    .cache(0, "alarm-id-" + id)
+    .exec()
+
+    return alarmDoc;
+
   }
 
   async updateAlarm(id: string, updateQuery: MongooseUpdateQuery<Alarm>) {
