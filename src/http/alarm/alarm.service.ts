@@ -51,36 +51,40 @@ export class AlarmService {
     }
 
     let waking = async (name: string) => {
-      let alarm = await this.databaseServiceAlarm.getAlarmWithId(
-        name.split("-")[1],
+      let alarmWithId = await this.databaseServiceAlarm.getAlarmWithId(
+        name.split("-")[1]
       );
       console.log("Farbe 000000");
       alarm.esps.forEach(async esp => {
         const oldDoc: EspDocument = await this.databaseServiceEsp.getEspWithId(
           esp.uuid,
-        );
-        await this.databaseServiceEsp.updateEspWithId(esp.uuid, {
-          leds: { colors: ["#000000"], pattern: "waking" },
+          );
+        const newDoc = await this.databaseServiceEsp.updateEspWithId(oldDoc.uuid, {
+          leds: {
+            colors: ["#000000"],
+            pattern: "waking"
+          },
           brightness: 255,
           isOn: true,
         });
-        this.tcpService.sendData(
-          `{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(
-            "#000000",
-          )}"], "pattern": "plain"}}`,
-          esp.ip,
+        this.tcpService.sendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
+          ["#000000"]
+          )}, "pattern": "plain"}}`,
+          newDoc.ip,
         );
-        this.tcpService.sendData(JSON.stringify({ command: "on" }), esp.ip);
+        this.tcpService.sendData(`{ "command": "on" }`,
+          newDoc.ip,
+        );
         this.tcpService.sendData(
-          JSON.stringify({ command: "brightness", data: 255 }),
-          esp.ip,
+          `{"command": "brightness", "data": 255 }`,
+          newDoc.ip,
         );
 
         console.log("fading");
         this.utilsService.fading(
-          "todo",
-          { color: alarm.color, time: 5000 * 60, delay: (5000 * 60) / 255 },
-          oldDoc,
+          newDoc.id,
+          { color: alarmWithId.color, time: 5000 * 30, delay: (5000 * 60) / 255 },
+          newDoc,
         );
       });
     };

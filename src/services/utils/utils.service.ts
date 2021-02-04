@@ -184,7 +184,7 @@ export class UtilsService {
 
         await this.databaseService.updateEspWithId(id, {
           leds: {
-            colors: [data.color],
+            colors: [tinycolor(colorTo).toHexString()],
             pattern: oldLight.leds.pattern,
           },
         });

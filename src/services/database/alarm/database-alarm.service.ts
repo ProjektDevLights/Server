@@ -61,7 +61,6 @@ export class DatabaseAlarmService {
   async addAlarm(alarm: Alarm) {
     await this.clear("all");
     const newAlarm: AlarmDocument = await this.alarmModel.create(alarm);
-    this.getAlarmWithId(newAlarm.id);
     return newAlarm;
   }
 

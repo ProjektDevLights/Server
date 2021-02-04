@@ -1,5 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { isEqual } from 'lodash';
+import { CustomException } from 'src/exceptions/custom-exception.exception';
 import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
 import { NothingChangedException } from '../../../exceptions/nothing-changed.exception';
 import { OffException } from '../../../exceptions/off.exception';
@@ -34,6 +35,7 @@ export class ColorService {
     if (isEqual(data.colors, oldDoc.leds.colors) && isEqual(data.pattern, oldDoc.leds.pattern) && isEqual(data.timeout, oldDoc.leds.timeout)) throw new NothingChangedException("Nothing changed");
     if (!this.utilsService.isValidPattern(data)) throw new BadRequestException("Wrong colors or pattern provided");
     if (!oldDoc.isOn) throw new OffException();
+    if (["waking", "blinking"].includes(oldDoc.leds.pattern)) throw new CustomException("The light is currently in a mode, where changing color is not supported", 423);
 
     this.tcpService.sendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
       data.colors,
