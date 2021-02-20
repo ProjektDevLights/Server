@@ -51,6 +51,10 @@ export class DatabaseEspService {
     );
   }
 
+  async getEspWithMongoId(id: string): Promise<EspDocument>{
+    return this.espModel.findById(id);
+  }
+
   async getEspsWithMultipleIds(ids: string[]): Promise<EspDocument[]>;
   getEspsWithMultipleIds(
     ids: string[],

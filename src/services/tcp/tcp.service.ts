@@ -24,9 +24,22 @@ export class TcpService {
         ip: ip,
         socket: c,
       });
-      c.on("close", () => {
+      c.on("connect", () => {
+        console.log("connected");
+
+      }).on("end", () => {
+        console.log("ended");
+
+      }).on("close", () => {
         console.log("closed");
-      });
+
+      }).on("error", () => {
+        console.log("error");
+
+      }).on("timeout", () => {
+        console.log("timeout");
+
+      })
     });
     this.server.listen(2389, () => {});
   }

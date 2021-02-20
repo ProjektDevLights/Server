@@ -22,7 +22,7 @@ export class AlarmService {
   private onApplicationBootstrap() {}
 
   async scheduleAlarm(data: AlarmDto): Promise<StandartResponse<Alarm>> {
-    const espIds = await this.databaseServiceEsp
+    const espIds: string[] = await this.databaseServiceEsp
       .getEspsWithMultipleIds(data.ids, true)
       .distinct("_id")
       .exec();
@@ -56,8 +56,8 @@ export class AlarmService {
       );
       console.log("Farbe 000000");
       alarm.esps.forEach(async esp => {
-        const oldDoc: EspDocument = await this.databaseServiceEsp.getEspWithId(
-          esp.uuid,
+        const oldDoc: EspDocument = await this.databaseServiceEsp.getEspWithMongoId(
+          esp,
           );
         const newDoc = await this.databaseServiceEsp.updateEspWithId(oldDoc.uuid, {
           leds: {

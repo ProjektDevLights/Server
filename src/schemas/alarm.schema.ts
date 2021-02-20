@@ -19,7 +19,7 @@ export class Alarm {
   repeat: number;
 
   @Prop({ required: true, type: [{ type: String, ref: "Esp" }] })
-  esps: Esp[];
+  esps: string[];
 }
 export const AlarmSchema = SchemaFactory.createForClass(Alarm).set("toJSON", {
   virtuals: true,
