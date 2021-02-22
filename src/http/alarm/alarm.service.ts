@@ -1,9 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
-import { StandartResponse } from "../../interfaces";
+import tinycolor from "tinycolor2";
+import { Light, StandartResponse } from "../../interfaces";
 import { Alarm, AlarmDocument } from "../../schemas/alarm.schema";
-import { EspDocument } from "../../schemas/esp.schema";
+import { Esp, EspDocument } from "../../schemas/esp.schema";
 import { CronService } from "../../services/cron/cron.service";
 import { TcpService } from "../../services/tcp/tcp.service";
 import { UtilsService } from "../../services/utils/utils.service";
@@ -56,10 +57,10 @@ export class AlarmService {
       );
       console.log("Farbe 000000");
       alarm.esps.forEach(async esp => {
-        const oldDoc: EspDocument = await this.databaseServiceEsp.getEspWithMongoId(
+        const oldLight: Light = this.databaseServiceEsp.espDocToLight(await this.databaseServiceEsp.getEspWithMongoId(
           esp,
-          );
-        const newDoc = await this.databaseServiceEsp.updateEspWithId(oldDoc.uuid, {
+          ));
+        const newDoc = await this.databaseServiceEsp.updateEspWithId(oldLight.id, {
           leds: {
             colors: ["#000000"],
             pattern: "waking"
@@ -85,6 +86,18 @@ export class AlarmService {
           newDoc.id,
           { color: alarmWithId.color, time: 5000 * 30, delay: (5000 * 60) / 255 },
           newDoc,
+          async () => {
+
+            console.log(newDoc);
+            console.log(oldLight);
+
+            await this.databaseServiceEsp.updateEspWithId(oldLight.id, {
+              leds: {
+                colors: [alarmWithId.color],
+                pattern: "plain",
+              },
+            });
+          }
         );
       });
     };

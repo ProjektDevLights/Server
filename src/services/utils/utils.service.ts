@@ -142,6 +142,7 @@ export class UtilsService {
     id: string,
     data: { color: string; time: number; delay: number },
     oldLight: EspDocument,
+    callback: () => {}
   ) {
     let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
 
@@ -175,19 +176,7 @@ export class UtilsService {
     console.log({ rStep, gStep, bStep });
     const runInterval = setInterval(async () => {
       if (runs <= 0) {
-        this.tcpService.sendData(
-          `{"command": "leds", "data": {"colors": ["${this.hexToRgb(
-            tinycolor(colorTo).toHexString(),
-          )}"], "pattern": "plain"}}`,
-          oldLight.ip,
-        );
-
-        await this.databaseService.updateEspWithId(id, {
-          leds: {
-            colors: [tinycolor(colorTo).toHexString()],
-            pattern: oldLight.leds.pattern,
-          },
-        });
+        callback();
         clearInterval(runInterval);
         return;
       }
