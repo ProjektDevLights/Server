@@ -25,7 +25,6 @@ export class ColorService {
     const on: boolean[] = await this.databaseService.getEspsWithTag(tag, true).distinct("isOn").exec();
     if (!on.every((val, i) => val === true)) throw new ServiceUnavailableException("At least one light is not on! In order to update with tag please turn them on with '/tags/:tag/on'");
 
-
     const newDocs: EspDocument[] = await this.databaseService.updateEspsWithTag(tag, {
       $set: {
         leds: {
@@ -35,14 +34,9 @@ export class ColorService {
         }
       }
     });
-    this.tcpService.batchSendData(JSON.stringify({
-      command: "leds",
-      data: {
-        colors: this.utilsService.hexArrayToRgb(data.colors),
-        pattern: data.pattern,
-        timeout: data.timeout,
-      }
-    }), newDocs);
+    this.tcpService.batchSendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
+      data.colors,
+    )}, "pattern": "${data.pattern}"`, newDocs);
     return {
       message: "Succesfully changed the color of the light!",
       object: this.databaseService.espDocsToLights(newDocs),
