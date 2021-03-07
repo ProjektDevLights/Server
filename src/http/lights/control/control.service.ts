@@ -26,7 +26,7 @@ export class ControlService {
 
     return {
       message: "Succesfully turned the light on!",
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 
@@ -44,7 +44,7 @@ export class ControlService {
 
     return {
       message: "Successfully turned the light off!",
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 
@@ -56,7 +56,7 @@ export class ControlService {
 
     return {
       message: "Restarting...",
-      object: this.databaseService.espDocToPartialLight(doc),
+      object: DatabaseEspService.espDocToPartialLight(doc),
     };
   }
 
@@ -68,7 +68,7 @@ export class ControlService {
 
     return {
       message: "Resetting...",
-      object: this.databaseService.espDocToPartialLight(doc),
+      object: DatabaseEspService.espDocToPartialLight(doc),
     };
   }
 
@@ -77,7 +77,7 @@ export class ControlService {
 
     return {
       message: "Resetting...",
-      object: this.databaseService.espDocToLight(doc),
+      object: DatabaseEspService.espDocToLight(doc),
     };
   }
 }

@@ -151,8 +151,8 @@ export class DatabaseEspService {
     const newDocs: EspDocument[] = await this.getEspsWithTag(tag);
 
     if (
-      JSON.stringify(this.espDocsToLights(oldDocs)) ==
-      JSON.stringify(this.espDocsToLights(newDocs))
+      JSON.stringify(DatabaseEspService.espDocsToLights(oldDocs)) ==
+      JSON.stringify(DatabaseEspService.espDocsToLights(newDocs))
     ) {
       throw new NothingChangedException(
         "The color of the lights with this tag didn't change!",
@@ -182,7 +182,7 @@ export class DatabaseEspService {
     }
   }
 
-  espDocsToLights(docs: EspDocument[]): Light[] {
+  static espDocsToLights(docs: EspDocument[]): Light[] {
     const result: Light[] = [];
 
     docs.forEach((doc: EspDocument) => {
@@ -191,7 +191,7 @@ export class DatabaseEspService {
     return result;
   }
 
-  espDocsToPartialLights(docs: EspDocument[]): PartialLight[] {
+  static espDocsToPartialLights(docs: EspDocument[]): PartialLight[] {
     const result: PartialLight[] = [];
 
     docs.forEach((doc: EspDocument) => {
@@ -200,7 +200,7 @@ export class DatabaseEspService {
     return result;
   }
 
-  espDocToLight(doc: EspDocument): Light {
+  static espDocToLight(doc: EspDocument): Light {
     return {
       name: doc.name,
       id: doc.uuid,
@@ -212,7 +212,8 @@ export class DatabaseEspService {
     };
   }
 
-  espDocToPartialLight(doc: EspDocument): PartialLight {
+
+  static espDocToPartialLight(doc: EspDocument): PartialLight {
     return {
       name: doc.name,
       id: doc.uuid,

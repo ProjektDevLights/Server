@@ -1,5 +1,7 @@
+import { MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { AlarmValidationMiddleware } from 'src/middlewares/alarm-validation.middleware';
 import { CronModule } from 'src/services/cron/cron.module';
 import { DatabaseModule } from 'src/services/database/database.module';
 import { TcpModule } from 'src/services/tcp/tcp.module';
@@ -15,4 +17,8 @@ import { AlarmService } from './alarm.service';
   providers: [AlarmService, CronService, UtilsService],
   imports: [DatabaseModule, CronModule, TcpModule, MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }, { name: Alarm.name, schema: AlarmSchema }])]
 })
-export class AlarmModule { }
+export class AlarmModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(AlarmValidationMiddleware).forRoutes({path: "/alarm/:alarm(.*)", method: RequestMethod.ALL});  
+  } 
+ }

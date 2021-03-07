@@ -55,9 +55,9 @@ export class TcpService {
       client.write(data + "\n", () => {});
     } catch (e) {
       console.error(e);
-      throw new ServiceUnavailableException(
+/*       throw new ServiceUnavailableException(
         "The Light is not plugged in or started yet!",
-      );
+      ); */
     }
     return;
   }

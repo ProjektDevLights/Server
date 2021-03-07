@@ -39,7 +39,7 @@ export class ColorService {
     )}, "pattern": "${data.pattern}"`, newDocs);
     return {
       message: "Succesfully changed the color of the light!",
-      object: this.databaseService.espDocsToLights(newDocs),
+      object: DatabaseEspService.espDocsToLights(newDocs),
     };
   }
 
@@ -64,7 +64,7 @@ export class ColorService {
     ), docs)
     return {
       message: "Blinking color!",
-      object: this.databaseService.espDocsToLights(docs),
+      object: DatabaseEspService.espDocsToLights(docs),
     };
   }
 }

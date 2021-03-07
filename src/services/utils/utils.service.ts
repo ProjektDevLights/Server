@@ -2,13 +2,15 @@ import { Injectable } from "@nestjs/common";
 import tinycolor, { ColorFormats } from "tinycolor2";
 import { Leds } from "../../interfaces";
 import { EspDocument } from "../../schemas/esp.schema";
+import { DatabaseAlarmService } from "../database/alarm/database-alarm.service";
 import { DatabaseEspService } from "../database/esp/database-esp.service";
 import { TcpService } from "../tcp/tcp.service";
 
 @Injectable()
 export class UtilsService {
   constructor(
-    private databaseService: DatabaseEspService,
+    private databaseServiceEsp: DatabaseEspService,
+    private databaseServiceAlarm: DatabaseAlarmService,
     private tcpService: TcpService,
   ) {}
 
@@ -98,12 +100,18 @@ export class UtilsService {
   }
 
   async isIdValid(id: string): Promise<boolean> {
-    if (await this.databaseService.getEspWithId(id)) return true;
+    if (await this.databaseServiceEsp.getEspWithId(id)) return true;
     return false;
   }
 
   async isTagValid(tag: string): Promise<boolean> {
-    return (await this.databaseService.getTags()).includes(tag);
+    return (await this.databaseServiceEsp.getTags()).includes(tag);
+  }
+  async isAlarmIdValid(id: string): Promise<boolean> {
+    try {
+      await this.databaseServiceAlarm.getAlarmWithId(id);
+    } catch{return false}
+    return  true
   }
 
 
@@ -142,8 +150,8 @@ export class UtilsService {
     id: string,
     data: { color: string; time: number; delay: number },
     oldLight: EspDocument,
-    callback: () => {}
-  ) {
+    callback: Function
+  ): NodeJS.Timeout {
     let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
 
     console.log(colorTo);
@@ -193,6 +201,7 @@ export class UtilsService {
 
       runs--;
     }, data.delay);
+    return runInterval;
   }
 
   generateStep(

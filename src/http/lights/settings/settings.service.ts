@@ -32,7 +32,7 @@ export class SettingsService {
     }
     return {
       message: "Succesfully updatet Light!",
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 
@@ -57,7 +57,7 @@ export class SettingsService {
 
     return {
       message: "Succesfully updated Lights brightness",
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 
@@ -79,7 +79,7 @@ export class SettingsService {
     });
     return {
       message: "Succesfully updated LED count",
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 
@@ -108,7 +108,7 @@ export class SettingsService {
 
     return {
       message: `Succesfully added the following tags: ${newTags}!`,
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 
@@ -138,7 +138,7 @@ export class SettingsService {
     });
     return {
       message: `Succesfully removed the following tags: ${remTags}!`,
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 }

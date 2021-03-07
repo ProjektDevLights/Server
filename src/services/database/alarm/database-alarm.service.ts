@@ -4,6 +4,9 @@ import { InjectModel } from "@nestjs/mongoose";
 import cachegoose from "cachegoose";
 import { Model, MongooseUpdateQuery } from "mongoose";
 import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";
+import { EspDocument } from "src/schemas/esp.schema";
+import { Alarm as AlarmInterface } from "../../../interfaces"
+import { DatabaseEspService } from "../esp/database-esp.service";
 
 @Injectable()
 export class DatabaseAlarmService {
@@ -15,26 +18,26 @@ export class DatabaseAlarmService {
     return (
       this.alarmModel
         .find()
-        .populate("esps")
+        .populate({
+          path: "esps",
+          select: '-__v -ip -_id'
+        })
         //@ts-ignore
-        .cache(0, "alarm-all")
         .exec()
     );
   }
 
   async getAlarmWithId(id: string): Promise<AlarmDocument> {
 
-    const alarmDoc: AlarmDocument = this.alarmModel
+    return this.alarmModel
     .findById(id)
     .populate({
       path: "esps",
-      select: '-__v -ip -_id'
+      select: '-__v -_id'
     })
     //@ts-ignore
-    .cache(0, "alarm-id-" + id)
+    //.cache(0, "alarm-id-" + id)
     .exec()
-
-    return alarmDoc;
 
   }
 
@@ -62,6 +65,26 @@ export class DatabaseAlarmService {
     await this.clear("all");
     const newAlarm: AlarmDocument = await this.alarmModel.create(alarm);
     return newAlarm;
+  }
+  
+  static alarmDocsToAlarm(docs: AlarmDocument[]) : AlarmInterface[] {
+    const alarms : AlarmInterface[] = [];
+    docs.forEach((doc: AlarmDocument) => {
+      alarms.push(this.alarmDocToAlarm(doc));
+    })
+    return alarms;
+  }
+  
+  static alarmDocToAlarm(doc: AlarmDocument) : AlarmInterface {
+    return {
+      id: doc._id,
+      color: doc.color,
+      date: doc.date,
+      days: doc.days,
+      //@ts-ignore
+      lights: DatabaseEspService.espDocsToPartialLights(doc.esps),
+      repeat: doc.repeat,
+    }
   }
 
   clear = (key: string) =>

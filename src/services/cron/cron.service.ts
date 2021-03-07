@@ -46,20 +46,25 @@ export class CronService {
     startJob.start();
   }
 
-  deleteCron(name: string): CronJob {
-    const job = this.scheduler.getCronJob(name);
-    this.scheduler.deleteCronJob(name);
+  deleteCron(name: string): boolean {
+    let fail = 0;
+    try {
+      this.scheduler.deleteCronJob(name);
+    } catch{fail++}
+    try {
+
     this.scheduler.deleteCronJob(name+"-start");
+  } catch{fail++}
 
     this.logger.warn(`job ${name} deleted!`);
-    return job;
+    return fail < 2;
   }
 
   getCron(name: string): CronJob {
     return this.scheduler.getCronJob(name);
   }
 
-  getCronKey(name: string): string {
+  getCronKey(name: string): string {  
     const jobs = this.scheduler.getCronJobs();
     const jobArr: CronJob[] = [];
     jobs.forEach((value, key, map) => {

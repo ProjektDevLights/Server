@@ -14,7 +14,7 @@ export class GeneralService {
   async getAll(): Promise<StandartResponse<Light[]>> {
     return {
       message: "List of all lights",
-      object: this.databaseService.espDocsToLights(
+      object: DatabaseEspService.espDocsToLights(
         await this.databaseService.getEsps(),
       ),
     };
@@ -23,7 +23,7 @@ export class GeneralService {
   async get(id: string): Promise<StandartResponse<Light>> {
     return {
       message: "Light with Id " + id,
-      object: this.databaseService.espDocToLight(
+      object: DatabaseEspService.espDocToLight(
         await this.databaseService.getEspWithId(id),
       ),
     };
@@ -34,7 +34,7 @@ export class GeneralService {
     this.tcpService.sendData(data, doc.ip);
     return {
       message: "Passed data",
-      object: this.databaseService.espDocToLight(doc),
+      object: DatabaseEspService.espDocToLight(doc),
     };
   }
 }

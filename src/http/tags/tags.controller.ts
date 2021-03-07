@@ -2,9 +2,11 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, ValidationPipe } fro
 import { Light, PartialLight, StandartResponse } from '../../interfaces';
 import { BlinkLedsDto } from '../lights/color/dto/blink-leds.dto';
 import { UpdateLedsDto } from '../lights/color/dto/update-leds.dto';
+import UpdateBrightnessDto from '../lights/settings/dto/update-brightness.dto';
 import { ColorService } from './color/color.service';
 import { ControlService } from './control/control.service';
 import { GeneralService } from './general/general.service';
+import { SettingsService } from './settings/settings.service';
 
 @Controller('tags')
 export class TagsController {
@@ -13,6 +15,7 @@ export class TagsController {
     private generalService: GeneralService,
     private controlService: ControlService,
     private colorService: ColorService,
+    private settingsService: SettingsService
   ) { }
 
 
@@ -62,5 +65,14 @@ export class TagsController {
   @Post(":tag/blink")
   async blink(@Param("tag") tag: string, @Body(new ValidationPipe()) data: BlinkLedsDto): Promise<StandartResponse<Light[]>> {
     return this.colorService.blink(tag, data);
+  }
+
+  //settings 
+  @Patch("/:tag/brightness")
+  async brightness(
+    @Param("tag") tag: string,
+    @Body(new ValidationPipe()) data: UpdateBrightnessDto
+  ){
+    return this.settingsService.setBrightness(tag,data.brightness)
   }
 }

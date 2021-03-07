@@ -52,7 +52,7 @@ export class ColorService {
 
     return {
       message: "Succesfully changed the color of the light!",
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 
@@ -105,7 +105,7 @@ export class ColorService {
     }
     return {
       message: "Fading the color!",
-      object: this.databaseService.espDocToLight(resDoc),
+      object: DatabaseEspService.espDocToLight(resDoc),
     };
   }
 
@@ -123,7 +123,7 @@ export class ColorService {
 
     return {
       message: "Blinking color!",
-      object: this.databaseService.espDocToLight(doc),
+      object: DatabaseEspService.espDocToLight(doc),
     };
   }
 
@@ -194,7 +194,7 @@ export class ColorService {
 
     return {
       message: "Blinking colors!",
-      object: this.databaseService.espDocToLight(newDoc),
+      object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
 

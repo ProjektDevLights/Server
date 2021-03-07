@@ -17,7 +17,7 @@ export class GeneralService {
 
   async getWithTag(tag: string): Promise<StandartResponse<Light[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
-    return { message: `Lights with tag ${tag}!`, object: this.databaseService.espDocsToLights(docs) };
+    return { message: `Lights with tag ${tag}!`, object: DatabaseEspService.espDocsToLights(docs) };
   }
 
 }

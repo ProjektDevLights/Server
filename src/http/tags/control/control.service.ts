@@ -18,7 +18,7 @@ export class ControlService {
     const newLights: Light[] = [];
     oldDocs.forEach((doc: EspDocument) => {
       if (!doc.isOn) {
-        newLights.push(this.databaseService.espDocToLight(doc));
+        newLights.push(DatabaseEspService.espDocToLight(doc));
       }
     });
     if (newLights.length <= 0) {
@@ -30,7 +30,7 @@ export class ControlService {
 
     return {
       message: `All Lights with the Tag ${tag} are on now!  The following lights have been changed.`,
-      object: this.databaseService.espDocsToLights(newDocs),
+      object: DatabaseEspService.espDocsToLights(newDocs),
     };
   }
 
@@ -39,7 +39,7 @@ export class ControlService {
     const newLights: Light[] = [];
     oldDocs.forEach((doc: EspDocument) => {
       if (doc.isOn) {
-        newLights.push(this.databaseService.espDocToLight(doc));
+        newLights.push(DatabaseEspService.espDocToLight(doc));
       }
     });
     if (newLights.length <= 0) {
@@ -53,7 +53,7 @@ export class ControlService {
 
     return {
       message: `All Lights with the Tag ${tag} are off now!  The following lights have been changed.`,
-      object: this.databaseService.espDocsToLights(newDocs),
+      object: DatabaseEspService.espDocsToLights(newDocs),
     };
   }
 
@@ -64,7 +64,7 @@ export class ControlService {
 
     return {
       message: "Restarting...",
-      object: this.databaseService.espDocsToPartialLights(docs),
+      object: DatabaseEspService.espDocsToPartialLights(docs),
     };
   }
 
@@ -77,7 +77,7 @@ export class ControlService {
 
     return {
       message: "Resetting...",
-      object: this.databaseService.espDocsToPartialLights(docs),
+      object: DatabaseEspService.espDocsToPartialLights(docs),
     };
   }
 
