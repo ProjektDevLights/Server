@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
-import { Light, StandartResponse } from '../../../interfaces';
+import { CountResponse, Light, StandartResponse } from '../../../interfaces';
 import { EspDocument } from '../../../schemas/esp.schema';
 
 @Injectable()
@@ -10,14 +10,14 @@ export class GeneralService {
     private databaseService: DatabaseEspService,
   ) { }
 
-  async getTags(): Promise<StandartResponse<string[]>> {
+  async getTags(): Promise<CountResponse<string[]>> {
     const allTags: string[] = await this.databaseService.getEsps(true).distinct("tags").exec();
-    return { message: "The following tags exist at the moment", object: allTags };
+    return { message: "The following tags exist at the moment", count: allTags.length, object: allTags };
   }
 
-  async getWithTag(tag: string): Promise<StandartResponse<Light[]>> {
+  async getWithTag(tag: string): Promise<CountResponse<Light[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
-    return { message: `Lights with tag ${tag}!`, object: DatabaseEspService.espDocsToLights(docs) };
+    return { message: `Lights with tag ${tag}!`, count: docs.length ,object: DatabaseEspService.espDocsToLights(docs) };
   }
 
 }

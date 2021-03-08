@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NothingChangedException } from 'src/exceptions/nothing-changed.exception';
 import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
-import { Light, PartialLight, StandartResponse } from '../../../interfaces';
+import { CountResponse, Light, PartialLight, StandartResponse } from '../../../interfaces';
 import { EspDocument } from '../../../schemas/esp.schema';
 import { TcpService } from '../../../services/tcp/tcp.service';
 
@@ -13,7 +13,7 @@ export class ControlService {
     private tcpService: TcpService
   ) { }
 
-  async onTags(tag: string): Promise<StandartResponse<Light[]>> {
+  async onTags(tag: string): Promise<CountResponse<Light[]>> {
     const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
     const newLights: Light[] = [];
     oldDocs.forEach((doc: EspDocument) => {
@@ -30,11 +30,12 @@ export class ControlService {
 
     return {
       message: `All Lights with the Tag ${tag} are on now!  The following lights have been changed.`,
+      count: newDocs.length,
       object: DatabaseEspService.espDocsToLights(newDocs),
     };
   }
 
-  async offTags(tag: string): Promise<StandartResponse<Light[]>> {
+  async offTags(tag: string): Promise<CountResponse<Light[]>> {
     const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
     const newLights: Light[] = [];
     oldDocs.forEach((doc: EspDocument) => {
@@ -53,22 +54,24 @@ export class ControlService {
 
     return {
       message: `All Lights with the Tag ${tag} are off now!  The following lights have been changed.`,
+      count: newDocs.length,
       object: DatabaseEspService.espDocsToLights(newDocs),
     };
   }
 
-  async restartWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
+  async restartWithTag(tag: string): Promise<CountResponse<PartialLight[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 
     this.tcpService.batchSendData(`{"command": "restart"}`, docs);
 
     return {
       message: "Restarting...",
+      count: docs.length,
       object: DatabaseEspService.espDocsToPartialLights(docs),
     };
   }
 
-  async resetWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
+  async resetWithTag(tag: string): Promise<CountResponse<PartialLight[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 
     this.databaseService.deleteEspsWithTag(tag)
@@ -77,6 +80,7 @@ export class ControlService {
 
     return {
       message: "Resetting...",
+      count: docs.length,
       object: DatabaseEspService.espDocsToPartialLights(docs),
     };
   }

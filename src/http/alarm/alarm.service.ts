@@ -3,7 +3,7 @@ import { findIndex, keys, pickBy, compact, remove } from "lodash";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import tinycolor from "tinycolor2";
-import { Alarm, Light, StandartResponse } from "../../interfaces";
+import { Alarm, Light, StandartResponse, CountResponse } from "../../interfaces";
 import { AlarmDocument } from "../../schemas/alarm.schema";
 import { Esp, EspDocument } from "../../schemas/esp.schema";
 import { CronService } from "../../services/cron/cron.service";
@@ -23,7 +23,7 @@ export class AlarmService {
 
 
   private runningAlarms: {
-    id: string, 
+    id: string,
     interval: NodeJS.Timeout
   }[] = [];
 
@@ -97,7 +97,7 @@ export class AlarmService {
         const oldLight: Light = DatabaseEspService.espDocToLight(await this.databaseServiceEsp.getEspWithId(
           //@ts-ignore
           esp.uuid,
-          )); 
+          ));
 
         const newDoc = await this.databaseServiceEsp.updateEspWithId(oldLight.id, {
           leds: {
@@ -149,7 +149,7 @@ export class AlarmService {
       date.getHours() +
       " * * " +
       (days ?? "*");
-    
+
     this.cronService.addCronJob(
       "alarm-" + alarm._id.toString(),
       schedulerDate,
@@ -167,10 +167,11 @@ export class AlarmService {
     };
   }
 
-  async getAlarms() : Promise<StandartResponse<Alarm[]>> {
+  async getAlarms() : Promise<CountResponse<Alarm[]>> {
     const alarmDocs : AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
     return {
       message: "List of all Alarms",
+      count: alarmDocs.length,
       object: DatabaseAlarmService.alarmDocsToAlarm(alarmDocs)
     }
   }

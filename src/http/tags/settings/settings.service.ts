@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { filter, pickBy } from 'lodash';
 import { NothingChangedException } from 'src/exceptions/nothing-changed.exception';
 import { OffException } from 'src/exceptions/off.exception';
-import { Light, StandartResponse } from 'src/interfaces';
+import { CountResponse, Light, StandartResponse } from 'src/interfaces';
 import { EspDocument } from 'src/schemas/esp.schema';
 import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
 import { TcpService } from 'src/services/tcp/tcp.service';
@@ -18,15 +18,15 @@ export class SettingsService {
     async setBrightness(
         tag: string,
         brightness: number,
-      ): Promise<StandartResponse<Light[]>> {
+      ): Promise<CountResponse<Light[]>> {
 
         const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
-    
+
         if (!filter(oldDocs, (doc: EspDocument) => doc.brightness != brightness).length) {
-            
+
           throw new NothingChangedException();
         }
-    
+
         if (!filter(oldDocs, (doc: EspDocument) => doc.isOn).length) throw new OffException();
         this.tcpService.batchSendData(
           `{"command": "brightness", "data": "${brightness}"}`,
@@ -35,9 +35,10 @@ export class SettingsService {
         const newDocs: EspDocument[] = await this.databaseService.updateEspsWithTag(tag, {
           brightness: brightness,
         });
-    
+
         return {
           message: "Succesfully updated Lights brightness",
+          count: newDocs.length,
           object: DatabaseEspService.espDocsToLights(newDocs),
         };
       }

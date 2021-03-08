@@ -2,7 +2,7 @@ import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { BlinkLedsDto } from 'src/http/lights/color/dto/blink-leds.dto';
 import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
 import { UpdateLedsDto } from '../../../http/lights/color/dto/update-leds.dto';
-import { Light, StandartResponse } from '../../../interfaces';
+import { CountResponse, Light, StandartResponse } from '../../../interfaces';
 import { EspDocument } from '../../../schemas/esp.schema';
 import { TcpService } from '../../../services/tcp/tcp.service';
 import { UtilsService } from '../../../services/utils/utils.service';
@@ -19,7 +19,7 @@ export class ColorService {
   async updateLedsWithTag(
     tag: string,
     data: UpdateLedsDto,
-  ): Promise<StandartResponse<Light[]>> {
+  ): Promise<CountResponse<Light[]>> {
     data.colors = this.utilsService.makeValidHexArray(data.colors);
 
     const on: boolean[] = await this.databaseService.getEspsWithTag(tag, true).distinct("isOn").exec();
@@ -39,11 +39,12 @@ export class ColorService {
     )}, "pattern": "${data.pattern}"`, newDocs);
     return {
       message: "Succesfully changed the color of the light!",
+      count: newDocs.length,
       object: DatabaseEspService.espDocsToLights(newDocs),
     };
   }
 
-  async blink(tag: string, data: BlinkLedsDto): Promise<StandartResponse<Light[]>> {
+  async blink(tag: string, data: BlinkLedsDto): Promise<CountResponse<Light[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
     const areOn: boolean[] = [];
     // mit absich nicht this.databaseService.getEspsWithTag(tag, true).distinct("isOn").exec();
@@ -64,6 +65,7 @@ export class ColorService {
     ), docs)
     return {
       message: "Blinking color!",
+      count: docs.length,
       object: DatabaseEspService.espDocsToLights(docs),
     };
   }

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Put, ValidationPipe } from '@nestjs/common';
-import { Light, PartialLight, StandartResponse } from '../../interfaces';
+import { CountResponse, Light, PartialLight, StandartResponse } from '../../interfaces';
 import { ColorService } from './color/color.service';
 import { BlinkLedsDto } from './color/dto/blink-leds.dto';
 import { BlinkingLedsDto } from './color/dto/blinking-leds.dto';
@@ -25,7 +25,7 @@ export class LightsController {
 
     //general service
     @Get("")
-    async getAll(): Promise<StandartResponse<Light[]>> {
+    async getAll(): Promise<CountResponse<Light[]>> {
         return this.generalService.getAll();
     }
 
