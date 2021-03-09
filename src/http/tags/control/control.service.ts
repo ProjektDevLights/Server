@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NothingChangedException } from 'src/exceptions/nothing-changed.exception';
 import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
-import { CountResponse, Light, PartialLight, StandartResponse } from '../../../interfaces';
+import { Light, PartialLight, StandartResponse } from '../../../interfaces';
 import { EspDocument } from '../../../schemas/esp.schema';
 import { TcpService } from '../../../services/tcp/tcp.service';
 
@@ -13,7 +13,7 @@ export class ControlService {
     private tcpService: TcpService
   ) { }
 
-  async onTags(tag: string): Promise<CountResponse<Light[]>> {
+  async onTags(tag: string): Promise<StandartResponse<Light[]>> {
     const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
     const newLights: Light[] = [];
     oldDocs.forEach((doc: EspDocument) => {
@@ -35,7 +35,7 @@ export class ControlService {
     };
   }
 
-  async offTags(tag: string): Promise<CountResponse<Light[]>> {
+  async offTags(tag: string): Promise<StandartResponse<Light[]>> {
     const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
     const newLights: Light[] = [];
     oldDocs.forEach((doc: EspDocument) => {
@@ -59,7 +59,7 @@ export class ControlService {
     };
   }
 
-  async restartWithTag(tag: string): Promise<CountResponse<PartialLight[]>> {
+  async restartWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 
     this.tcpService.batchSendData(`{"command": "restart"}`, docs);
@@ -71,7 +71,7 @@ export class ControlService {
     };
   }
 
-  async resetWithTag(tag: string): Promise<CountResponse<PartialLight[]>> {
+  async resetWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 
     this.databaseService.deleteEspsWithTag(tag)

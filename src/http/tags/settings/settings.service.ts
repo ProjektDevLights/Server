@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { filter, pickBy } from 'lodash';
+import { filter } from 'lodash';
 import { NothingChangedException } from 'src/exceptions/nothing-changed.exception';
 import { OffException } from 'src/exceptions/off.exception';
-import { CountResponse, Light, StandartResponse } from 'src/interfaces';
+import { Light, StandartResponse } from 'src/interfaces';
 import { EspDocument } from 'src/schemas/esp.schema';
 import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
 import { TcpService } from 'src/services/tcp/tcp.service';
@@ -18,7 +18,7 @@ export class SettingsService {
     async setBrightness(
         tag: string,
         brightness: number,
-      ): Promise<CountResponse<Light[]>> {
+      ): Promise<StandartResponse<Light[]>> {
 
         const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 

@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Put, ValidationPipe } from "@nestjs/common";
-import { StandartResponse, Alarm, CountResponse } from "src/interfaces";
+import { StandartResponse, Alarm } from "src/interfaces";
 import { AlarmService } from "./alarm.service";
 import { AlarmDto } from "./dto/alarm.dto";
 
@@ -15,7 +15,7 @@ export class AlarmController {
   }
 
    @Get("")
-   async getAlarms() : Promise<CountResponse<Alarm[]>> {
+   async getAlarms() : Promise<StandartResponse<Alarm[]>> {
      return this.alarmService.getAlarms();
    }
 

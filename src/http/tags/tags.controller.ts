@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, ValidationPipe } from '@nestjs/common';
-import { CountResponse, Light, PartialLight, StandartResponse } from '../../interfaces';
+import { StandartResponse, Light, PartialLight } from '../../interfaces';
 import { BlinkLedsDto } from '../lights/color/dto/blink-leds.dto';
 import { UpdateLedsDto } from '../lights/color/dto/update-leds.dto';
 import UpdateBrightnessDto from '../lights/settings/dto/update-brightness.dto';
@@ -29,41 +29,41 @@ export class TagsController {
   @Get(":tag")
   async getWithTag(
     @Param("tag") tag: string,
-  ): Promise<CountResponse<Light[]>> {
+  ): Promise<StandartResponse<Light[]>> {
     return this.generalService.getWithTag(tag);
   }
 
   //control service
   @Patch(":tag/on")
-  async onTags(@Param("tag") tag: string): Promise<CountResponse<Light[]>> {
+  async onTags(@Param("tag") tag: string): Promise<StandartResponse<Light[]>> {
     return this.controlService.onTags(tag);
   }
 
   @Patch(":tag/off")
-  async offTags(@Param("tag") tag: string): Promise<CountResponse<Light[]>> {
+  async offTags(@Param("tag") tag: string): Promise<StandartResponse<Light[]>> {
     return this.controlService.offTags(tag);
   }
 
   @Post(":tag/restart")
-  async restartWithTag(@Param("tag") tag: string): Promise<CountResponse<PartialLight[]>> {
+  async restartWithTag(@Param("tag") tag: string): Promise<StandartResponse<PartialLight[]>> {
     return this.controlService.restartWithTag(tag);
   }
 
 
   @Delete(":tag/reset")
-  async resetWithTag(@Param("tag") tag: string): Promise<CountResponse<PartialLight[]>> {
+  async resetWithTag(@Param("tag") tag: string): Promise<StandartResponse<PartialLight[]>> {
     return this.controlService.resetWithTag(tag);
   }
 
   //color service
 
   @Patch(":tag/color")
-  updateColor(@Param("tag") tag: string, @Body(new ValidationPipe()) data: UpdateLedsDto): Promise<CountResponse<Light[]>> {
+  updateColor(@Param("tag") tag: string, @Body(new ValidationPipe()) data: UpdateLedsDto): Promise<StandartResponse<Light[]>> {
     return this.colorService.updateLedsWithTag(tag, data);
   }
 
   @Post(":tag/blink")
-  async blink(@Param("tag") tag: string, @Body(new ValidationPipe()) data: BlinkLedsDto): Promise<CountResponse<Light[]>> {
+  async blink(@Param("tag") tag: string, @Body(new ValidationPipe()) data: BlinkLedsDto): Promise<StandartResponse<Light[]>> {
     return this.colorService.blink(tag, data);
   }
 
@@ -72,7 +72,7 @@ export class TagsController {
   async brightness(
     @Param("tag") tag: string,
     @Body(new ValidationPipe()) data: UpdateBrightnessDto
-  ): Promise<CountResponse<Light[]>>{
+  ): Promise<StandartResponse<Light[]>>{
     return this.settingsService.setBrightness(tag,data.brightness)
   }
 }

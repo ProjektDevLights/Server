@@ -3,7 +3,7 @@ import { findIndex, keys, pickBy, compact, remove } from "lodash";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import tinycolor from "tinycolor2";
-import { Alarm, Light, StandartResponse, CountResponse } from "../../interfaces";
+import { Alarm, Light, StandartResponse } from "../../interfaces";
 import { AlarmDocument } from "../../schemas/alarm.schema";
 import { Esp, EspDocument } from "../../schemas/esp.schema";
 import { CronService } from "../../services/cron/cron.service";
@@ -167,7 +167,7 @@ export class AlarmService {
     };
   }
 
-  async getAlarms() : Promise<CountResponse<Alarm[]>> {
+  async getAlarms() : Promise<StandartResponse<Alarm[]>> {
     const alarmDocs : AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
     return {
       message: "List of all Alarms",

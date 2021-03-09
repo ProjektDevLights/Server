@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { TcpService } from "src/services/tcp/tcp.service";
-import { CountResponse, Light, StandartResponse } from "../../../interfaces";
+import { Light, StandartResponse } from "../../../interfaces";
 import { EspDocument } from "../../../schemas/esp.schema";
 
 @Injectable()
@@ -11,7 +11,7 @@ export class GeneralService {
     private databaseService: DatabaseEspService,
   ) {}
 
-  async getAll(): Promise<CountResponse<Light[]>> {
+  async getAll(): Promise<StandartResponse<Light[]>> {
     let esps: Light[] = DatabaseEspService.espDocsToLights(
       await this.databaseService.getEsps()
     );
