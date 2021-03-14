@@ -1,11 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { findIndex, keys, pickBy, compact, remove } from "lodash";
+import { keys, pickBy, remove } from "lodash";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
-import tinycolor from "tinycolor2";
 import { Alarm, Light, StandartResponse } from "../../interfaces";
 import { AlarmDocument } from "../../schemas/alarm.schema";
-import { Esp, EspDocument } from "../../schemas/esp.schema";
+import { EspDocument } from "../../schemas/esp.schema";
 import { CronService } from "../../services/cron/cron.service";
 import { TcpService } from "../../services/tcp/tcp.service";
 import { UtilsService } from "../../services/utils/utils.service";
@@ -21,43 +20,49 @@ export class AlarmService {
     private cronService: CronService,
   ) {}
 
-
   private runningAlarms: {
-    id: string,
-    interval: NodeJS.Timeout
+    id: string;
+    interval: NodeJS.Timeout;
   }[] = [];
 
   fadingCallback = async (id: string): Promise<void> => {
-
     console.log(id);
-    const alarm: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(id);
+    const alarm: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(
+      id,
+    );
 
-    const alarmIndexes = keys(pickBy(this.runningAlarms, (entry) => entry.id.includes(id)));
+    const alarmIndexes = keys(
+      pickBy(this.runningAlarms, entry => entry.id.includes(id)),
+    );
     console.log(alarmIndexes);
     alarmIndexes.forEach((i: string) => {
       console.log(parseInt(i));
-      this.databaseServiceEsp.updateEspWithId(this.runningAlarms[parseInt(i)].id.split("-")[0], {
-        leds: {
-          colors: [alarm.color],
-          pattern: "plain",
-        },
-      }).then((espDoc: EspDocument) => {
-        this.tcpService.sendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-          [alarm.color]
-          )}, "pattern": "plain"}}`,
-          espDoc.ip,
-        );
-      });
+      this.databaseServiceEsp
+        .updateEspWithId(this.runningAlarms[parseInt(i)].id.split("-")[0], {
+          leds: {
+            colors: [alarm.color],
+            pattern: "plain",
+          },
+        })
+        .then((espDoc: EspDocument) => {
+          this.tcpService.sendData(
+            `{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
+              [alarm.color],
+            )}, "pattern": "plain"}}`,
+            espDoc.ip,
+          );
+        });
       try {
-        clearInterval(this.runningAlarms[parseInt(i)].interval)
+        clearInterval(this.runningAlarms[parseInt(i)].interval);
       } catch {}
-      this.runningAlarms[parseInt(i)] = undefined
-    })
-    remove(this.runningAlarms, (value) => value == undefined);
+      this.runningAlarms[parseInt(i)] = undefined;
+    });
+    remove(this.runningAlarms, value => value == undefined);
     console.log(this.runningAlarms);
-  }
+  };
 
   async scheduleAlarm(data: AlarmDto): Promise<StandartResponse<Alarm>> {
+    data.color = this.utilsService.makeValidHex(data.color);
     const espIds: string[] = await this.databaseServiceEsp
       .getEspsWithMultipleIds(data.ids, true)
       .distinct("_id")
@@ -88,33 +93,36 @@ export class AlarmService {
 
     let waking = async (name: string) => {
       let alarmWithId = await this.databaseServiceAlarm.getAlarmWithId(
-        name.split("-")[1]
+        name.split("-")[1],
       );
       console.log("Farbe 000000");
 
-
       alarmWithId.esps.forEach(async esp => {
-        const oldLight: Light = DatabaseEspService.espDocToLight(await this.databaseServiceEsp.getEspWithId(
-          //@ts-ignore
-          esp.uuid,
-          ));
+        const oldLight: Light = DatabaseEspService.espDocToLight(
+          await this.databaseServiceEsp.getEspWithId(
+            //@ts-ignore
+            esp.uuid,
+          ),
+        );
 
-        const newDoc = await this.databaseServiceEsp.updateEspWithId(oldLight.id, {
-          leds: {
-            colors: ["#000000"],
-            pattern: "waking"
+        const newDoc = await this.databaseServiceEsp.updateEspWithId(
+          oldLight.id,
+          {
+            leds: {
+              colors: ["#000000"],
+              pattern: "waking",
+            },
+            brightness: 255,
+            isOn: true,
           },
-          brightness: 255,
-          isOn: true,
-        });
-        this.tcpService.sendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-          ["#000000"]
+        );
+        this.tcpService.sendData(
+          `{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
+            ["#000000"],
           )}, "pattern": "plain"}}`,
           newDoc.ip,
         );
-        this.tcpService.sendData(`{ "command": "on" }`,
-          newDoc.ip,
-        );
+        this.tcpService.sendData(`{ "command": "on" }`, newDoc.ip);
         this.tcpService.sendData(
           `{"command": "brightness", "data": 255 }`,
           newDoc.ip,
@@ -123,14 +131,18 @@ export class AlarmService {
         console.log("fading");
         const interval: NodeJS.Timeout = this.utilsService.fading(
           newDoc.id,
-          { color: alarmWithId.color, time: 5000 * 60, delay: (5000 * 60) / 255 },
+          {
+            color: alarmWithId.color,
+            time: 5000 * 60,
+            delay: (5000 * 60) / 255,
+          },
           newDoc,
-          this.fadingCallback
+          this.fadingCallback,
         );
         this.runningAlarms.push({
           id: newDoc.uuid + "-" + alarmWithId.id,
           interval: interval,
-        })
+        });
       });
     };
 
@@ -163,43 +175,50 @@ export class AlarmService {
 
     return {
       message: "Succesfully scheduled alarm!",
-      object: DatabaseAlarmService.alarmDocToAlarm(await this.databaseServiceAlarm.getAlarmWithId(alarm.id)),
+      object: DatabaseAlarmService.alarmDocToAlarm(
+        await this.databaseServiceAlarm.getAlarmWithId(alarm.id),
+      ),
     };
   }
 
-  async getAlarms() : Promise<StandartResponse<Alarm[]>> {
-    const alarmDocs : AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
+  async getAlarms(): Promise<StandartResponse<Alarm[]>> {
+    const alarmDocs: AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
     return {
       message: "List of all Alarms",
       count: alarmDocs.length,
-      object: DatabaseAlarmService.alarmDocsToAlarm(alarmDocs)
-    }
+      object: DatabaseAlarmService.alarmDocsToAlarm(alarmDocs),
+    };
   }
 
-  async deleteAlarm(id: string) : Promise<StandartResponse<Alarm>> {
-    const oldDoc : AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(id);
+  async deleteAlarm(id: string): Promise<StandartResponse<Alarm>> {
+    const oldDoc: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(
+      id,
+    );
     this.cronService.deleteCron("alarm-" + id);
     await this.databaseServiceAlarm.deleteAlarmWithId(id);
     return {
       message: "Successfully deleted Alarm",
-      object: DatabaseAlarmService.alarmDocToAlarm(oldDoc)
-    }
+      object: DatabaseAlarmService.alarmDocToAlarm(oldDoc),
+    };
   }
 
-
-  async getAlarmWithId(id : string): Promise<StandartResponse<Alarm>> {
+  async getAlarmWithId(id: string): Promise<StandartResponse<Alarm>> {
     return {
       message: "Alarm with ID: " + id,
-      object: DatabaseAlarmService.alarmDocToAlarm(await this.databaseServiceAlarm.getAlarmWithId(id))
-    }
+      object: DatabaseAlarmService.alarmDocToAlarm(
+        await this.databaseServiceAlarm.getAlarmWithId(id),
+      ),
+    };
   }
 
   async stopAlarm(id: string): Promise<StandartResponse<Alarm>> {
-    const alarm: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(id);
+    const alarm: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(
+      id,
+    );
     this.fadingCallback(id);
     return {
       message: "Succesfully stopped alarm with ID " + id,
-      object: DatabaseAlarmService.alarmDocToAlarm(alarm)
-    }
+      object: DatabaseAlarmService.alarmDocToAlarm(alarm),
+    };
   }
 }
