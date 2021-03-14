@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { keys, pickBy, remove } from "lodash";
+import moment from "moment";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { Alarm, Light, StandartResponse } from "../../interfaces";
@@ -25,29 +26,22 @@ export class AlarmService {
     interval: NodeJS.Timeout;
   }[] = [];
 
-  fadingCallback = async (id: string): Promise<void> => {
-    console.log(id);
-    const alarm: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(
-      id,
-    );
-
+  fadingCallback = async (id: string, color: string): Promise<void> => {
     const alarmIndexes = keys(
       pickBy(this.runningAlarms, entry => entry.id.includes(id)),
     );
-    console.log(alarmIndexes);
     alarmIndexes.forEach((i: string) => {
-      console.log(parseInt(i));
       this.databaseServiceEsp
         .updateEspWithId(this.runningAlarms[parseInt(i)].id.split("-")[0], {
           leds: {
-            colors: [alarm.color],
+            colors: [color],
             pattern: "plain",
           },
         })
         .then((espDoc: EspDocument) => {
           this.tcpService.sendData(
             `{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-              [alarm.color],
+              [color],
             )}, "pattern": "plain"}}`,
             espDoc.ip,
           );
@@ -58,7 +52,6 @@ export class AlarmService {
       this.runningAlarms[parseInt(i)] = undefined;
     });
     remove(this.runningAlarms, value => value == undefined);
-    console.log(this.runningAlarms);
   };
 
   async scheduleAlarm(data: AlarmDto): Promise<StandartResponse<Alarm>> {
@@ -95,7 +88,6 @@ export class AlarmService {
       let alarmWithId = await this.databaseServiceAlarm.getAlarmWithId(
         name.split("-")[1],
       );
-      console.log("Farbe 000000");
 
       alarmWithId.esps.forEach(async esp => {
         const oldLight: Light = DatabaseEspService.espDocToLight(
@@ -128,7 +120,6 @@ export class AlarmService {
           newDoc.ip,
         );
 
-        console.log("fading");
         const interval: NodeJS.Timeout = this.utilsService.fading(
           newDoc.id,
           {
@@ -137,7 +128,7 @@ export class AlarmService {
             delay: (5000 * 60) / 255,
           },
           newDoc,
-          this.fadingCallback,
+          () => this.fadingCallback(name.split("-")[1], alarmWithId.color),
         );
         this.runningAlarms.push({
           id: newDoc.uuid + "-" + alarmWithId.id,
@@ -148,11 +139,9 @@ export class AlarmService {
 
     let finished = async (name: string) => {
       const id = name.split("-")[1];
-      console.log("finished");
       this.databaseServiceAlarm.deleteAlarmWithId(id);
     };
 
-    console.log("scheduling");
     let schedulerDate: string =
       date.getSeconds() +
       " " +
@@ -160,19 +149,18 @@ export class AlarmService {
       " " +
       date.getHours() +
       " * * " +
-      (days ?? "*");
+      (days.length ? days : "*");
 
     this.cronService.addCronJob(
       "alarm-" + alarm._id.toString(),
-      schedulerDate,
+      !days.length && !repeat
+        ? moment.utc(alarm.date).add(2, "seconds")
+        : schedulerDate,
       repeat,
       waking,
       finished,
       date,
     );
-
-    //console.log(alarm.esps);
-
     return {
       message: "Succesfully scheduled alarm!",
       object: DatabaseAlarmService.alarmDocToAlarm(
@@ -215,7 +203,7 @@ export class AlarmService {
     const alarm: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(
       id,
     );
-    this.fadingCallback(id);
+    this.fadingCallback(id, alarm.color);
     return {
       message: "Succesfully stopped alarm with ID " + id,
       object: DatabaseAlarmService.alarmDocToAlarm(alarm),

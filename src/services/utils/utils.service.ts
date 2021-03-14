@@ -82,7 +82,7 @@ export class UtilsService {
   }
 
   hexArrayToRgb(colors: string[]): string {
-    if(colors.length == 0) return "[]";
+    if (colors.length == 0) return "[]";
     let rgb: string[] = [];
     colors.forEach(color => {
       rgb.push(this.hexToRgb(color));
@@ -91,7 +91,7 @@ export class UtilsService {
   }
 
   makeValidHexArray(colors: string[]): string[] {
-    if(colors.length == 0) return [];
+    if (colors.length == 0) return [];
     let hex: string[] = [];
     colors.forEach(color => {
       hex.push(this.makeValidHex(color));
@@ -110,55 +110,57 @@ export class UtilsService {
   async isAlarmIdValid(id: string): Promise<boolean> {
     try {
       await this.databaseServiceAlarm.getAlarmWithId(id);
-    } catch{return false}
-    return  true
+    } catch {
+      return false;
+    }
+    return true;
   }
 
-
-
   isValidPattern(data: Leds): boolean {
-
     // length > 1 => gradient
     // length == 1 => plain or runner
     // length == 0 => fading or rainbow
 
-    switch(data.colors.length){
+    switch (data.colors.length) {
       case 0: {
-        switch(data.pattern){
+        switch (data.pattern) {
           case "fading": {
-            return !(!data.timeout);
+            return !!data.timeout;
           }
           case "rainbow": {
-            return !(!data.timeout);
+            return !!data.timeout;
           }
-          default: return false;
+          default:
+            return false;
         }
       }
-      case 1:{
-        return (data.pattern === "plain" && !data.timeout) || (data.pattern === "runner" && !(!data.timeout))
+      case 1: {
+        return (
+          (data.pattern === "plain" && !data.timeout) ||
+          (data.pattern === "runner" && !!data.timeout)
+        );
       }
-      case 2:{
+      case 2: {
         return data.pattern === "gradient" && !data.timeout;
       }
-      default: return false;
+      default:
+        return false;
     }
-
-
   }
 
   fading(
     id: string,
     data: { color: string; time: number; delay: number },
     oldLight: EspDocument,
-    callback: Function
+    callback: Function,
   ): NodeJS.Timeout {
     let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
 
-    console.log(colorTo);
+    //console.log(colorTo);
     let colorStart: ColorFormats.RGB = tinycolor(
       oldLight.leds.colors[0],
     ).toRgb();
-    console.log(colorStart);
+    //console.log(colorStart);
     let rStep: number = this.generateStep(
       colorStart.r,
       colorTo.r,
@@ -181,7 +183,7 @@ export class UtilsService {
     let runs: number = Math.round(data.time / data.delay);
 
     let colorRun: ColorFormats.RGB = colorStart;
-    console.log({ rStep, gStep, bStep });
+    // console.log({ rStep, gStep, bStep });
     const runInterval = setInterval(async () => {
       if (runs <= 0) {
         callback();
@@ -191,7 +193,6 @@ export class UtilsService {
       colorRun.r = this.applyStep(colorRun.r, rStep, colorTo.r);
       colorRun.g = this.applyStep(colorRun.g, gStep, colorTo.g);
       colorRun.b = this.applyStep(colorRun.b, bStep, colorTo.b);
-      console.log(colorRun);
       this.tcpService.sendData(
         `{"command": "leds", "data": {"colors": ["${this.hexToRgb(
           tinycolor(colorRun).toHexString(),

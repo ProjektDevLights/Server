@@ -26,20 +26,19 @@ export class TcpService {
       });
       c.on("connect", () => {
         console.log("connected");
-
-      }).on("end", () => {
-        console.log("ended");
-
-      }).on("close", () => {
-        console.log("closed");
-
-      }).on("error", () => {
-        console.log("error");
-
-      }).on("timeout", () => {
-        console.log("timeout");
-
       })
+        .on("end", () => {
+          console.log("ended");
+        })
+        .on("close", () => {
+          console.log("closed");
+        })
+        .on("error", () => {
+          console.log("error");
+        })
+        .on("timeout", () => {
+          console.log("timeout");
+        });
     });
     this.server.listen(2389, () => {});
   }
@@ -54,10 +53,10 @@ export class TcpService {
       const client: net.Socket = find(this.clients, { ip: ip }).socket;
       client.write(data + "\n", () => {});
     } catch (e) {
-      console.error(e);
-/*       throw new ServiceUnavailableException(
+      //console.error(e);
+      throw new ServiceUnavailableException(
         "The Light is not plugged in or started yet!",
-      ); */
+      );
     }
     return;
   }
