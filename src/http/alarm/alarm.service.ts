@@ -39,10 +39,14 @@ export class AlarmService {
           },
         })
         .then((espDoc: EspDocument) => {
+
+
+
           this.tcpService.sendData(
-            `{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-              [color],
-            )}, "pattern": "plain"}}`,
+            this.utilsService.genJSONforEsp(
+              "leds", {
+              "colors": this.utilsService.hexToRgb(this.utilsService.hexArrayToRgb([color])), "pattern": "plain"
+            }),
             espDoc.ip,
           );
         });
@@ -108,17 +112,18 @@ export class AlarmService {
             isOn: true,
           },
         );
+
+
+
         this.tcpService.sendData(
-          `{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-            ["#000000"],
-          )}, "pattern": "plain"}}`,
+          this.utilsService.genJSONforEsp(
+            "leds", {
+            "colors": this.utilsService.hexArrayToRgb(["#000000"],), "pattern": "plain"
+          }),
           newDoc.ip,
         );
-        this.tcpService.sendData(`{ "command": "on" }`, newDoc.ip);
-        this.tcpService.sendData(
-          `{"command": "brightness", "data": 255 }`,
-          newDoc.ip,
-        );
+        this.tcpService.sendData(this.utilsService.genJSONforEsp("on"), newDoc.ip);
+        this.tcpService.sendData(this.utilsService.genJSONforEsp("brightness", 255),newDoc.ip,);
 
         const interval: NodeJS.Timeout = this.utilsService.fading(
           newDoc.id,

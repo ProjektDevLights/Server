@@ -38,9 +38,14 @@ export class ColorService {
     if (!oldDoc.isOn) throw new OffException();
     //if (["waking", "blinking"].includes(oldDoc.leds.pattern)) throw new CustomException("The light is currently in a mode, where changing color is not supported", 423);
 
-    this.tcpService.sendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-      data.colors,
-    )}, "pattern": "${data.pattern}", "timeout": ${data.timeout}}}`, oldDoc.ip);
+    this.tcpService.sendData(
+      this.utilsService.genJSONforEsp(
+        "leds", {
+        "colors": this.utilsService.hexArrayToRgb(data.colors,), "pattern": data.pattern, "timeout": data.timeout
+        }),
+    oldDoc.ip);
+
+
 
     const newDoc = await this.databaseService.updateEspWithId(id, {
       leds: {
@@ -73,9 +78,14 @@ export class ColorService {
 
     let resDoc: EspDocument;
     if (data.delay < 1000 || data.time < 2000) {
-      this.tcpService.sendData(`{"command": "fade", "data": {"color":"${this.utilsService.hexToRgb(
-        data.color,
-      )}"}"]}}`, oldDoc.ip);
+
+      this.tcpService.sendData(
+        this.utilsService.genJSONforEsp(
+          "fade", {
+          "color": this.utilsService.hexToRgb(data.color)
+          }),
+        oldDoc.ip);
+
       resDoc = await this.databaseService.updateEspWithId(id, { leds: { colors: [data.color], pattern: "plain" } })
     } else {
 
@@ -119,8 +129,13 @@ export class ColorService {
 
 
     if (!doc.isOn) throw new OffException();
-    this.tcpService.sendData(`{"command": "blink", "data": {"color": "${this.utilsService.hexToRgb(data.color)}", "time": ${data.time}}}`, doc.ip);
-
+    this.tcpService.sendData(
+      this.utilsService.genJSONforEsp(
+        "blink", {
+        "color": this.utilsService.hexToRgb(data.color), "time": data.time
+      }),
+      doc.ip
+    );
     return {
       message: "Blinking color!",
       object: DatabaseEspService.espDocToLight(doc),
@@ -160,9 +175,11 @@ export class ColorService {
     const runInterval = setInterval(() => {
       if (runs <= 0) {
 
-        this.tcpService.sendData(`{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-          oldDoc.leds.colors,
-        )}, "pattern": "plain"}}`, oldDoc.ip);
+        this.tcpService.sendData(
+          this.utilsService.genJSONforEsp(
+            "leds", {
+            "colors": this.utilsService.hexArrayToRgb(oldDoc.leds.colors), "pattern": "plain"
+        }), oldDoc.ip);
 
 
 
@@ -185,9 +202,14 @@ export class ColorService {
         cIndex = cIndex >= data?.colors?.length - 1 ? 0 : cIndex + 1;
       }
 
-      this.tcpService.sendData(`{"command": "leds", "data": {"colors": ["${this.utilsService.hexToRgb(
-        blinkColor
-      )}"], "pattern": "plain"}}`, oldDoc.ip);
+      this.tcpService.sendData(
+        this.utilsService.genJSONforEsp(
+          "leds", {
+          "colors": this.utilsService.hexToRgb(blinkColor), "pattern": "plain"
+        }),
+      oldDoc.ip);
+
+
 
       runs--;
     }, delay);

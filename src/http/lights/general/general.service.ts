@@ -33,7 +33,7 @@ export class GeneralService {
 
   async pass(id: string, data: string): Promise<StandartResponse<Light>> {
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
-    this.tcpService.sendData(data, doc.ip);
+    this.tcpService.sendData(JSON.parse(data), doc.ip);
     return {
       message: "Passed data",
       object: DatabaseEspService.espDocToLight(doc),
