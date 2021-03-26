@@ -4,8 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import cachegoose from "cachegoose";
 import { Model, MongooseUpdateQuery } from "mongoose";
 import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";
-import { EspDocument } from "src/schemas/esp.schema";
-import { Alarm as AlarmInterface } from "../../../interfaces"
+import { Alarm as AlarmInterface } from "../../../interfaces";
 import { DatabaseEspService } from "../esp/database-esp.service";
 
 @Injectable()
@@ -20,7 +19,7 @@ export class DatabaseAlarmService {
         .find()
         .populate({
           path: "esps",
-          select: '-__v -ip -_id'
+          select: "-__v -ip -_id",
         })
         //@ts-ignore
         .exec()
@@ -28,17 +27,17 @@ export class DatabaseAlarmService {
   }
 
   async getAlarmWithId(id: string): Promise<AlarmDocument> {
-
-    return this.alarmModel
-    .findById(id)
-    .populate({
-      path: "esps",
-      select: '-__v -_id'
-    })
-    //@ts-ignore
-    //.cache(0, "alarm-id-" + id)
-    .exec()
-
+    return (
+      this.alarmModel
+        .findById(id)
+        .populate({
+          path: "esps",
+          select: "-__v -_id",
+        })
+        //@ts-ignore
+        //.cache(0, "alarm-id-" + id)
+        .exec()
+    );
   }
 
   async updateAlarm(id: string, updateQuery: MongooseUpdateQuery<Alarm>) {
@@ -66,25 +65,26 @@ export class DatabaseAlarmService {
     const newAlarm: AlarmDocument = await this.alarmModel.create(alarm);
     return newAlarm;
   }
-  
-  static alarmDocsToAlarm(docs: AlarmDocument[]) : AlarmInterface[] {
-    const alarms : AlarmInterface[] = [];
+
+  static alarmDocsToAlarm(docs: AlarmDocument[]): AlarmInterface[] {
+    const alarms: AlarmInterface[] = [];
     docs.forEach((doc: AlarmDocument) => {
       alarms.push(this.alarmDocToAlarm(doc));
-    })
+    });
     return alarms;
   }
-  
-  static alarmDocToAlarm(doc: AlarmDocument) : AlarmInterface {
+
+  static alarmDocToAlarm(doc: AlarmDocument): AlarmInterface {
     return {
+      name: doc.name,
+      isOn: doc.isOn,
       id: doc._id,
       color: doc.color,
-      date: doc.date,
+      time: doc.time,
       days: doc.days,
       //@ts-ignore
       lights: DatabaseEspService.espDocsToPartialLights(doc.esps),
-      repeat: doc.repeat,
-    }
+    };
   }
 
   clear = (key: string) =>

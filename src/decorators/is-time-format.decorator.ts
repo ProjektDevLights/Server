@@ -1,17 +1,18 @@
 import { registerDecorator, ValidationOptions } from "class-validator";
-export function IsNotMultiLine(validationOptions?: ValidationOptions) {
+import moment from "moment";
+export function IsRightTimeFormat(validationOptions?: ValidationOptions) {
   return function(object: Object, propertyName: string) {
     registerDecorator({
-      name: "isNotMultiLine",
+      name: "isRightTimeFormat",
       target: object.constructor,
       propertyName: propertyName,
       options: {
-        message: `${propertyName} must not be multiline`,
+        message: `${propertyName} is not the right Time format, must be HH:mm`,
         ...validationOptions,
       },
       validator: {
         validate(value: any) {
-          return !value.includes("\n") && !value.includes("\r");
+          return moment(value, "HH:mm", true).isValid();
         },
       },
     });

@@ -1,22 +1,27 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import * as mongoose from "mongoose";
-import { Esp } from "./esp.schema";
 
 export type AlarmDocument = Alarm & mongoose.Document;
 
 @Schema()
 export class Alarm {
   @Prop({ required: true })
+  isOn: boolean;
+
+  @Prop({ required: true })
   color: string;
 
   @Prop({ required: true })
-  date: string;
+  time: string; // HH:MM 24
 
   @Prop({ required: true })
   days: number[];
 
+  @Prop({ required: false })
+  name?: string;
+
   @Prop({ required: true })
-  repeat: number;
+  cronPattern: string;
 
   @Prop({ required: true, type: [{ type: String, ref: "Esp" }] })
   esps: string[];

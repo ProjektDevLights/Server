@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsHexColor,
   IsInt,
   IsNotEmpty,
@@ -8,12 +9,17 @@ import {
   Max,
   Min,
 } from "class-validator";
-import { IsNotMultiLine } from "../../../decorators/is-not-multiline.decorator";
-import { IsRightTimeFormat } from "../../../decorators/is-time-format.decorator";
+import { IsNotMultiLine } from "src/decorators/is-not-multiline.decorator";
+import { IsRightTimeFormat } from "src/decorators/is-time-format.decorator";
 
-export class AlarmDto {
+export class EditAlarmsDto {
+  @IsOptional()
+  @IsBoolean()
+  isOn?: boolean;
+
+  @IsOptional()
   @IsRightTimeFormat()
-  time: string;
+  time?: string;
 
   @IsOptional()
   @Min(0, { each: true })
@@ -21,9 +27,11 @@ export class AlarmDto {
   @IsInt({ each: true })
   days?: number[] = [];
 
+  @IsOptional()
   @IsHexColor()
-  color: string;
+  color?: string;
 
+  @IsOptional()
   @IsNotEmpty()
   @IsString({ each: true })
   @Matches(
@@ -32,10 +40,10 @@ export class AlarmDto {
     ),
     { each: true },
   )
-  ids: string[];
+  ids?: string[];
 
   @IsOptional()
   @IsString()
   @IsNotMultiLine()
-  name: string;
+  name?: string;
 }

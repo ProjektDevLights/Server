@@ -1,7 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Put, ValidationPipe } from "@nestjs/common";
-import { StandartResponse, Alarm } from "src/interfaces";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Put,
+  ValidationPipe,
+} from "@nestjs/common";
+import { Alarm, StandartResponse } from "src/interfaces";
 import { AlarmService } from "./alarm.service";
 import { AlarmDto } from "./dto/alarm.dto";
+import { EditAlarmsDto } from "./dto/edit-alarm.dto";
 
 @Controller("alarm")
 export class AlarmController {
@@ -14,24 +24,26 @@ export class AlarmController {
     return this.alarmService.scheduleAlarm(data);
   }
 
-   @Get("")
-   async getAlarms() : Promise<StandartResponse<Alarm[]>> {
-     return this.alarmService.getAlarms();
-   }
+  @Get("")
+  async getAlarms(): Promise<StandartResponse<Alarm[]>> {
+    return this.alarmService.getAlarms();
+  }
 
-   @Delete(":id")
-   async deleteAlarm(@Param("id") id: string): Promise<StandartResponse<Alarm>> {
-     return this.alarmService.deleteAlarm(id);
-   }
+  @Delete(":id")
+  async deleteAlarm(@Param("id") id: string): Promise<StandartResponse<Alarm>> {
+    return this.alarmService.deleteAlarm(id);
+  }
 
-   @Delete(":id/stop")
-   async stopAlarm(@Param("id") id: string): Promise<StandartResponse<Alarm>>{
-    return this.alarmService.stopAlarm(id);
-   }
+  @Get(":id")
+  async getWithId(@Param("id") id: string): Promise<StandartResponse<Alarm>> {
+    return this.alarmService.getAlarmWithId(id);
+  }
 
-
-   @Get(":id")
-   async getWithId(@Param("id") id: string) : Promise<StandartResponse<Alarm>> {
-     return this.alarmService.getAlarmWithId(id);
-   }
+  @Patch(":id")
+  async editWithId(
+    @Param("id") id: string,
+    @Body(new ValidationPipe()) data: EditAlarmsDto,
+  ): Promise<StandartResponse<Alarm>> {
+    return this.alarmService.editAlarmWithId(id, data);
+  }
 }

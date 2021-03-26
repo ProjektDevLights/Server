@@ -1,7 +1,6 @@
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { CronJob } from "cron";
-import moment from "moment";
 
 @Injectable()
 export class CronService {
@@ -9,43 +8,12 @@ export class CronService {
 
   private readonly logger = new Logger(CronService.name);
 
-  addCronJob(
-    name: string,
-    cronPattern: string | moment.Moment,
-    repeat: number = 0,
-    callback: (name: string) => void,
-    finished: (name: string) => void,
-    startDate?: Date,
-  ): void {
-    const date = new Date();
-    date.setSeconds(date.getSeconds() + 2);
-    const startJob = new CronJob(startDate ?? date, () => {
+  addCron(name: string, cronPattern: string, callback: (name: string) => void) {
+    const job = new CronJob(cronPattern, () => {
       callback(name);
-      if (repeat == 0) {
-        const job = new CronJob(cronPattern, () => {
-          callback(name);
-          if (repeat <= -1) {
-            return;
-          }
-          if (repeat == 0) {
-            job.stop();
-            this.scheduler.deleteCronJob(name);
-            finished(name);
-            return;
-          }
-          repeat--;
-        });
-
-        this.scheduler.addCronJob(name, job);
-        job.start();
-      } else {
-        finished(name);
-      }
-      startJob.stop();
-      this.scheduler.deleteCronJob(name + "-start");
     });
-    this.scheduler.addCronJob(name + "-start", startJob);
-    startJob.start();
+    this.scheduler.addCronJob(name, job);
+    job.start();
   }
 
   deleteCron(name: string): boolean {

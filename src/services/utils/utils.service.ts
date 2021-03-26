@@ -152,7 +152,7 @@ export class UtilsService {
     id: string,
     data: { color: string; time: number; delay: number },
     oldLight: EspDocument,
-    callback: Function,
+    callback?: Function,
   ): NodeJS.Timeout {
     let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
 
