@@ -1,4 +1,6 @@
 import { Injectable } from "@nestjs/common";
+import { Commands, COMMANDS } from "src/interfaces/commands.inteface";
+import { Pattern } from "src/interfaces/patterns/pattern.type";
 import tinycolor, { ColorFormats } from "tinycolor2";
 import { Leds } from "../../interfaces";
 import { EspDocument } from "../../schemas/esp.schema";
@@ -194,9 +196,10 @@ export class UtilsService {
       colorRun.g = this.applyStep(colorRun.g, gStep, colorTo.g);
       colorRun.b = this.applyStep(colorRun.b, bStep, colorTo.b);
       this.tcpService.sendData(
-        `{"command": "leds", "data": {"colors": ["${this.hexToRgb(
-          tinycolor(colorRun).toHexString(),
-        )}"], "pattern": "plain"}}`,
+        this.genJSONforEsp(
+          "leds", {
+          "colors": this.hexToRgb(tinycolor(colorRun).toHexString()), "pattern": "plain"
+        }),
         oldLight.ip,
       );
 
@@ -223,4 +226,26 @@ export class UtilsService {
     if (start - step > goal && step <= 0) return goal;
     return start - step;
   }
+
+  //Commands
+
+  //leds
+  genJSONforEsp(command: Commands, data: {"colors": string[] | string, "pattern": Pattern, "timeout": number}): string
+  genJSONforEsp(command: Commands, data: {"colors": string[] | string, "pattern": Pattern}): string
+  //fade
+  genJSONforEsp(command: Commands, data: {"color": string}): string
+  //blink
+  genJSONforEsp(command: Commands, data: {"color": string, "time": number}): string
+  //count & brightness
+  genJSONforEsp(command: Commands, data: number): string
+  //restart, reset, etc.
+  genJSONforEsp(command: Commands): string
+  genJSONforEsp(command: Commands, data?: any): string {
+
+    if(data){
+      return `{"command": ${command}, "data": ${data}}`
+    }
+    return `{"command": ${command}}`
+  }
+
 }

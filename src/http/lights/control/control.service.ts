@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
+import { UtilsService } from "src/services/utils/utils.service";
 import { NothingChangedException } from "../../../exceptions/nothing-changed.exception";
 import { Light, PartialLight, StandartResponse } from "../../../interfaces";
 import { EspDocument } from "../../../schemas/esp.schema";
@@ -10,6 +11,7 @@ export class ControlService {
   constructor(
     private tcpService: TcpService,
     private databaseService: DatabaseEspService,
+    private utilsService: UtilsService,
   ) {}
 
   async on(id: string): Promise<StandartResponse<Light>> {
@@ -18,7 +20,7 @@ export class ControlService {
     if (oldDoc.isOn)
       throw new NothingChangedException("The light is already on");
 
-    this.tcpService.sendData(`{"command": "on"}`, oldDoc.ip);
+    this.tcpService.sendData(this.utilsService.genJSONforEsp("on"), oldDoc.ip);
 
     const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, {
       isOn: true,
@@ -36,7 +38,7 @@ export class ControlService {
     if (!oldDoc.isOn)
       throw new NothingChangedException("The light is already off");
 
-    this.tcpService.sendData(`{"command": "off"}`, oldDoc.ip);
+    this.tcpService.sendData(this.utilsService.genJSONforEsp("off"), oldDoc.ip);
 
     const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, {
       isOn: false,
@@ -51,7 +53,7 @@ export class ControlService {
   async restart(id: string): Promise<StandartResponse<PartialLight>> {
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
 
-    this.tcpService.sendData(`{"command": "restart"}`, doc.ip);
+    this.tcpService.sendData(this.utilsService.genJSONforEsp("restart"), doc.ip);
     this.tcpService.removeConnection(doc.ip);
 
     return {
@@ -62,7 +64,7 @@ export class ControlService {
 
   async reset(id: string): Promise<StandartResponse<PartialLight>> {
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
-    this.tcpService.sendData(`{"command": "reset"}`, doc.ip);
+    this.tcpService.sendData(this.utilsService.genJSONforEsp("reset"), doc.ip);
 
     await this.databaseService.deleteEspWithId(id);
 

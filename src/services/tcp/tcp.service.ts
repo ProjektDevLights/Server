@@ -64,7 +64,7 @@ export class TcpService {
   batchSendData(data: string, esps: EspDocument[]) {
     try {
       esps.forEach((esp: EspDocument) => {
-        this.sendData(data, esp.ip);
+        this.sendData(JSON.parse(data), esp.ip);
       });
     } catch {
       throw new ServiceUnavailableException(
