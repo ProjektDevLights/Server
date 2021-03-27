@@ -18,7 +18,7 @@ export class Alarm {
   days: number[];
 
   @Prop({ required: false })
-  name?: string;
+  name: string;
 
   @Prop({ required: true })
   cronPattern: string;

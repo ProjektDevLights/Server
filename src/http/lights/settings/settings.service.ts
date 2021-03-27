@@ -46,6 +46,7 @@ export class SettingsService {
       throw new NothingChangedException();
     }
 
+    console.log(this.utilsService.genJSONforEsp("brightness", brightness),);
     if (!oldDoc.isOn) throw new OffException();
     this.tcpService.sendData(
       this.utilsService.genJSONforEsp("brightness", brightness),

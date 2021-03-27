@@ -241,9 +241,18 @@ export class UtilsService {
   //restart, reset, etc.
   genJSONforEsp(command: Commands): string
   genJSONforEsp(command: Commands, data?: any): string {
-
+   console.log(data);
     if(data){
-      return `{"command": ${command}, "data": ${data}}`
+      if(typeof data === "object") {
+         if(data.colors) {
+           return `{"command": ${command}, "data": {"colors": ${data.colors}, "pattern": ${data.pattern}, ${data.timeout ? `"timeout": ${data.timeout}` : "" }}}`
+         } else if(data.color) {
+           return `{"command": ${command}, "data": {"color": ${data.color}, ${data.time ? `"time": ${data.time}` : ""}}}`
+         }
+        
+      } else {
+        return `{"command": ${command}, "data": ${data}}`
+      }
     }
     return `{"command": ${command}}`
   }

@@ -139,7 +139,7 @@ export class AlarmService {
         days: daysString.split(",").map(x => +x),
         esps: espIds,
         isOn: true,
-        name: data.name,
+        name: data.name ?? "New Alarm",
       })
     )._id;
 
@@ -157,11 +157,9 @@ export class AlarmService {
     request: EditAlarmsDto,
     database: EditAlarmsDto,
   ): boolean {
-    console.log(database);
     let equal: boolean = true;
     forIn(request, (data: unknown, key: string) => {
-      console.log(data && !isEqual(data, database[key]));
-      if (data && !isEqual(data, database[key])) {
+      if ((data && !isEqual(data, database[key])) || key === "isOn" && !isEqual(data, database[key])) {
         equal = false;
       }
     });
@@ -172,8 +170,8 @@ export class AlarmService {
     id: string,
     data: EditAlarmsDto,
   ): Promise<StandartResponse<Alarm>> {
+    console.log(data);
     const alarmDoc = await this.databaseServiceAlarm.getAlarmWithId(id);
-
     if (
       this.checkEquality(data, {
         color: alarmDoc.color,
@@ -181,6 +179,7 @@ export class AlarmService {
         ids: map(alarmDoc.esps, "uuid"),
         name: alarmDoc.name,
         time: alarmDoc.time,
+        isOn: alarmDoc.isOn
       })
     ) {
       throw new NothingChangedException();
@@ -190,19 +189,17 @@ export class AlarmService {
 
     if (data.isOn === false) {
       this.cronService.deleteCron(`alarm-${alarmDoc.id}`);
-      console.log("off");
     }
     if (
       ((data.time && data.time != alarmDoc.time) ||
         (data.days && data.days != alarmDoc.days)) &&
       (data.isOn === true || (data.isOn !== false && alarmDoc.isOn))
     ) {
-      console.log("datum change");
 
-      const splitTime: string[] = data.time.split(":");
+      const splitTime: string[] = data.time ? data.time.split(":") : alarmDoc.time.split(":");
       const daysString: string = data.days
         ? data.days.join(",")
-        : "0,1,2,3,4,5,6";
+        : "0,1,2,3,4,5,6" ;
       cronPattern = `${splitTime[1]} ${splitTime[0]} * * ${daysString}`;
       this.cronService.deleteCron(`alarm-${alarmDoc.id}`);
 
@@ -212,13 +209,11 @@ export class AlarmService {
         this.callback,
       );
     }
-
-    const espIds: string[] = data.ids
-      ? await this.databaseServiceEsp
-          .getEspsWithMultipleIds(data.ids, true)
+  
+    const espIds: string[] = await this.databaseServiceEsp
+          .getEspsWithMultipleIds(data.ids ?? map(alarmDoc.esps, "uuid"), true)
           .distinct("_id")
-          .exec()
-      : map(alarmDoc.esps, "_id");
+          .exec();    
     const newDocId: string = (
       await this.databaseServiceAlarm.updateAlarm(id, {
         esps: espIds,

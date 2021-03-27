@@ -29,21 +29,24 @@ export class ColorService {
     data: UpdateLedsDto,
   ): Promise<StandartResponse<Light>> {
 
-
+    console.log(data);
     data.colors = this.utilsService.makeValidHexArray(data.colors);
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
 
     if (isEqual(data.colors, oldDoc.leds.colors) && isEqual(data.pattern, oldDoc.leds.pattern) && isEqual(data.timeout, oldDoc.leds.timeout)) throw new NothingChangedException("Nothing changed");
     if (!this.utilsService.isValidPattern(data)) throw new BadRequestException("Wrong colors or pattern provided");
-    if (!oldDoc.isOn) throw new OffException();
+    /* if (!oldDoc.isOn) throw new OffException(); */
     //if (["waking", "blinking"].includes(oldDoc.leds.pattern)) throw new CustomException("The light is currently in a mode, where changing color is not supported", 423);
-
-    this.tcpService.sendData(
+    console.log(this.utilsService.genJSONforEsp(
+      "leds", {
+      "colors": this.utilsService.hexArrayToRgb(data.colors,), "pattern": data.pattern, "timeout": data.timeout
+      }));
+    /* this.tcpService.sendData(
       this.utilsService.genJSONforEsp(
         "leds", {
-        "colors": this.utilsService.hexArrayToRgb(data.colors,), "pattern": data.pattern, "timeout": data.timeout
+        colors: this.utilsService.hexArrayToRgb(data.colors,), pattern: data.pattern, timeout: data.timeout
         }),
-    oldDoc.ip);
+    oldDoc.ip); */
 
 
 
