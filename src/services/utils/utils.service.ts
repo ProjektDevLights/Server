@@ -229,10 +229,11 @@ export class UtilsService {
   }
 
   genJSONforEsp(input: EspCommand): string {
-    if (input.data.colors) {
+
+    if (input.data?.colors !== undefined) {
       input.data.colors = this.hexArrayToRgb(input.data.colors);
     }
-    if (input.data.color) {
+    if (input.data?.color !== undefined) {
       input.data.color = this.hexToRgb(input.data.colors);
     }
     //matches \" "[ --> takes last character
