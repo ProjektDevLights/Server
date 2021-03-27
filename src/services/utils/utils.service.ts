@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Commands, COMMANDS } from "src/interfaces/commands.inteface";
 import { Pattern } from "src/interfaces/patterns/pattern.type";
 import tinycolor, { ColorFormats } from "tinycolor2";
-import { Leds } from "../../interfaces";
+import { EspCommand, Leds } from "../../interfaces";
 import { EspDocument } from "../../schemas/esp.schema";
 import { DatabaseAlarmService } from "../database/alarm/database-alarm.service";
 import { DatabaseEspService } from "../database/esp/database-esp.service";
@@ -185,7 +185,6 @@ export class UtilsService {
     let runs: number = Math.round(data.time / data.delay);
 
     let colorRun: ColorFormats.RGB = colorStart;
-    // console.log({ rStep, gStep, bStep });
     const runInterval = setInterval(async () => {
       if (runs <= 0) {
         callback();
@@ -196,9 +195,12 @@ export class UtilsService {
       colorRun.g = this.applyStep(colorRun.g, gStep, colorTo.g);
       colorRun.b = this.applyStep(colorRun.b, bStep, colorTo.b);
       this.tcpService.sendData(
-        this.genJSONforEsp(
-          "leds", {
-          "colors": this.hexToRgb(tinycolor(colorRun).toHexString()), "pattern": "plain"
+        this.genJSONforEsp({
+          command: "leds",
+          data: {
+            colors: [tinycolor(colorRun).toHexString()],
+            pattern: "plain",
+          },
         }),
         oldLight.ip,
       );
@@ -214,7 +216,6 @@ export class UtilsService {
     delay: number,
     time: number,
   ): number {
-    console.log(((start - end) * delay) / time);
     const floatStep: number = ((start - end) * delay) / time;
     if (floatStep > 0) return Math.ceil(floatStep);
     if (floatStep < 0) return Math.floor(floatStep);
@@ -227,34 +228,21 @@ export class UtilsService {
     return start - step;
   }
 
-  //Commands
-
-  //leds
-  genJSONforEsp(command: Commands, data: {"colors": string[] | string, "pattern": Pattern, "timeout": number}): string
-  genJSONforEsp(command: Commands, data: {"colors": string[] | string, "pattern": Pattern}): string
-  //fade
-  genJSONforEsp(command: Commands, data: {"color": string}): string
-  //blink
-  genJSONforEsp(command: Commands, data: {"color": string, "time": number}): string
-  //count & brightness
-  genJSONforEsp(command: Commands, data: number): string
-  //restart, reset, etc.
-  genJSONforEsp(command: Commands): string
-  genJSONforEsp(command: Commands, data?: any): string {
-   console.log(data);
-    if(data){
-      if(typeof data === "object") {
-         if(data.colors) {
-           return `{"command": ${command}, "data": {"colors": ${data.colors}, "pattern": ${data.pattern}, ${data.timeout ? `"timeout": ${data.timeout}` : "" }}}`
-         } else if(data.color) {
-           return `{"command": ${command}, "data": {"color": ${data.color}, ${data.time ? `"time": ${data.time}` : ""}}}`
-         }
-        
-      } else {
-        return `{"command": ${command}, "data": ${data}}`
-      }
+  genJSONforEsp(input: EspCommand): string {
+    if (input.data.colors) {
+      input.data.colors = this.hexArrayToRgb(input.data.colors);
     }
-    return `{"command": ${command}}`
+    if (input.data.color) {
+      input.data.color = this.hexToRgb(input.data.colors);
+    }
+    //matches \" "[ --> takes last character
+    return JSON.stringify(input)
+      .replace(/(\"\[)|(\\\")/g, (match: string): string => {
+        return match.substring(match.length - 1);
+        //matches ]" --> takes first character
+      })
+      .replace(/\]\"/g, (match: string): string => {
+        return match.charAt(0);
+      });
   }
-
 }

@@ -1,6 +1,7 @@
 import { ConflictException, Injectable } from "@nestjs/common";
-import { forIn, intersection, isEqual, map } from "lodash";
+import { findIndex, forIn, intersection, isEqual, map } from "lodash";
 import moment from "moment";
+import { AlarmConflictException } from "src/exceptions/alarm-conflict.exception";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { NothingChangedException } from "../../exceptions/nothing-changed.exception";
@@ -12,7 +13,12 @@ import { UtilsService } from "../../services/utils/utils.service";
 import { AlarmDto } from "./dto/alarm.dto";
 import { EditAlarmsDto } from "./dto/edit-alarm.dto";
 
-export type Conflict = { alarm: string; esps: string[] };
+export type Conflict = {
+  alarm: string;
+  esps: string[];
+  days: number[];
+  time: Time;
+};
 @Injectable()
 export class AlarmService {
   constructor(
@@ -28,6 +34,22 @@ export class AlarmService {
     interval: NodeJS.Timeout;
   }[] = [];
 
+  async rescheduleJobs(): Promise<void> {
+    const alarms: AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
+    alarms.forEach((alarm: AlarmDocument) => {
+      if (alarm.isOn) {
+        this.cronService.addCron(
+          `alarm-${alarm._id}`,
+          alarm.cronPattern,
+          this.callback,
+        );
+      }
+    });
+  }
+
+  private onApplicationBootstrap() {
+    this.rescheduleJobs();
+  }
   private callback = async (name: string) => {
     let alarm: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(
       name.split("-")[1],
@@ -53,14 +75,18 @@ export class AlarmService {
         },
       );
       this.tcpService.sendData(
-        `{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-          ["#000000"],
-        )}, "pattern": "plain"}}`,
+        this.utilsService.genJSONforEsp({
+          command: "leds",
+          data: { colors: ["#000000"], pattern: "plain", noFade: true },
+        }),
         newDoc.ip,
       );
-      this.tcpService.sendData(`{ "command": "on" }`, newDoc.ip);
       this.tcpService.sendData(
-        `{"command": "brightness", "data": 255 }`,
+        this.utilsService.genJSONforEsp({ command: "on" }),
+        newDoc.ip,
+      );
+      this.tcpService.sendData(
+        this.utilsService.genJSONforEsp({ command: "brightness", data: 255 }),
         newDoc.ip,
       );
 
@@ -78,26 +104,32 @@ export class AlarmService {
 
   private getConflictingAlarms(
     time: Time,
+    days: number[],
+    isOn: boolean,
     esps: string[], // uuids
     alarms: AlarmDocument[],
   ): Conflict[] {
     const conflicts: Conflict[] = [];
-
-    // 7:59 8:00
     alarms.forEach(alarm => {
-      if (alarm.isOn) {
-        if (
-          Math.round(
-            Math.abs(
-              moment(alarm.time, "HH:MM").unix() * 60 -
-                moment(time, "HH:MM").unix() * 60,
-            ),
-          ) < 5
-        ) {
-          conflicts.push({
-            alarm: alarm.id,
-            esps: intersection(esps, map(alarm.esps, "uuid")),
-          });
+      if (alarm.isOn && isOn) {
+        if (intersection(days, alarm.days).length) {
+          if (
+            Math.round(
+              Math.abs(
+                moment(alarm.time, "hh:mm").unix() / 60 -
+                  moment(time, "hh:mm").unix() / 60,
+              ),
+            ) < 5
+          ) {
+            if (intersection(esps, map(alarm.esps, "uuid")).length) {
+              conflicts.push({
+                alarm: alarm.id,
+                esps: intersection(esps, map(alarm.esps, "uuid")),
+                days: intersection(days, alarm.days),
+                time: alarm.time,
+              });
+            }
+          }
         }
       }
     });
@@ -109,20 +141,17 @@ export class AlarmService {
 
     const conflicts: Conflict[] = this.getConflictingAlarms(
       data.time,
+      data.days,
+      true,
       data.ids,
       allAlarms,
     );
     if (conflicts.length > 0) {
-      throw new ConflictException({
-        statusCode: 419,
-        message:
-          "The alarm is conflicting with existing alarms! Consider turning them off or changing the light in them.",
-        error: "Conflict",
-      });
+      throw new AlarmConflictException(conflicts);
     }
 
     const splitTime: string[] = data.time.split(":");
-    const daysString: string = data.days.length
+    const daysString: string = data.days?.length
       ? data.days.join(",")
       : "0,1,2,3,4,5,6";
     const cronPattern = `${splitTime[1]} ${splitTime[0]} * * ${daysString}`;
@@ -159,7 +188,10 @@ export class AlarmService {
   ): boolean {
     let equal: boolean = true;
     forIn(request, (data: unknown, key: string) => {
-      if ((data && !isEqual(data, database[key])) || key === "isOn" && !isEqual(data, database[key])) {
+      if (
+        (data && !isEqual(data, database[key])) ||
+        (key === "isOn" && !isEqual(data, database[key]))
+      ) {
         equal = false;
       }
     });
@@ -170,7 +202,6 @@ export class AlarmService {
     id: string,
     data: EditAlarmsDto,
   ): Promise<StandartResponse<Alarm>> {
-    console.log(data);
     const alarmDoc = await this.databaseServiceAlarm.getAlarmWithId(id);
     if (
       this.checkEquality(data, {
@@ -179,27 +210,47 @@ export class AlarmService {
         ids: map(alarmDoc.esps, "uuid"),
         name: alarmDoc.name,
         time: alarmDoc.time,
-        isOn: alarmDoc.isOn
+        isOn: alarmDoc.isOn,
       })
     ) {
       throw new NothingChangedException();
     }
 
+    const allAlarms: AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
+    allAlarms.splice(
+      findIndex(allAlarms, (alarm: AlarmDocument) => alarm._id == id),
+      1,
+    );
+
+    const conflicts: Conflict[] = this.getConflictingAlarms(
+      data.time ?? alarmDoc.time,
+      data.days ?? alarmDoc.days,
+      data.isOn === false || data.isOn === true ? data.isOn : alarmDoc.isOn,
+      data.ids ?? map(alarmDoc.esps, "uuid"),
+      allAlarms,
+    );
+    if (conflicts.length > 0) {
+      throw new AlarmConflictException(conflicts);
+    }
+
     let cronPattern: string = undefined;
 
+    //if off remove cron
     if (data.isOn === false) {
       this.cronService.deleteCron(`alarm-${alarmDoc.id}`);
     }
+    //schedule with new pattern
     if (
       ((data.time && data.time != alarmDoc.time) ||
         (data.days && data.days != alarmDoc.days)) &&
       (data.isOn === true || (data.isOn !== false && alarmDoc.isOn))
     ) {
-
-      const splitTime: string[] = data.time ? data.time.split(":") : alarmDoc.time.split(":");
+      const splitTime: string[] = data.time
+        ? data.time.split(":")
+        : alarmDoc.time.split(":");
       const daysString: string = data.days
         ? data.days.join(",")
-        : "0,1,2,3,4,5,6" ;
+        : "0,1,2,3,4,5,6";
       cronPattern = `${splitTime[1]} ${splitTime[0]} * * ${daysString}`;
       this.cronService.deleteCron(`alarm-${alarmDoc.id}`);
 
@@ -208,12 +259,21 @@ export class AlarmService {
         cronPattern,
         this.callback,
       );
+      //reschedule with old data
+    } else if (data.isOn === true && alarmDoc.isOn === false) {
+      //should not exist, but weird shit can happen
+      this.cronService.deleteCron(`alarm-${alarmDoc.id}`);
+      this.cronService.addCron(
+        `alarm-${id}`,
+        alarmDoc.cronPattern,
+        this.callback,
+      );
     }
-  
+
     const espIds: string[] = await this.databaseServiceEsp
-          .getEspsWithMultipleIds(data.ids ?? map(alarmDoc.esps, "uuid"), true)
-          .distinct("_id")
-          .exec();    
+      .getEspsWithMultipleIds(data.ids ?? map(alarmDoc.esps, "uuid"), true)
+      .distinct("_id")
+      .exec();
     const newDocId: string = (
       await this.databaseServiceAlarm.updateAlarm(id, {
         esps: espIds,

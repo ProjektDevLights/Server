@@ -20,7 +20,7 @@ export class ControlService {
     if (oldDoc.isOn)
       throw new NothingChangedException("The light is already on");
 
-    this.tcpService.sendData(this.utilsService.genJSONforEsp("on"), oldDoc.ip);
+    this.tcpService.sendData(this.utilsService.genJSONforEsp({command: "on"}), oldDoc.ip);
 
     const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, {
       isOn: true,
@@ -38,7 +38,7 @@ export class ControlService {
     if (!oldDoc.isOn)
       throw new NothingChangedException("The light is already off");
 
-    this.tcpService.sendData(this.utilsService.genJSONforEsp("off"), oldDoc.ip);
+    this.tcpService.sendData(this.utilsService.genJSONforEsp({command: "off"}), oldDoc.ip);
 
     const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, {
       isOn: false,
@@ -53,7 +53,7 @@ export class ControlService {
   async restart(id: string): Promise<StandartResponse<PartialLight>> {
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
 
-    this.tcpService.sendData(this.utilsService.genJSONforEsp("restart"), doc.ip);
+    this.tcpService.sendData(this.utilsService.genJSONforEsp({command: "restart"}), doc.ip);
     this.tcpService.removeConnection(doc.ip);
 
     return {
@@ -64,7 +64,7 @@ export class ControlService {
 
   async reset(id: string): Promise<StandartResponse<PartialLight>> {
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
-    this.tcpService.sendData(this.utilsService.genJSONforEsp("reset"), doc.ip);
+    this.tcpService.sendData(this.utilsService.genJSONforEsp({command: "reset"}), doc.ip);
 
     await this.databaseService.deleteEspWithId(id);
 

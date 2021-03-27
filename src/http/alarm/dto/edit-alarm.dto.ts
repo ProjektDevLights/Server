@@ -45,5 +45,6 @@ export class EditAlarmsDto {
   @IsOptional()
   @IsString()
   @IsNotMultiLine()
+  @IsNotEmpty()
   name?: string;
 }

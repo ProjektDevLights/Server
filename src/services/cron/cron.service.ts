@@ -6,8 +6,6 @@ import { CronJob } from "cron";
 export class CronService {
   constructor(private scheduler: SchedulerRegistry) {}
 
-  private readonly logger = new Logger(CronService.name);
-
   addCron(name: string, cronPattern: string, callback: (name: string) => void) {
     const job = new CronJob(cronPattern, () => {
       callback(name);
@@ -28,8 +26,6 @@ export class CronService {
     } catch {
       fail++;
     }
-
-    this.logger.warn(`job ${name} deleted!`);
     return fail < 2;
   }
 
@@ -37,6 +33,7 @@ export class CronService {
     return this.scheduler.getCronJob(name);
   }
 
+  // consider not throwing error, because it gets propagated to user, better use boolean (see delete cron)
   getCronKey(name: string): string {
     const jobs = this.scheduler.getCronJobs();
     const jobArr: CronJob[] = [];
@@ -47,27 +44,25 @@ export class CronService {
       } catch (e) {
         next = "error: next fire date is in the past!";
       }
-      this.logger.log(`job: ${key} -> next: ${next}`);
       if (key == name) {
         return key;
       }
     });
-    throw new NotFoundException("Corn could not be found");
+    throw new NotFoundException("Cron could not be found");
   }
 
   getAllCrons(): CronJob[] {
     const jobs = this.scheduler.getCronJobs();
     const jobArr: CronJob[] = [];
-    jobs.forEach((value, key, map) => {
+    jobs.forEach((value: CronJob, key: string) => {
       let next;
       try {
         next = value.nextDates().toDate();
       } catch (e) {
         next = "error: next fire date is in the past!";
       }
-      this.logger.log(`job: ${key} -> next: ${next}`);
       jobArr.push(this.scheduler.getCronJob(key));
     });
-    return jobArr;
+    return jobArr; 
   }
 }

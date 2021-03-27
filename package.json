@@ -64,6 +64,7 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-nestjs": "^1.2.3",
+    "fastify": "^3.14.1",
     "jest": "26.4.2",
     "prettier": "^1.19.1",
     "supertest": "^4.0.2",

@@ -17,7 +17,7 @@ export class Alarm {
   @Prop({ required: true })
   days: number[];
 
-  @Prop({ required: false })
+  @Prop({ required: true })
   name: string;
 
   @Prop({ required: true })
