@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 //@ts-ignore
 import cachegoose from "cachegoose";
@@ -37,6 +37,9 @@ export class DatabaseAlarmService {
         //@ts-ignore
         //.cache(0, "alarm-id-" + id)
         .exec()
+        .catch(e => {
+          throw new NotFoundException("There is no alarm with this ID!");
+        }) as Promise<AlarmDocument>
     );
   }
 

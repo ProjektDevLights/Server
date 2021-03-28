@@ -2,6 +2,7 @@ import { ConflictException, Injectable } from "@nestjs/common";
 import { findIndex, forIn, intersection, isEqual, map } from "lodash";
 import moment from "moment";
 import { AlarmConflictException } from "src/exceptions/alarm-conflict.exception";
+import { InvalidIdException } from "src/exceptions/invalid-id.exception";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { NothingChangedException } from "../../exceptions/nothing-changed.exception";
@@ -136,8 +137,21 @@ export class AlarmService {
     return conflicts;
   }
 
+  private async validateIds(ids: string[]): Promise<string[]> {
+    const invalids: string[] = [];
+    for (let index = 0; index < ids.length; index++) {
+      const element = ids[index];
+      const isValid = await this.utilsService.isIdValid(element);
+      if (!isValid) invalids.push(element);
+    }
+    return invalids;
+  }
+
   async scheduleAlarm(data: AlarmDto): Promise<StandartResponse<Alarm>> {
     const allAlarms: AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
+
+    const invalids = await this.validateIds(data.ids);
+    if (invalids.length > 0) throw new InvalidIdException(invalids);
 
     const conflicts: Conflict[] = this.getConflictingAlarms(
       data.time,
@@ -202,6 +216,9 @@ export class AlarmService {
     id: string,
     data: EditAlarmsDto,
   ): Promise<StandartResponse<Alarm>> {
+    const invalids = await this.validateIds(data.ids);
+    if (invalids.length > 0) throw new InvalidIdException(invalids);
+
     const alarmDoc = await this.databaseServiceAlarm.getAlarmWithId(id);
     if (
       this.checkEquality(data, {

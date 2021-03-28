@@ -9,7 +9,8 @@ import {
   UseFilters,
   ValidationPipe,
 } from "@nestjs/common";
-import { AlarmConflictExpceptionFilter } from "src/exceptions/AlarmConflictExceptionFilter";
+import { AlarmConflictExpceptionFilter } from "src/exceptions/filters/alarm-conflict.exception.filter";
+import { InvalidIdExceptionFilter } from "src/exceptions/filters/invalid-id.exception.filter";
 import { Alarm, StandartResponse } from "src/interfaces";
 
 import { AlarmService } from "./alarm.service";
@@ -21,7 +22,10 @@ export class AlarmController {
   constructor(private alarmService: AlarmService) {}
 
   @Put("")
-  @UseFilters(new AlarmConflictExpceptionFilter())
+  @UseFilters(
+    new AlarmConflictExpceptionFilter(),
+    new InvalidIdExceptionFilter(),
+  )
   async scheduleAlarm(
     @Body(new ValidationPipe()) data: AlarmDto,
   ): Promise<StandartResponse<Alarm>> {
@@ -44,7 +48,10 @@ export class AlarmController {
   }
 
   @Patch(":id")
-  @UseFilters(new AlarmConflictExpceptionFilter())
+  @UseFilters(
+    new AlarmConflictExpceptionFilter(),
+    new InvalidIdExceptionFilter(),
+  )
   async editWithId(
     @Param("id") id: string,
     @Body(new ValidationPipe()) data: EditAlarmsDto,
