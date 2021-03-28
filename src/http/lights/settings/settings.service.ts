@@ -50,7 +50,7 @@ export class SettingsService {
     this.tcpService.sendData(
       this.utilsService.genJSONforEsp({
         command: "brightness",
-        data: { brightness: brightness },
+        data: brightness,
       }),
       oldDoc.ip,
     );
