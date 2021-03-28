@@ -110,12 +110,8 @@ export class UtilsService {
     return (await this.databaseServiceEsp.getTags()).includes(tag);
   }
   async isAlarmIdValid(id: string): Promise<boolean> {
-    try {
-      await this.databaseServiceAlarm.getAlarmWithId(id);
-    } catch {
-      return false;
-    }
-    return true;
+    if (await this.databaseServiceAlarm.getAlarmWithId(id)) return true;
+    return false;
   }
 
   isValidPattern(data: Leds): boolean {
@@ -229,7 +225,6 @@ export class UtilsService {
   }
 
   genJSONforEsp(input: EspCommand): string {
-
     if (input.data?.colors !== undefined) {
       input.data.colors = this.hexArrayToRgb(input.data.colors);
     }
