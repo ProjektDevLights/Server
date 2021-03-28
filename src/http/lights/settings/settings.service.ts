@@ -48,7 +48,10 @@ export class SettingsService {
 
     if (!oldDoc.isOn) throw new OffException();
     this.tcpService.sendData(
-      this.utilsService.genJSONforEsp( {command: "brightness", data: {brightness: brightness}}),
+      this.utilsService.genJSONforEsp({
+        command: "brightness",
+        data: { brightness: brightness },
+      }),
       oldDoc.ip,
     );
 
@@ -66,12 +69,12 @@ export class SettingsService {
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
     if (oldDoc.count == count) {
       throw new NothingChangedException();
-    } 
+    }
 
     if (!oldDoc.isOn) throw new OffException();
 
     this.tcpService.sendData(
-      this.utilsService.genJSONforEsp({command: "count", data: {count: count}}),
+      this.utilsService.genJSONforEsp({ command: "count", data: count }),
       oldDoc.ip,
     );
 
