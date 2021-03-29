@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { findIndex, forIn, intersection, isEqual, map } from "lodash";
 import moment from "moment";
 import { AlarmConflictException } from "src/exceptions/alarm-conflict.exception";
@@ -30,11 +30,6 @@ export class AlarmService {
     private cronService: CronService,
   ) {}
 
-  private runningAlarms: {
-    id: string;
-    interval: NodeJS.Timeout;
-  }[] = [];
-
   async rescheduleJobs(): Promise<void> {
     const alarms: AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
     alarms.forEach((alarm: AlarmDocument) => {
@@ -51,58 +46,64 @@ export class AlarmService {
   private onApplicationBootstrap() {
     this.rescheduleJobs();
   }
+
+  // executed when alarm is firing
   private callback = async (name: string) => {
     let alarm: AlarmDocument = await this.databaseServiceAlarm.getAlarmWithId(
       name.split("-")[1],
     );
 
     alarm.esps.forEach(async esp => {
-      const oldLight: Light = DatabaseEspService.espDocToLight(
-        await this.databaseServiceEsp.getEspWithId(
+      try {
+        const oldDoc = await this.databaseServiceEsp.getEspWithId(
           //@ts-ignore
           esp.uuid,
-        ),
-      );
+        );
+        const oldLight: Light = DatabaseEspService.espDocToLight(oldDoc);
+        this.tcpService.sendData(
+          this.utilsService.genJSONforEsp({
+            command: "leds",
+            data: { colors: ["#000000"], pattern: "plain", noFade: true },
+          }),
+          oldDoc.ip,
+        );
+        this.tcpService.sendData(
+          this.utilsService.genJSONforEsp({ command: "on" }),
+          oldDoc.ip,
+        );
+        this.tcpService.sendData(
+          this.utilsService.genJSONforEsp({ command: "brightness", data: 255 }),
+          oldDoc.ip,
+        );
 
-      const newDoc = await this.databaseServiceEsp.updateEspWithId(
-        oldLight.id,
-        {
-          leds: {
-            colors: ["#000000"],
-            pattern: "waking",
+        const newDoc = await this.databaseServiceEsp.updateEspWithId(
+          oldLight.id,
+          {
+            leds: {
+              colors: ["#000000"],
+              pattern: "waking",
+            },
+            brightness: 255,
+            isOn: true,
           },
-          brightness: 255,
-          isOn: true,
-        },
-      );
-      this.tcpService.sendData(
-        this.utilsService.genJSONforEsp({
-          command: "leds",
-          data: { colors: ["#000000"], pattern: "plain", noFade: true },
-        }),
-        newDoc.ip,
-      );
-      this.tcpService.sendData(
-        this.utilsService.genJSONforEsp({ command: "on" }),
-        newDoc.ip,
-      );
-      this.tcpService.sendData(
-        this.utilsService.genJSONforEsp({ command: "brightness", data: 255 }),
-        newDoc.ip,
-      );
+        );
 
-      this.utilsService.fading(
-        newDoc.id,
-        {
-          color: alarm.color,
-          time: 5000 * 60,
-          delay: (5000 * 60) / 255,
-        },
-        newDoc,
-      );
+        this.utilsService.fading(
+          oldLight.id,
+          {
+            color: alarm.color,
+            time: 5000 * 60,
+            delay: (5000 * 60) / 255,
+          },
+          newDoc,
+        );
+      } catch (e) {
+        console.log("eroorrr" + e);
+      }
     });
   };
 
+  //determines if other alarms would fire the same time as given alarm
   private getConflictingAlarms(
     time: Time,
     days: number[],
@@ -137,7 +138,8 @@ export class AlarmService {
     return conflicts;
   }
 
-  private async validateIds(ids: string[]): Promise<string[]> {
+  // checks wether light ids are all valid
+  private async validateIds(ids: string[] = []): Promise<string[]> {
     const invalids: string[] = [];
     for (let index = 0; index < ids.length; index++) {
       const element = ids[index];

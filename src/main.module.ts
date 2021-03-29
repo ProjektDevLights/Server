@@ -13,7 +13,7 @@ import { TagsModule } from "./http/tags/tags.module";
     MongooseModule.forRoot(config.database.url, {
       useFindAndModify: false,
       db: {
-        ignoreUndefined: true
+        ignoreUndefined: true,
       },
       connectionFactory: (connection, name) => {
         cachegoose(connection.base, {

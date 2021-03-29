@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 //@ts-ignore
 import cachegoose from "cachegoose";
@@ -14,33 +14,26 @@ export class DatabaseAlarmService {
   ) {}
 
   async getAlarms(): Promise<AlarmDocument[]> {
-    return (
-      this.alarmModel
-        .find()
-        .populate({
-          path: "esps",
-          select: "-__v -ip -_id",
-        })
-        //@ts-ignore
-        .exec()
-    );
+    return await this.alarmModel
+      .find()
+      .populate({
+        path: "esps",
+        select: "-__v -ip -_id",
+      })
+      //@ts-ignore
+      .exec();
   }
 
   async getAlarmWithId(id: string): Promise<AlarmDocument> {
-    return (
-      this.alarmModel
-        .findById(id)
-        .populate({
-          path: "esps",
-          select: "-__v -_id",
-        })
-        //@ts-ignore
-        //.cache(0, "alarm-id-" + id)
-        .exec()
-        .catch(e => {
-          throw new NotFoundException("There is no alarm with this ID!");
-        }) as Promise<AlarmDocument>
-    );
+    return await this.alarmModel
+      .findById(id)
+      .populate({
+        path: "esps",
+        select: "-__v -_id",
+      })
+      //@ts-ignore
+      //.cache(0, "alarm-id-" + id)
+      .exec();
   }
 
   async updateAlarm(id: string, updateQuery: MongooseUpdateQuery<Alarm>) {

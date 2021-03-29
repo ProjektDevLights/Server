@@ -51,8 +51,8 @@ export class DatabaseEspService {
     );
   }
 
-  async getEspWithMongoId(id: string): Promise<EspDocument>{
-    return this.espModel.findById(id);
+  async getEspWithMongoId(id: string): Promise<EspDocument> {
+    return await this.espModel.findById(id);
   }
 
   async getEspsWithMultipleIds(ids: string[]): Promise<EspDocument[]>;
@@ -74,7 +74,10 @@ export class DatabaseEspService {
     await this.clear("id-" + id);
     this.clear("all");
     const updated: EspDocument = await this.espModel
-      .findOneAndUpdate({ uuid: id }, updateQuery, { new: true, omitUndefined: true })
+      .findOneAndUpdate({ uuid: id }, updateQuery, {
+        new: true,
+        omitUndefined: true,
+      })
       //@ts-ignore
       .cache(0, "esp-id-" + id)
       .exec();
@@ -143,7 +146,7 @@ export class DatabaseEspService {
       .updateMany(
         { tags: { $all: [tag] } },
         updateQuery,
-        { new: true, omitUndefined: true  },
+        { new: true, omitUndefined: true },
         //@ts-ignore
       )
       .exec();
@@ -211,7 +214,6 @@ export class DatabaseEspService {
       count: doc.count,
     };
   }
-
 
   static espDocToPartialLight(doc: EspDocument): PartialLight {
     return {
