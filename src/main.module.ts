@@ -1,6 +1,5 @@
-import { CacheModule, Module } from "@nestjs/common";
+import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
-import * as redisStore from "cache-manager-redis-store";
 import cachegoose from "cachegoose";
 import { config } from "./config";
 import { AlarmModule } from "./http/alarm/alarm.module";
@@ -11,7 +10,6 @@ import { TagsModule } from "./http/tags/tags.module";
 @Module({
   imports: [
     EspModule,
-    CacheModule.register({ store: redisStore, host: "localhost", port: 6379 }),
     MongooseModule.forRoot(config.database.url, {
       useFindAndModify: false,
       db: {
