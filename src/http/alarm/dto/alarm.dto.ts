@@ -1,4 +1,5 @@
 import {
+  ArrayNotEmpty,
   IsHexColor,
   IsInt,
   IsNotEmpty,
@@ -6,7 +7,7 @@ import {
   IsString,
   Matches,
   Max,
-  Min
+  Min,
 } from "class-validator";
 import { IsNotMultiLine } from "../../../decorators/is-not-multiline.decorator";
 import { IsRightTimeFormat } from "../../../decorators/is-time-format.decorator";
@@ -25,6 +26,7 @@ export class AlarmDto {
   @IsHexColor()
   color: string;
 
+  @ArrayNotEmpty()
   @IsNotEmpty()
   @IsString({ each: true })
   @Matches(
