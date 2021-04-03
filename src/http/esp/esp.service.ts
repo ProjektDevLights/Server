@@ -1,10 +1,9 @@
 import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
+  Injectable
 } from "@nestjs/common";
 import { EspDocument } from "src/schemas/esp.schema";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
+import { NothingChangedException } from "../../exceptions/nothing-changed.exception";
 import { SetupDto } from "./dto/setup.dto";
 import { UpdateDto } from "./dto/update.dto";
 
@@ -42,7 +41,7 @@ export class EspService {
     try {
       this.databaseService.addEsp({
         uuid: id,
-        count: 0,
+        count: 150,
         name: name,
         ip: data.ip,
         leds: { pattern: "plain", colors: ["#1DE9B6"]},
@@ -58,12 +57,11 @@ export class EspService {
   }
 
   async update(data: UpdateDto): Promise<void> {
-    //TODO Look if esp really has been changed
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(
       data.id,
     );
     if (oldDoc.ip === data.ip) {
-      throw new NotFoundException();
+      throw new NothingChangedException();
     }
     await this.databaseService.updateEspWithId(data.id, { ip: data.ip });
     return;
