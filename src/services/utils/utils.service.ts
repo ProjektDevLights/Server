@@ -1,6 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import { Commands, COMMANDS } from "src/interfaces/commands.inteface";
-import { Pattern } from "src/interfaces/patterns/pattern.type";
 import tinycolor, { ColorFormats } from "tinycolor2";
 import { EspCommand, Leds } from "../../interfaces";
 import { EspDocument } from "../../schemas/esp.schema";
@@ -164,7 +162,7 @@ export class UtilsService {
     //loop color setting
     const runInterval = setInterval(async () => {
       if (runs <= 0) {
-        callback();
+        callback ? callback() : undefined;
         clearInterval(runInterval);
         return;
       }
