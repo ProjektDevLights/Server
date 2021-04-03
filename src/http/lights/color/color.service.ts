@@ -105,11 +105,12 @@ export class ColorService {
         { color, time, delay },
         oldDoc,
         async () => {
-        await this.databaseService.updateEspWithId(oldDoc.id, {
+
+        let newDoc: EspDocument = await this.databaseService.updateEspWithId(oldDoc.uuid, {
           leds: {
             colors: [color],
             pattern: oldDoc.leds.pattern,
-          },
+          }
         });
       });
     }

@@ -152,44 +152,26 @@ export class UtilsService {
     oldLight: EspDocument,
     callback?: Function,
   ): NodeJS.Timeout {
+
     let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
+    let colorStart: ColorFormats.RGB = tinycolor(oldLight.leds.colors[0]).toRgb();
 
-    //console.log(colorTo);
-    let colorStart: ColorFormats.RGB = tinycolor(
-      oldLight.leds.colors[0],
-    ).toRgb();
-    //console.log(colorStart);
-    let rStep: number = this.generateStep(
-      colorStart.r,
-      colorTo.r,
-      data.delay,
-      data.time,
-    );
-    let gStep: number = this.generateStep(
-      colorStart.g,
-      colorTo.g,
-      data.delay,
-      data.time,
-    );
-    let bStep: number = this.generateStep(
-      colorStart.b,
-      colorTo.b,
-      data.delay,
-      data.time,
-    );
-
+    let steps: {rStep: number, gStep: number, bStep: number} = this.generateSteps(colorStart, colorTo, data.delay, data.time) ?? {rStep: 0, gStep: 0, bStep: 0}
     let runs: number = Math.round(data.time / data.delay);
 
     let colorRun: ColorFormats.RGB = colorStart;
+
+    //loop color setting
     const runInterval = setInterval(async () => {
       if (runs <= 0) {
         callback();
         clearInterval(runInterval);
         return;
       }
-      colorRun.r = this.applyStep(colorRun.r, rStep, colorTo.r);
-      colorRun.g = this.applyStep(colorRun.g, gStep, colorTo.g);
-      colorRun.b = this.applyStep(colorRun.b, bStep, colorTo.b);
+      //setting new steps
+      colorRun.r = this.applyStep(colorRun.r, steps.rStep, colorTo.r);
+      colorRun.g = this.applyStep(colorRun.g, steps.gStep, colorTo.g);
+      colorRun.b = this.applyStep(colorRun.b, steps.bStep, colorTo.b);
       this.tcpService.sendData(
         this.genJSONforEsp({
           command: "leds",
@@ -206,19 +188,35 @@ export class UtilsService {
     return runInterval;
   }
 
-  generateStep(
-    start: number,
-    end: number,
+  generateSteps(
+    start: ColorFormats.RGB,
+    end: ColorFormats.RGB,
     delay: number,
     time: number,
-  ): number {
-    const floatStep: number = ((start - end) * delay) / time;
-    if (floatStep > 0) return Math.ceil(floatStep);
-    if (floatStep < 0) return Math.floor(floatStep);
-    return 0;
+  ): {rStep: number, gStep: number, bStep: number} {
+
+    let steps: {rStep: number, gStep: number, bStep: number} = {rStep: 0, gStep: 0, bStep: 0}
+
+    const floatStepR: number = ((start.r - end.r) * delay) / time;
+    console.log(floatStepR)
+    if (floatStepR > 0) steps.rStep = Math.ceil(floatStepR);
+    if (floatStepR < 0) steps.rStep = Math.floor(floatStepR);
+
+    const floatStepG: number = ((start.g - end.g) * delay) / time;
+    console.log(floatStepG)
+    if (floatStepG > 0) steps.gStep = Math.ceil(floatStepG);
+    if (floatStepG < 0) steps.gStep = Math.floor(floatStepG);
+
+    const floatStepB: number = ((start.b - end.b) * delay) / time;
+    console.log(floatStepB)
+    if (floatStepB > 0) steps.bStep = Math.ceil(floatStepB);
+    if (floatStepB < 0) steps.bStep = Math.floor(floatStepB);
+
+    return steps;
   }
 
-  applyStep(start: number, step: number, goal: number) {
+  applyStep(start: number, step: number, goal: number): number {
+
     if (start - step < goal && step >= 0) return goal;
     if (start - step > goal && step <= 0) return goal;
     return start - step;
