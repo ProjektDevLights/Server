@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable } from "@nestjs/common";
 import { findIndex, forIn, intersection, isEqual, map } from "lodash";
 import moment from "moment";
 import { AlarmConflictException } from "src/exceptions/alarm-conflict.exception";
@@ -243,6 +243,10 @@ export class AlarmService {
       })
     ) {
       throw new NothingChangedException();
+    }
+    console.log(data.days);
+    if (data.days !== undefined && data.days.length === 0) {
+      throw new BadRequestException("days should not be empty");
     }
 
     const allAlarms: AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();

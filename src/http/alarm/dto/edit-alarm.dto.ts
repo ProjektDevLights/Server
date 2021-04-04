@@ -23,7 +23,6 @@ export class EditAlarmsDto {
   time?: string;
 
   @IsOptional()
-  @ArrayNotEmpty()
   @Min(0, { each: true })
   @Max(6, { each: true })
   @IsInt({ each: true })
