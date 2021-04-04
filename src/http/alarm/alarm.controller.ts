@@ -12,7 +12,6 @@ import {
 import { AlarmConflictExpceptionFilter } from "src/exceptions/filters/alarm-conflict.exception.filter";
 import { InvalidIdExceptionFilter } from "src/exceptions/filters/invalid-id.exception.filter";
 import { Alarm, StandartResponse } from "src/interfaces";
-
 import { AlarmService } from "./alarm.service";
 import { AlarmDto } from "./dto/alarm.dto";
 import { EditAlarmsDto } from "./dto/edit-alarm.dto";

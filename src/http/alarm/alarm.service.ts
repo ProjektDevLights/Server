@@ -97,18 +97,15 @@ export class AlarmService {
           },
           newDoc,
           () => {
-            this.databaseServiceEsp.updateEspWithId(
-              oldLight.id,
-              {
-                leds: {
-                  colors: [alarm.color],
-                  pattern: "plain",
-                },
-                brightness: 255,
-                isOn: true,
+            this.databaseServiceEsp.updateEspWithId(oldLight.id, {
+              leds: {
+                colors: [alarm.color],
+                pattern: "plain",
               },
-            );
-          }
+              brightness: 255,
+              isOn: true,
+            });
+          },
         );
       } catch (e) {
         console.log("eroorrr" + e);
