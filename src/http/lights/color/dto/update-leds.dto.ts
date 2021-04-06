@@ -1,10 +1,18 @@
-import { IsHexColor, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
+import {
+  IsHexColor,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+} from "class-validator";
 import { IsPattern } from "src/decorators/is-pattern.decorator";
 import { Pattern } from "../../../../interfaces/patterns/pattern.type";
 
 export class UpdateLedsDto {
+  @IsOptional()
   @IsString({ each: true })
-  @IsNotEmpty()
   @IsHexColor({ each: true })
   colors: string[];
 

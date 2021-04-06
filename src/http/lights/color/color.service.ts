@@ -1,56 +1,67 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { isEqual } from 'lodash';
-import { CustomException } from 'src/exceptions/custom-exception.exception';
-import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
-import tinycolor from 'tinycolor2';
-import { NothingChangedException } from '../../../exceptions/nothing-changed.exception';
-import { OffException } from '../../../exceptions/off.exception';
-import { Light, StandartResponse } from '../../../interfaces';
-import { EspDocument } from '../../../schemas/esp.schema';
-import { TcpService } from '../../../services/tcp/tcp.service';
-import { UtilsService } from '../../../services/utils/utils.service';
-import { BlinkLedsDto } from './dto/blink-leds.dto';
-import { BlinkingLedsDto } from './dto/blinking-leds.dto';
-import { FadingLedsDto } from './dto/fading-leds.dto';
-import { UpdateLedsDto } from './dto/update-leds.dto';
+import { BadRequestException, Injectable } from "@nestjs/common";
+import { isEqual } from "lodash";
+import { CustomException } from "src/exceptions/custom-exception.exception";
+import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
+import { NothingChangedException } from "../../../exceptions/nothing-changed.exception";
+import { OffException } from "../../../exceptions/off.exception";
+import { Light, StandartResponse } from "../../../interfaces";
+import { EspDocument } from "../../../schemas/esp.schema";
+import { TcpService } from "../../../services/tcp/tcp.service";
+import { UtilsService } from "../../../services/utils/utils.service";
+import { BlinkLedsDto } from "./dto/blink-leds.dto";
+import { BlinkingLedsDto } from "./dto/blinking-leds.dto";
+import { FadingLedsDto } from "./dto/fading-leds.dto";
+import { UpdateLedsDto } from "./dto/update-leds.dto";
 
 @Injectable()
 export class ColorService {
-
   constructor(
     private databaseService: DatabaseEspService,
     private utilsService: UtilsService,
-    private tcpService: TcpService
-  ) { }
-
+    private tcpService: TcpService,
+  ) {}
 
   async updateLeds(
     id: string,
     data: UpdateLedsDto,
   ): Promise<StandartResponse<Light>> {
+    data.colors = data.colors ?? [];
+    if (!this.utilsService.isValidPattern(data))
+      throw new BadRequestException("Wrong colors or pattern provided");
 
+    data.colors = data.colors.length ? data.colors : ["#1DE9B6"];
     data.colors = this.utilsService.makeValidHexArray(data.colors);
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
 
-    if (isEqual(data.colors, oldDoc.leds.colors) && isEqual(data.pattern, oldDoc.leds.pattern) && isEqual(data.timeout, oldDoc.leds.timeout)) throw new NothingChangedException("Nothing changed");
-    if (!this.utilsService.isValidPattern(data)) throw new BadRequestException("Wrong colors or pattern provided");
+    if (
+      isEqual(data.colors, oldDoc.leds.colors) &&
+      isEqual(data.pattern, oldDoc.leds.pattern) &&
+      isEqual(data.timeout, oldDoc.leds.timeout)
+    )
+      throw new NothingChangedException("Nothing changed");
     if (!oldDoc.isOn) throw new OffException();
-    if (["waking", "blinking"].includes(oldDoc.leds.pattern)) throw new CustomException("The light is currently in a mode, where changing color is not supported", 423);
-    this.tcpService.sendData(
-      this.utilsService.genJSONforEsp(
-      {
+    if (["waking", "blinking"].includes(oldDoc.leds.pattern))
+      throw new CustomException(
+        "The light is currently in a mode, where changing color is not supported",
+        423,
+      );
+    /*     this.tcpService.sendData(
+      this.utilsService.genJSONforEsp({
         command: "leds",
-        data: {colors: data.colors, pattern: data.pattern, timeout: data.timeout }
+        data: {
+          colors: data.colors,
+          pattern: data.pattern,
+          timeout: data.timeout,
+        },
       }),
-    oldDoc.ip);
-
-
+      oldDoc.ip,
+    ); */
 
     const newDoc = await this.databaseService.updateEspWithId(id, {
       leds: {
         colors: data.colors,
         pattern: data.pattern,
-        timeout: data.timeout == null ? undefined : data.timeout
+        timeout: data.timeout == null ? undefined : data.timeout,
       },
     });
 
@@ -64,54 +75,51 @@ export class ColorService {
     id: string,
     data: FadingLedsDto,
   ): Promise<StandartResponse<Light>> {
-
-
     data.color = this.utilsService.makeValidHex(data.color);
     data.delay = data.delay ?? 1000;
     data.time = data.time ?? 5000;
 
     const oldDoc = await this.databaseService.getEspWithId(id);
 
-    if (oldDoc.leds.pattern != "plain") throw new BadRequestException("Pattern must be Plain!");
-    if (oldDoc.leds.colors[0] === data.color) throw new NothingChangedException();
+    if (oldDoc.leds.pattern != "plain")
+      throw new BadRequestException("Pattern must be Plain!");
+    if (oldDoc.leds.colors[0] === data.color)
+      throw new NothingChangedException();
 
     let resDoc: EspDocument;
     if (data.delay < 1000 || data.time < 2000) {
-
       this.tcpService.sendData(
-        this.utilsService.genJSONforEsp(
-          {
-            command: "fade",
-            data: {color: data.color}
-          }),
-        oldDoc.ip);
+        this.utilsService.genJSONforEsp({
+          command: "fade",
+          data: { color: data.color },
+        }),
+        oldDoc.ip,
+      );
 
-      resDoc = await this.databaseService.updateEspWithId(id, { leds: { colors: [data.color], pattern: "plain" } })
+      resDoc = await this.databaseService.updateEspWithId(id, {
+        leds: { colors: [data.color], pattern: "plain" },
+      });
     } else {
-
-
       resDoc = await this.databaseService.updateEspWithId(id, {
         leds: {
           colors: [data.color],
           pattern: "fading",
         },
-      })
+      });
 
       let color: string = data.color;
       let time: number = data.time;
-      let delay: number = data.delay
-      this.utilsService.fading(
-        id,
-        { color, time, delay },
-        oldDoc,
-        async () => {
-
-        let newDoc: EspDocument = await this.databaseService.updateEspWithId(oldDoc.uuid, {
-          leds: {
-            colors: [color],
-            pattern: oldDoc.leds.pattern,
-          }
-        });
+      let delay: number = data.delay;
+      this.utilsService.fading(id, { color, time, delay }, oldDoc, async () => {
+        let newDoc: EspDocument = await this.databaseService.updateEspWithId(
+          oldDoc.uuid,
+          {
+            leds: {
+              colors: [color],
+              pattern: oldDoc.leds.pattern,
+            },
+          },
+        );
       });
     }
     return {
@@ -120,23 +128,19 @@ export class ColorService {
     };
   }
 
-
   async blinkColor(
     id: string,
-    data: BlinkLedsDto
+    data: BlinkLedsDto,
   ): Promise<StandartResponse<Light>> {
-
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
-
 
     if (!doc.isOn) throw new OffException();
     this.tcpService.sendData(
-      this.utilsService.genJSONforEsp(
-        {
-          command: "blink",
-          data: { color: data.color, time: data.time}
+      this.utilsService.genJSONforEsp({
+        command: "blink",
+        data: { color: data.color, time: data.time },
       }),
-      doc.ip
+      doc.ip,
     );
     return {
       message: "Blinking color!",
@@ -157,16 +161,15 @@ export class ColorService {
 
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
 
-
-    if (oldDoc.leds.pattern != "plain") throw new BadRequestException("Pattern must be Plain!");
-
+    if (oldDoc.leds.pattern != "plain")
+      throw new BadRequestException("Pattern must be Plain!");
 
     const newDoc = await this.databaseService.updateEspWithId(id, {
       leds: {
         colors: data.colors ?? oldDoc.leds.colors,
         pattern: "blinking",
-      }
-    })
+      },
+    });
 
     if (data.delay < 100) data.delay = 100;
     const delay = data.delay;
@@ -176,21 +179,23 @@ export class ColorService {
 
     const runInterval = setInterval(() => {
       if (runs <= 0) {
-
         this.tcpService.sendData(
-          this.utilsService.genJSONforEsp(
-            {command: "leds", data: {
-            colors: this.utilsService.hexArrayToRgb(oldDoc.leds.colors), pattern: "plain"
-        }}), oldDoc.ip);
-
-
+          this.utilsService.genJSONforEsp({
+            command: "leds",
+            data: {
+              colors: this.utilsService.hexArrayToRgb(oldDoc.leds.colors),
+              pattern: "plain",
+            },
+          }),
+          oldDoc.ip,
+        );
 
         this.databaseService.updateEspWithId(id, {
           leds: {
             colors: oldDoc.leds.colors,
             pattern: oldDoc.leds.pattern,
           },
-        })
+        });
         clearInterval(runInterval);
         return;
       }
@@ -205,14 +210,12 @@ export class ColorService {
       }
 
       this.tcpService.sendData(
-        this.utilsService.genJSONforEsp(
-          {
-            command: "leds",
-          data: { colors: blinkColor, pattern: "plain" }
+        this.utilsService.genJSONforEsp({
+          command: "leds",
+          data: { colors: blinkColor, pattern: "plain" },
         }),
-      oldDoc.ip);
-
-
+        oldDoc.ip,
+      );
 
       runs--;
     }, delay);
@@ -222,5 +225,4 @@ export class ColorService {
       object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
-
 }

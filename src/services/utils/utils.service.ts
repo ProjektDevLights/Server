@@ -150,11 +150,20 @@ export class UtilsService {
     oldLight: EspDocument,
     callback?: Function,
   ): NodeJS.Timeout {
-
     let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
-    let colorStart: ColorFormats.RGB = tinycolor(oldLight.leds.colors[0]).toRgb();
+    let colorStart: ColorFormats.RGB = tinycolor(
+      oldLight.leds.colors[0],
+    ).toRgb();
 
-    let steps: {rStep: number, gStep: number, bStep: number} = this.generateSteps(colorStart, colorTo, data.delay, data.time) ?? {rStep: 0, gStep: 0, bStep: 0}
+    let steps: {
+      rStep: number;
+      gStep: number;
+      bStep: number;
+    } = this.generateSteps(colorStart, colorTo, data.delay, data.time) ?? {
+      rStep: 0,
+      gStep: 0,
+      bStep: 0,
+    };
     let runs: number = Math.round(data.time / data.delay);
 
     let colorRun: ColorFormats.RGB = colorStart;
@@ -191,22 +200,25 @@ export class UtilsService {
     end: ColorFormats.RGB,
     delay: number,
     time: number,
-  ): {rStep: number, gStep: number, bStep: number} {
-
-    let steps: {rStep: number, gStep: number, bStep: number} = {rStep: 0, gStep: 0, bStep: 0}
+  ): { rStep: number; gStep: number; bStep: number } {
+    let steps: { rStep: number; gStep: number; bStep: number } = {
+      rStep: 0,
+      gStep: 0,
+      bStep: 0,
+    };
 
     const floatStepR: number = ((start.r - end.r) * delay) / time;
-    console.log(floatStepR)
+    console.log(floatStepR);
     if (floatStepR > 0) steps.rStep = Math.ceil(floatStepR);
     if (floatStepR < 0) steps.rStep = Math.floor(floatStepR);
 
     const floatStepG: number = ((start.g - end.g) * delay) / time;
-    console.log(floatStepG)
+    console.log(floatStepG);
     if (floatStepG > 0) steps.gStep = Math.ceil(floatStepG);
     if (floatStepG < 0) steps.gStep = Math.floor(floatStepG);
 
     const floatStepB: number = ((start.b - end.b) * delay) / time;
-    console.log(floatStepB)
+    console.log(floatStepB);
     if (floatStepB > 0) steps.bStep = Math.ceil(floatStepB);
     if (floatStepB < 0) steps.bStep = Math.floor(floatStepB);
 
@@ -214,7 +226,6 @@ export class UtilsService {
   }
 
   applyStep(start: number, step: number, goal: number): number {
-
     if (start - step < goal && step >= 0) return goal;
     if (start - step > goal && step <= 0) return goal;
     return start - step;
