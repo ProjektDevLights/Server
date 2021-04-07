@@ -2,6 +2,8 @@ import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { find, findIndex } from "lodash";
 import * as net from "net";
 import { EspDocument } from "src/schemas/esp.schema";
+import { Leds } from "../../interfaces";
+import { DatabaseEspService } from "../database/esp/database-esp.service";
 
 export interface tcpEsp {
   ip: string;
@@ -9,6 +11,7 @@ export interface tcpEsp {
 }
 @Injectable()
 export class TcpService {
+  constructor(private databaseService: DatabaseEspService) {}
   private server: net.Server;
   private clients: tcpEsp[] = [];
 
@@ -38,9 +41,22 @@ export class TcpService {
         })
         .on("timeout", () => {
           console.log("timeout");
-        });
+        })
+        .on("data", (data: Buffer) => this.handleIncomingData(data, ip));
     });
     this.server.listen(2389, () => {});
+  }
+
+  handleIncomingData(data: Buffer, ip: string): void {
+    const newData: Leds = JSON.parse(data.toString());
+    this.databaseService
+      .getEsps(true)
+      .where({ ip: ip })
+      .update({ leds: newData })
+      .exec()
+      .then((doc: EspDocument) => {
+        this.databaseService.clear("id-" + doc.uuid);
+      });
   }
 
   removeConnection(ip: string) {

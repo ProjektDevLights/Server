@@ -5,6 +5,7 @@ import { AlarmConflictException } from "src/exceptions/alarm-conflict.exception"
 import { InvalidIdException } from "src/exceptions/invalid-id.exception";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
+import tinycolor from "tinycolor2";
 import { NothingChangedException } from "../../exceptions/nothing-changed.exception";
 import { Alarm, Light, StandartResponse, Time } from "../../interfaces";
 import { AlarmDocument } from "../../schemas/alarm.schema";
@@ -89,23 +90,11 @@ export class AlarmService {
         );
 
         this.utilsService.fading(
-          oldLight.id,
-          {
-            color: alarm.color,
-            time: 5000 * 60,
-            delay: (5000 * 60) / 255,
-          },
-          newDoc,
-          () => {
-            this.databaseServiceEsp.updateEspWithId(oldLight.id, {
-              leds: {
-                colors: [alarm.color],
-                pattern: "plain",
-              },
-              brightness: 255,
-              isOn: true,
-            });
-          },
+          oldDoc.ip,
+          tinycolor("#000000"),
+          tinycolor(alarm.color),
+          5000 * 60,
+          (5000 * 60) / 255,
         );
       } catch (e) {
         console.log("eroorrr" + e);

@@ -1,8 +1,10 @@
-import { Module } from '@nestjs/common';
-import { TcpService } from './tcp.service';
+import { Module } from "@nestjs/common";
+import { DatabaseModule } from "../database/database.module";
+import { TcpService } from "./tcp.service";
 
 @Module({
-    providers: [TcpService],
-    exports: [TcpService]
+  providers: [TcpService],
+  imports: [DatabaseModule],
+  exports: [TcpService],
 })
 export class TcpModule {}

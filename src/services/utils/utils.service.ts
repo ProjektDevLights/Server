@@ -1,11 +1,17 @@
 import { Injectable } from "@nestjs/common";
+import { isArray, map } from "lodash";
 import tinycolor, { ColorFormats } from "tinycolor2";
+import { CustomData } from "../../http/lights/color/dto/custom-pattern.dto";
 import { EspCommand, Leds } from "../../interfaces";
-import { EspDocument } from "../../schemas/esp.schema";
 import { DatabaseAlarmService } from "../database/alarm/database-alarm.service";
 import { DatabaseEspService } from "../database/esp/database-esp.service";
 import { TcpService } from "../tcp/tcp.service";
 
+export type Steps = {
+  rStep: number;
+  gStep: number;
+  bStep: number;
+};
 @Injectable()
 export class UtilsService {
   constructor(
@@ -112,73 +118,103 @@ export class UtilsService {
     return false;
   }
 
-  isValidPattern(data: Leds): boolean {
+  isValidPattern(data: Leds): string | string[] | undefined {
     // length > 1 => gradient
     // length == 1 => plain or runner
     // length == 0 => fading or rainbow
+    const errors: string[] = [];
 
-    switch (data.colors.length) {
-      case 0: {
-        switch (data.pattern) {
-          case "fading": {
-            return !!data.timeout;
-          }
-          case "rainbow": {
-            return !!data.timeout;
-          }
-          default:
-            return false;
-        }
-      }
-      case 1: {
-        return (
-          (data.pattern === "plain" && !data.timeout) ||
-          (data.pattern === "runner" && !!data.timeout)
-        );
-      }
-      case 2: {
-        return data.pattern === "gradient" && !data.timeout;
-      }
+    console.log();
+
+    switch (data.pattern) {
+      case "plain":
+        data.colors.length !== 1
+          ? errors.push(
+              "colors should be of length 1, when using pattern 'plain'",
+            )
+          : undefined;
+        data.timeout
+          ? errors.push("timeout should be empty, when using pattern 'plain'")
+          : undefined;
+        break;
+      case "gradient":
+        data.colors.length !== 2
+          ? errors.push(
+              "colors should be of length 2, when using pattern 'gradient'",
+            )
+          : undefined;
+        data.timeout
+          ? errors.push(
+              "timeout should be empty, when using pattern 'gradient'",
+            )
+          : undefined;
+        break;
+      case "runner":
+        data.colors.length !== 1
+          ? errors.push(
+              "colors should be of length 1, when using pattern 'runner'",
+            )
+          : undefined;
+        !data.timeout
+          ? errors.push(
+              "timeout must not be empty, when using pattern 'runner'",
+            )
+          : undefined;
+        break;
+      case "rainbow":
+        data.colors.length !== 0
+          ? errors.push("colors should be empty, when using pattern 'rainbow'")
+          : undefined;
+        !data.timeout
+          ? errors.push(
+              "timeout must not be empty, when using pattern 'rainbow'",
+            )
+          : undefined;
+        break;
+      case "fading":
+        data.colors.length !== 0
+          ? errors.push(
+              "colors should be of length 0, when using pattern 'fading'",
+            )
+          : undefined;
+        !data.timeout
+          ? errors.push(
+              "timeout must not be empty, when using pattern 'fading'",
+            )
+          : undefined;
+        break;
       default:
-        return false;
+        errors.push("Pattern must not be empty");
     }
+    return errors.length > 0
+      ? errors.length > 1
+        ? errors
+        : errors[0]
+      : undefined;
   }
 
-  fading(
-    id: string,
-    data: { color: string; time: number; delay: number },
-    oldLight: EspDocument,
-    callback?: Function,
-  ): NodeJS.Timeout {
-    let colorTo: ColorFormats.RGB = tinycolor(data.color).toRgb();
-    let colorStart: ColorFormats.RGB = tinycolor(
-      oldLight.leds.colors[0],
-    ).toRgb();
-
-    let steps: {
-      rStep: number;
-      gStep: number;
-      bStep: number;
-    } = this.generateSteps(colorStart, colorTo, data.delay, data.time) ?? {
-      rStep: 0,
-      gStep: 0,
-      bStep: 0,
-    };
-    let runs: number = Math.round(data.time / data.delay);
-
-    let colorRun: ColorFormats.RGB = colorStart;
+  async fading(
+    ip: string,
+    from: tinycolor.Instance,
+    to: tinycolor.Instance,
+    time: number = 60 * 1000,
+    delay: number = 5 * 1000,
+  ) {
+    let steps: Steps = this.generateSteps(
+      from.toRgb(),
+      to.toRgb(),
+      delay,
+      time,
+    );
+    let runs: number = Math.round(time / delay);
+    let colorRun: ColorFormats.RGB = from.toRgb();
 
     //loop color setting
-    const runInterval = setInterval(async () => {
-      if (runs <= 0) {
-        callback ? callback() : undefined;
-        clearInterval(runInterval);
-        return;
-      }
-      //setting new steps
-      colorRun.r = this.applyStep(colorRun.r, steps.rStep, colorTo.r);
-      colorRun.g = this.applyStep(colorRun.g, steps.gStep, colorTo.g);
-      colorRun.b = this.applyStep(colorRun.b, steps.bStep, colorTo.b);
+
+    for (let i = 0; i < runs; i++) {
+      colorRun.r = this.applyStep(colorRun.r, steps.rStep, to.toRgb().r);
+      colorRun.g = this.applyStep(colorRun.g, steps.gStep, to.toRgb().g);
+      colorRun.b = this.applyStep(colorRun.b, steps.bStep, to.toRgb().b);
       this.tcpService.sendData(
         this.genJSONforEsp({
           command: "leds",
@@ -187,12 +223,19 @@ export class UtilsService {
             pattern: "plain",
           },
         }),
-        oldLight.ip,
+        ip,
       );
-
-      runs--;
-    }, data.delay);
-    return runInterval;
+      await this.delay(delay);
+      console.log(
+        this.genJSONforEsp({
+          command: "leds",
+          data: {
+            colors: [tinycolor(colorRun).toHexString()],
+            pattern: "plain",
+          },
+        }),
+      );
+    }
   }
 
   generateSteps(
@@ -238,6 +281,14 @@ export class UtilsService {
     if (input.data?.color !== undefined) {
       input.data.color = this.hexToRgb(input.data.colors);
     }
+    if (isArray(input.data)) {
+      input.data = map(input.data, (customData: CustomData) => {
+        customData.leds = map(customData.leds, (color: string) => {
+          return this.hexToRgb(color);
+        });
+        return customData;
+      });
+    }
     //matches \" "[ --> takes last character
     return JSON.stringify(input)
       .replace(/(\"\[)|(\\\")/g, (match: string): string => {
@@ -248,4 +299,6 @@ export class UtilsService {
         return match.charAt(0);
       });
   }
+
+  delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 }

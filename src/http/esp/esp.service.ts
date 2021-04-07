@@ -1,6 +1,4 @@
-import {
-  Injectable
-} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { EspDocument } from "src/schemas/esp.schema";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { NothingChangedException } from "../../exceptions/nothing-changed.exception";
@@ -17,7 +15,7 @@ export class EspService {
       .distinct("ip")
       .exec();
 
-    if(ips.includes(data.ip)){
+    if (ips.includes(data.ip)) {
       return "This IP is already in use!";
     }
 
@@ -26,7 +24,7 @@ export class EspService {
       return "This IP is already in use!";
     }
 
-    let id: string= "";
+    let id: string = "";
 
     const ids: string[] = await this.databaseService
       .getEsps(true)
@@ -34,7 +32,8 @@ export class EspService {
       .exec();
 
     do {
-      id = Math.round(Math.random() * 255) + "." + Math.round(Math.random() * 255);
+      id =
+        Math.round(Math.random() * 255) + "." + Math.round(Math.random() * 255);
     } while (ids.includes(id));
 
     const name = "(new) Devlight";
@@ -44,7 +43,7 @@ export class EspService {
         count: 150,
         name: name,
         ip: data.ip,
-        leds: { pattern: "plain", colors: ["#1DE9B6"]},
+        leds: { pattern: "plain", colors: ["#1DE9B6"] },
         tags: [],
         isOn: true,
         brightness: 255,
@@ -63,7 +62,11 @@ export class EspService {
     if (oldDoc.ip === data.ip) {
       throw new NothingChangedException();
     }
-    await this.databaseService.updateEspWithId(data.id, { ip: data.ip });
+    try {
+      await this.databaseService.updateEspWithId(data.id, { ip: data.ip });
+    } catch {
+      console.error("This IP is already in use!");
+    }
     return;
   }
 }

@@ -1,23 +1,31 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, ValidationPipe } from '@nestjs/common';
-import { StandartResponse, Light, PartialLight } from '../../interfaces';
-import { BlinkLedsDto } from '../lights/color/dto/blink-leds.dto';
-import { UpdateLedsDto } from '../lights/color/dto/update-leds.dto';
-import UpdateBrightnessDto from '../lights/settings/dto/update-brightness.dto';
-import { ColorService } from './color/color.service';
-import { ControlService } from './control/control.service';
-import { GeneralService } from './general/general.service';
-import { SettingsService } from './settings/settings.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  ValidationPipe,
+} from "@nestjs/common";
+import { Light, PartialLight, StandartResponse } from "../../interfaces";
+import { BlinkLedsDto } from "../lights/color/dto/blink-leds.dto";
+import { CustomPatternDto } from "../lights/color/dto/custom-pattern.dto";
+import { UpdateLedsDto } from "../lights/color/dto/update-leds.dto";
+import UpdateBrightnessDto from "../lights/settings/dto/update-brightness.dto";
+import { ColorService } from "./color/color.service";
+import { ControlService } from "./control/control.service";
+import { GeneralService } from "./general/general.service";
+import { SettingsService } from "./settings/settings.service";
 
-@Controller('tags')
+@Controller("tags")
 export class TagsController {
-
   constructor(
     private generalService: GeneralService,
     private controlService: ControlService,
     private colorService: ColorService,
-    private settingsService: SettingsService
-  ) { }
-
+    private settingsService: SettingsService,
+  ) {}
 
   //general service
 
@@ -45,34 +53,51 @@ export class TagsController {
   }
 
   @Post(":tag/restart")
-  async restartWithTag(@Param("tag") tag: string): Promise<StandartResponse<PartialLight[]>> {
+  async restartWithTag(
+    @Param("tag") tag: string,
+  ): Promise<StandartResponse<PartialLight[]>> {
     return this.controlService.restartWithTag(tag);
   }
 
-
   @Delete(":tag/reset")
-  async resetWithTag(@Param("tag") tag: string): Promise<StandartResponse<PartialLight[]>> {
+  async resetWithTag(
+    @Param("tag") tag: string,
+  ): Promise<StandartResponse<PartialLight[]>> {
     return this.controlService.resetWithTag(tag);
   }
 
   //color service
 
   @Patch(":tag/color")
-  updateColor(@Param("tag") tag: string, @Body(new ValidationPipe()) data: UpdateLedsDto): Promise<StandartResponse<Light[]>> {
+  updateColor(
+    @Param("tag") tag: string,
+    @Body(new ValidationPipe()) data: UpdateLedsDto,
+  ): Promise<StandartResponse<Light[]>> {
     return this.colorService.updateLedsWithTag(tag, data);
   }
 
   @Post(":tag/blink")
-  async blink(@Param("tag") tag: string, @Body(new ValidationPipe()) data: BlinkLedsDto): Promise<StandartResponse<Light[]>> {
+  async blink(
+    @Param("tag") tag: string,
+    @Body(new ValidationPipe()) data: BlinkLedsDto,
+  ): Promise<StandartResponse<Light[]>> {
     return this.colorService.blink(tag, data);
+  }
+
+  @Patch(":tag/custom")
+  async custom(
+    @Param("tag") tag: string,
+    @Body(new ValidationPipe()) data: CustomPatternDto,
+  ) {
+    return this.colorService.applyCustom(tag, data);
   }
 
   //settings
   @Patch("/:tag/brightness")
   async brightness(
     @Param("tag") tag: string,
-    @Body(new ValidationPipe()) data: UpdateBrightnessDto
-  ): Promise<StandartResponse<Light[]>>{
-    return this.settingsService.setBrightness(tag,data.brightness)
+    @Body(new ValidationPipe()) data: UpdateBrightnessDto,
+  ): Promise<StandartResponse<Light[]>> {
+    return this.settingsService.setBrightness(tag, data.brightness);
   }
 }

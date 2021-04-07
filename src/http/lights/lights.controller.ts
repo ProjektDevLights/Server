@@ -13,6 +13,7 @@ import { Light, PartialLight, StandartResponse } from "../../interfaces";
 import { ColorService } from "./color/color.service";
 import { BlinkLedsDto } from "./color/dto/blink-leds.dto";
 import { BlinkingLedsDto } from "./color/dto/blinking-leds.dto";
+import { CustomPatternDto } from "./color/dto/custom-pattern.dto";
 import { UpdateLedsDto } from "./color/dto/update-leds.dto";
 import { ControlService } from "./control/control.service";
 import { GeneralService } from "./general/general.service";
@@ -147,5 +148,13 @@ export class LightsController {
     @Body(new ValidationPipe()) data: BlinkingLedsDto,
   ): Promise<StandartResponse<Light>> {
     return this.colorService.blinkColorLoop(id, data);
+  }
+
+  @Patch("/:light/custom")
+  async applyCustom(
+    @Param("light") id: string,
+    @Body(new ValidationPipe()) data: CustomPatternDto,
+  ) {
+    return this.colorService.applyCustom(id, data);
   }
 }
