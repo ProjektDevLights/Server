@@ -53,7 +53,6 @@ export class TcpService {
       .getEsps(true)
       .where({ ip: ip })
       .update({ leds: newData })
-      .exec()
       .then((doc: EspDocument) => {
         this.databaseService.clear("id-" + doc.uuid);
       });
