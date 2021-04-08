@@ -1,8 +1,8 @@
 import { Injectable, ServiceUnavailableException } from "@nestjs/common";
-import { find, findIndex } from "lodash";
-import { UpdateWriteOpResult } from "mongoose";
+import { find, findIndex, map } from "lodash";
 import * as net from "net";
 import { EspDocument } from "src/schemas/esp.schema";
+import tinycolor from "tinycolor2";
 import { Leds } from "../../interfaces";
 import { DatabaseEspService } from "../database/esp/database-esp.service";
 
@@ -12,7 +12,7 @@ export interface tcpEsp {
 }
 @Injectable()
 export class TcpService {
-  constructor(private databaseService: DatabaseEspService) {}
+  constructor(private databaseService: DatabaseEspService) { }
   private server: net.Server;
   private clients: tcpEsp[] = [];
 
@@ -45,19 +45,44 @@ export class TcpService {
         })
         .on("data", (data: Buffer) => this.handleIncomingData(data, ip));
     });
-    this.server.listen(2389, () => {});
+    this.server.listen(2389, () => { });
   }
 
-  handleIncomingData(data: Buffer, ip: string): void {
-    const newData: Leds = JSON.parse(data.toString());
-    this.databaseService
+  private handleIncomingData(data: Buffer, ip: string): void {
+    try {
+      const newData: Leds = JSON.parse(data.toString());
+      newData.colors = this.rgbToHexArray(newData.colors);
+      switch (newData.pattern) {
+        case "fading":
+          newData.colors = ["#1de9b6"];
+          break;
+        case "gradient":
+          newData.colors.splice(2);
+          break;
+        case "plain":
+          newData.colors.splice(1);
+          break;
+        case "runner":
+          newData.colors.splice(1);
+          break;
+        case "rainbow":
+          newData.colors = ["#1de9b6"];
+          break;
+      }
+      this.databaseService
       .getEsps(true).findOneAndUpdate({ip: ip}, {leds: newData}, {
         new: true,
         omitUndefined: true,
       })
       .then((doc: EspDocument) => {
+        console.log(doc);
         this.databaseService.clear("id-" + doc.uuid);
+        this.databaseService.clear("all");
+        doc.tags.forEach((tag: string) => this.databaseService.clear("tag-" + tag))
       });
+    } catch {
+      console.log("cant parse data");
+    }
   }
 
   removeConnection(ip: string) {
@@ -68,7 +93,7 @@ export class TcpService {
   sendData(data: string, ip: string): void {
     try {
       const client: net.Socket = find(this.clients, { ip: ip }).socket;
-      client.write(data + "\n", () => {});
+      client.write(data + "\n", () => { });
     } catch (e) {
       //console.error(e);
       throw new ServiceUnavailableException(
@@ -88,6 +113,14 @@ export class TcpService {
         "At least one light is not plugged in or started yet!",
       );
     }
+  }
+
+  private rgbToHex(rgb: string): string {
+    return tinycolor(`rgb (${map(rgb.split("."), (x: string) => +x)})`).toHexString();
+  }
+
+  private rgbToHexArray(rgbs: string[]): string[] {
+    return map(rgbs, (rgb: string) => this.rgbToHex(rgb))
   }
 
   private beforeApplicationShutdown() {

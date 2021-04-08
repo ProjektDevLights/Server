@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { isArray } from "lodash";
+import { isArray, map } from "lodash";
 import tinycolor, { ColorFormats } from "tinycolor2";
 import { EspCommand, Leds } from "../../interfaces";
 import { DatabaseAlarmService } from "../database/alarm/database-alarm.service";
@@ -38,6 +38,7 @@ export class UtilsService {
       parseInt(colors[2], 16)
     );
   }
+
 
   makeValidHex(hex: string): string {
     let colors: string[] = [];
