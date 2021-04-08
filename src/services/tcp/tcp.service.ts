@@ -1,5 +1,6 @@
 import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { find, findIndex } from "lodash";
+import { UpdateWriteOpResult } from "mongoose";
 import * as net from "net";
 import { EspDocument } from "src/schemas/esp.schema";
 import { Leds } from "../../interfaces";
@@ -50,9 +51,10 @@ export class TcpService {
   handleIncomingData(data: Buffer, ip: string): void {
     const newData: Leds = JSON.parse(data.toString());
     this.databaseService
-      .getEsps(true)
-      .where({ ip: ip })
-      .update({ leds: newData })
+      .getEsps(true).findOneAndUpdate({ip: ip}, {leds: newData}, {
+        new: true,
+        omitUndefined: true,
+      })
       .then((doc: EspDocument) => {
         this.databaseService.clear("id-" + doc.uuid);
       });

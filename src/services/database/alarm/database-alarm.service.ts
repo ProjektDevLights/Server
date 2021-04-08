@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 //@ts-ignore
 import cachegoose from "cachegoose";
-import { Model, MongooseUpdateQuery } from "mongoose";
+import { Model, UpdateQuery } from "mongoose";
 import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";
 import { Alarm as AlarmInterface } from "../../../interfaces";
 import { DatabaseEspService } from "../esp/database-esp.service";
@@ -36,7 +36,7 @@ export class DatabaseAlarmService {
       .exec();
   }
 
-  async updateAlarm(id: string, updateQuery: MongooseUpdateQuery<Alarm>) {
+  async updateAlarm(id: string, updateQuery: UpdateQuery<Alarm>) {
     await this.clear("id-" + id);
     this.clear("all");
     const updated: AlarmDocument = await this.alarmModel

@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 //@ts-ignore
 import cachegoose from "cachegoose";
-import { DocumentQuery, Model, MongooseUpdateQuery } from "mongoose";
+import { DocumentQuery, Model, UpdateQuery } from "mongoose";
 import { NothingChangedException } from "../../../exceptions/nothing-changed.exception";
 import { Light, PartialLight } from "../../../interfaces";
 import { Esp, EspDocument } from "../../../schemas/esp.schema";
@@ -69,7 +69,7 @@ export class DatabaseEspService {
 
   async updateEspWithId(
     id: string,
-    updateQuery: MongooseUpdateQuery<Light>,
+    updateQuery: UpdateQuery<Light>,
   ): Promise<EspDocument> {
     await this.clear("id-" + id);
     this.clear("all");
@@ -138,7 +138,7 @@ export class DatabaseEspService {
 
   async updateEspsWithTag(
     tag: string,
-    updateQuery: MongooseUpdateQuery<Light>,
+    updateQuery: UpdateQuery<Light>,
   ): Promise<EspDocument[]> {
     const oldDocs: EspDocument[] = await this.getEspsWithTag(tag);
     await this.clear("tag-" + tag);
