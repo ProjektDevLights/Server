@@ -3,7 +3,7 @@ import {
   Injectable,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { uniq } from "lodash";
+import { min, uniq } from "lodash";
 import { BlinkLedsDto } from "src/http/lights/color/dto/blink-leds.dto";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { UpdateLedsDto } from "../../../http/lights/color/dto/update-leds.dto";
@@ -117,10 +117,10 @@ export class ColorService {
       areOn.push(doc.isOn);
     });
 
-    if (!areOn.every((val, i) => val === true))
+    /* if (!areOn.every((val, i) => val === true))
       throw new ServiceUnavailableException(
         "At least one light is not on! In order to update with tag please turn them on with '/tags/:tag/on'",
-      );
+      ); */
 
     let colors: string[] = [];
     data.data.forEach((customData: CustomData) => {
@@ -130,12 +130,22 @@ export class ColorService {
     colors = uniq(colors);
 
     let sendColors: string[] = [];
-
     data.data.forEach((data: CustomData) => {
       for (let i = 0; i < data.repeat; i++) {
         sendColors = sendColors.concat(data.leds);
       }
     });
+
+    let errors: number[] = [];
+    docs.forEach((doc: EspDocument) => {
+      if (sendColors.length > doc.count) errors.push(doc.count);
+    });
+    console.log(errors);
+
+    if (errors.length > 0)
+      throw new BadRequestException(
+        `The total length of Leds should not exceed ${min(errors)}`,
+      );
 
     this.tcpService.batchSendData(
       this.utilsService.genJSONforEsp({ command: "custom", data: sendColors }),

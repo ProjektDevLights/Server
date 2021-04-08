@@ -266,6 +266,11 @@ export class ColorService {
       }
     });
 
+    if (sendColors.length > oldDoc.count)
+      throw new BadRequestException(
+        `The total length of Leds should not exceed ${oldDoc.count}`,
+      );
+
     this.tcpService.sendData(
       this.utilsService.genJSONforEsp({ command: "custom", data: sendColors }),
       oldDoc.ip,
