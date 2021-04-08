@@ -258,8 +258,16 @@ export class ColorService {
     });
     colors = uniq(colors);
 
+    let sendColors: string[] = [];
+
+    data.data.forEach((data: CustomData) => {
+      for (let i = 0; i < data.repeat; i++) {
+        sendColors = sendColors.concat(data.leds);
+      }
+    });
+
     this.tcpService.sendData(
-      this.utilsService.genJSONforEsp({ command: "custom", data: data.data }),
+      this.utilsService.genJSONforEsp({ command: "custom", data: sendColors }),
       oldDoc.ip,
     );
 

@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { isArray, map } from "lodash";
+import { isArray } from "lodash";
 import tinycolor, { ColorFormats } from "tinycolor2";
-import { CustomData } from "../../http/lights/color/dto/custom-pattern.dto";
 import { EspCommand, Leds } from "../../interfaces";
 import { DatabaseAlarmService } from "../database/alarm/database-alarm.service";
 import { DatabaseEspService } from "../database/esp/database-esp.service";
@@ -282,12 +281,7 @@ export class UtilsService {
       input.data.color = this.hexToRgb(input.data.colors);
     }
     if (isArray(input.data)) {
-      input.data = map(input.data, (customData: CustomData) => {
-        customData.leds = map(customData.leds, (color: string) => {
-          return this.hexToRgb(color);
-        });
-        return customData;
-      });
+      input.data = this.hexArrayToRgb(input.data);
     }
     //matches \" "[ --> takes last character
     return JSON.stringify(input)
