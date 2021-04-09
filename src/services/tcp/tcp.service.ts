@@ -79,7 +79,7 @@ export class TcpService {
         this.databaseService.clear("id-" + doc.uuid);
         this.databaseService.clear("all");
         doc.tags.forEach((tag: string) => this.databaseService.clear("tag-" + tag))
-      });
+      }).catch(() => {});
     } catch {
       console.log("cant parse data");
     }
