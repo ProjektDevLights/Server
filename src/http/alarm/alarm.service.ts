@@ -89,13 +89,19 @@ export class AlarmService {
           },
         );
 
-        this.utilsService.fading(
+        await this.utilsService.fading(
           oldDoc.ip,
           tinycolor("#000000"),
           tinycolor(alarm.color),
           5000 * 60,
           (5000 * 60) / 255,
         );
+        this.databaseServiceEsp.updateEspWithId(oldLight.id, {
+          leds: {
+            colors: [alarm.color],
+            pattern: "plain",
+          },
+        });
       } catch (e) {
         console.log("eroorrr" + e);
       }
