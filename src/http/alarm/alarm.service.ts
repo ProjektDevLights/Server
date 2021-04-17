@@ -102,9 +102,7 @@ export class AlarmService {
             pattern: "plain",
           },
         });
-      } catch (e) {
-        console.log("eroorrr" + e);
-      }
+      } catch {}
     });
   };
 
@@ -159,7 +157,6 @@ export class AlarmService {
 
     const invalids = await this.validateIds(data.ids);
     if (invalids.length > 0) throw new InvalidIdException(invalids);
-
     const conflicts: Conflict[] = this.getConflictingAlarms(
       data.time,
       data.days,
@@ -239,7 +236,6 @@ export class AlarmService {
     ) {
       throw new NothingChangedException();
     }
-    console.log(data.days);
     if (data.days !== undefined && data.days.length === 0) {
       throw new BadRequestException("days should not be empty");
     }
@@ -345,7 +341,7 @@ export class AlarmService {
 
   async getAlarmWithId(id: string): Promise<StandartResponse<Alarm>> {
     return {
-      message: "Alarm with ID: " + id,
+      message: "Alarm with Id: " + id,
       object: DatabaseAlarmService.alarmDocToAlarm(
         await this.databaseServiceAlarm.getAlarmWithId(id),
       ),

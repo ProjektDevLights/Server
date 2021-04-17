@@ -49,7 +49,6 @@ export class EspService {
         brightness: 255,
       });
     } catch (e) {
-      console.log(e);
       return "Something went wrong!";
     }
     return id;

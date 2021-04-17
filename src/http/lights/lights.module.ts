@@ -2,7 +2,7 @@ import {
   MiddlewareConsumer,
   Module,
   NestModule,
-  RequestMethod,
+  RequestMethod
 } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { LightValidationMiddleware } from "src/middlewares/light-validation.middleware";
@@ -35,6 +35,6 @@ export class LightsModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(LightValidationMiddleware)
-      .forRoutes({ path: "lights/:light/(.*)", method: RequestMethod.ALL });
+      .forRoutes({ path: "lights/:light(.*)", method: RequestMethod.ALL });
   }
 }

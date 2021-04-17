@@ -7,12 +7,11 @@ import {
   Patch,
   Post,
   Put,
-  ValidationPipe,
+  ValidationPipe
 } from "@nestjs/common";
 import { Light, PartialLight, StandartResponse } from "../../interfaces";
 import { ColorService } from "./color/color.service";
 import { BlinkLedsDto } from "./color/dto/blink-leds.dto";
-import { BlinkingLedsDto } from "./color/dto/blinking-leds.dto";
 import { CustomPatternDto } from "./color/dto/custom-pattern.dto";
 import { UpdateLedsDto } from "./color/dto/update-leds.dto";
 import { ControlService } from "./control/control.service";
@@ -126,28 +125,12 @@ export class LightsController {
     return this.colorService.updateLeds(id, data);
   }
 
-  @Post(":light/fade")
-  async fadeToColor(
-    @Param("light") id: string,
-    @Body(new ValidationPipe()) data: { color: string; time: number },
-  ): Promise<StandartResponse<Light>> {
-    return this.colorService.fadeToColor(id, data);
-  }
-
   @Post("/:light/blink")
   async blinkColor(
     @Param("light") id: string,
     @Body(new ValidationPipe()) data: BlinkLedsDto,
   ): Promise<StandartResponse<Light>> {
     return this.colorService.blinkColor(id, data);
-  }
-
-  @Post("/:light/blink/fancy")
-  async blinkColorLoop(
-    @Param("light") id: string,
-    @Body(new ValidationPipe()) data: BlinkingLedsDto,
-  ): Promise<StandartResponse<Light>> {
-    return this.colorService.blinkColorLoop(id, data);
   }
 
   @Patch("/:light/custom")

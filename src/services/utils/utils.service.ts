@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { isArray, map } from "lodash";
+import { isArray } from "lodash";
 import tinycolor, { ColorFormats } from "tinycolor2";
 import { EspCommand, Leds } from "../../interfaces";
 import { DatabaseAlarmService } from "../database/alarm/database-alarm.service";
@@ -123,9 +123,6 @@ export class UtilsService {
     // length == 1 => plain or runner
     // length == 0 => fading or rainbow
     const errors: string[] = [];
-
-    console.log();
-
     switch (data.pattern) {
       case "plain":
         data.colors.length !== 1
@@ -226,15 +223,6 @@ export class UtilsService {
         ip,
       );
       await this.delay(delay);
-      console.log(
-        this.genJSONforEsp({
-          command: "leds",
-          data: {
-            colors: [tinycolor(colorRun).toHexString()],
-            pattern: "plain",
-          },
-        }),
-      );
     }
   }
 
@@ -251,17 +239,14 @@ export class UtilsService {
     };
 
     const floatStepR: number = ((start.r - end.r) * delay) / time;
-    console.log(floatStepR);
     if (floatStepR > 0) steps.rStep = Math.ceil(floatStepR);
     if (floatStepR < 0) steps.rStep = Math.floor(floatStepR);
 
     const floatStepG: number = ((start.g - end.g) * delay) / time;
-    console.log(floatStepG);
     if (floatStepG > 0) steps.gStep = Math.ceil(floatStepG);
     if (floatStepG < 0) steps.gStep = Math.floor(floatStepG);
 
     const floatStepB: number = ((start.b - end.b) * delay) / time;
-    console.log(floatStepB);
     if (floatStepB > 0) steps.bStep = Math.ceil(floatStepB);
     if (floatStepB < 0) steps.bStep = Math.floor(floatStepB);
 
@@ -279,7 +264,7 @@ export class UtilsService {
       input.data.colors = this.hexArrayToRgb(input.data.colors);
     }
     if (input.data?.color !== undefined) {
-      input.data.color = this.hexToRgb(input.data.colors);
+      input.data.color = this.hexToRgb(input.data.color);
     }
     if (isArray(input.data)) {
       input.data = this.hexArrayToRgb(input.data);

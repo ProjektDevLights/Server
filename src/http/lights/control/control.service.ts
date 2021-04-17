@@ -78,7 +78,7 @@ export class ControlService {
     const doc: EspDocument = await this.databaseService.deleteEspWithId(id);
 
     return {
-      message: "Resetting...",
+      message: "Succesfully deleted light",
       object: DatabaseEspService.espDocToLight(doc),
     };
   }

@@ -23,7 +23,6 @@ export class SettingsService {
         const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 
         if (!filter(oldDocs, (doc: EspDocument) => doc.brightness != brightness).length) {
-
           throw new NothingChangedException();
         }
 
@@ -37,7 +36,7 @@ export class SettingsService {
         });
 
         return {
-          message: "Succesfully updated Lights brightness",
+          message: `Sucessfully changed brightness!`,
           count: newDocs.length,
           object: DatabaseEspService.espDocsToLights(newDocs),
         };

@@ -24,7 +24,7 @@ export class GeneralService {
 
   async get(id: string): Promise<StandartResponse<Light>> {
     return {
-      message: "Light with Id " + id,
+      message: "Light with Id:" + id,
       object: DatabaseEspService.espDocToLight(
         await this.databaseService.getEspWithId(id),
       ),
@@ -35,7 +35,7 @@ export class GeneralService {
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
     this.tcpService.sendData(data, doc.ip);
     return {
-      message: "Passed data",
+      message: "Succesfully passed data!",
       object: DatabaseEspService.espDocToLight(doc),
     };
   }

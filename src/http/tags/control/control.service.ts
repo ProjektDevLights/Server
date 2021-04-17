@@ -33,7 +33,7 @@ export class ControlService {
     );
 
     return {
-      message: `All Lights with the Tag ${tag} are on now!  The following lights have been changed.`,
+      message: `Succefully the the lights on!`,
       count: newDocs.length,
       object: DatabaseEspService.espDocsToLights(newDocs),
     };
@@ -61,7 +61,7 @@ export class ControlService {
     );
 
     return {
-      message: `All Lights with the Tag ${tag} are off now!  The following lights have been changed.`,
+      message: `Successfully turned the lights off!`,
       count: newDocs.length,
       object: DatabaseEspService.espDocsToLights(newDocs),
     };

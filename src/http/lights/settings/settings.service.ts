@@ -31,7 +31,7 @@ export class SettingsService {
       throw new NothingChangedException("No changes were made");
     }
     return {
-      message: "Succesfully updatet Light!",
+      message: "Succesfully updated Light!",
       object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
@@ -60,7 +60,7 @@ export class SettingsService {
     });
 
     return {
-      message: "Succesfully updated Lights brightness",
+      message: "Succesfully updated lights brightness!",
       object: DatabaseEspService.espDocToLight(newDoc),
     };
   }
@@ -82,7 +82,7 @@ export class SettingsService {
       count: count,
     });
     return {
-      message: "Succesfully updated LED count",
+      message: "Succesfully updated LED count!",
       object: DatabaseEspService.espDocToLight(newDoc),
     };
   }

@@ -2,9 +2,10 @@ import {
   IsHexColor,
   IsInt,
   IsNotEmpty,
-  IsString,
+  IsString
 } from "class-validator";
 export class BlinkLedsDto {
+  
   @IsString()
   @IsHexColor()
   @IsNotEmpty()

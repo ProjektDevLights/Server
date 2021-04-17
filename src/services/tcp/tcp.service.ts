@@ -19,7 +19,6 @@ export class TcpService {
   private onApplicationBootstrap() {
     this.server = net.createServer();
     this.server.on("connection", c => {
-      console.log(c.remoteAddress);
       const ip: string = c.remoteAddress.substr(7);
       if (find(this.clients, { ip: ip })) {
         this.removeConnection(ip);
@@ -29,19 +28,14 @@ export class TcpService {
         socket: c,
       });
       c.on("connect", () => {
-        console.log("connected");
       })
         .on("end", () => {
-          console.log("ended");
         })
         .on("close", () => {
-          console.log("closed");
         })
         .on("error", () => {
-          console.log("error");
         })
         .on("timeout", () => {
-          console.log("timeout");
         })
         .on("data", (data: Buffer) => this.handleIncomingData(data, ip));
     });
@@ -75,13 +69,11 @@ export class TcpService {
         omitUndefined: true,
       })
       .then((doc: EspDocument) => {
-        console.log(doc);
         this.databaseService.clear("id-" + doc.uuid);
         this.databaseService.clear("all");
         doc.tags.forEach((tag: string) => this.databaseService.clear("tag-" + tag))
       }).catch(() => {});
     } catch {
-      console.log("cant parse data");
     }
   }
 
@@ -124,7 +116,6 @@ export class TcpService {
   }
 
   private beforeApplicationShutdown() {
-    console.log("shutdown");
     this.clients.forEach(c => {
       c.socket.write('{"command": "serverRestart"}\n');
     });

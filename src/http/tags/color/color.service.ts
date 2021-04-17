@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  ServiceUnavailableException,
+  ServiceUnavailableException
 } from "@nestjs/common";
 import { min, uniq } from "lodash";
 import { BlinkLedsDto } from "src/http/lights/color/dto/blink-leds.dto";
@@ -13,7 +13,7 @@ import { TcpService } from "../../../services/tcp/tcp.service";
 import { UtilsService } from "../../../services/utils/utils.service";
 import {
   CustomData,
-  CustomPatternDto,
+  CustomPatternDto
 } from "../../lights/color/dto/custom-pattern.dto";
 
 @Injectable()
@@ -22,14 +22,13 @@ export class ColorService {
     private utilsService: UtilsService,
     private tcpService: TcpService,
     private databaseService: DatabaseEspService,
-  ) {}
+  ) { }
 
   async updateLedsWithTag(
     tag: string,
     data: UpdateLedsDto,
   ): Promise<StandartResponse<Light[]>> {
     data.colors = data.colors ?? [];
-
     let errors = this.utilsService.isValidPattern(data);
     if (errors?.length > 0) throw new BadRequestException(errors);
 
@@ -58,13 +57,11 @@ export class ColorService {
       },
     );
     this.tcpService.batchSendData(
-      `{"command": "leds", "data": {"colors": ${this.utilsService.hexArrayToRgb(
-        data.colors,
-      )}, "pattern": "${data.pattern}"`,
+      this.utilsService.genJSONforEsp({command: "leds", data: {colors: data.colors, pattern: data.pattern, timeout: data.timeout}}),
       newDocs,
     );
     return {
-      message: "Succesfully changed the color of the light!",
+      message: "Succesfully changed the color of the lights!",
       count: newDocs.length,
       object: DatabaseEspService.espDocsToLights(newDocs),
     };
@@ -140,7 +137,6 @@ export class ColorService {
     docs.forEach((doc: EspDocument) => {
       if (sendColors.length > doc.count) errors.push(doc.count);
     });
-    console.log(errors);
 
     if (errors.length > 0)
       throw new BadRequestException(
