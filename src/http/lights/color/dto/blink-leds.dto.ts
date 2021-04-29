@@ -2,10 +2,11 @@ import {
   IsHexColor,
   IsInt,
   IsNotEmpty,
-  IsString
+  IsString,
+  Max,
+  Min,
 } from "class-validator";
 export class BlinkLedsDto {
-  
   @IsString()
   @IsHexColor()
   @IsNotEmpty()
@@ -13,5 +14,7 @@ export class BlinkLedsDto {
 
   @IsInt()
   @IsNotEmpty()
+  @Min(1)
+  @Max(5000)
   time: number;
 }
