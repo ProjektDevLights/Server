@@ -11,12 +11,12 @@ Next set up a mongoDB Database either on your machine or on [mongoDB Atlas](http
 A [redis](https://redis.io/) Server for caching is also required.
 
 ### Getting started
-
-    git clone https://github.com/ProjektDevLights/Server.git
-    cd Server 
-    //Wether you are using yarn or npm
-    yarn install | npm install
-    yarn start:dev | npm run start:dev
+```shell
+git clone https://github.com/ProjektDevLights/Server.git
+cd Server 
+yarn install
+yarn start:dev
+```
 
 After running these few commands, your development server is running, and you can start changing or adding things you want to, so they will be applied immediately.
 
