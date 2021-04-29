@@ -23,4 +23,4 @@ After running these few commands, your development server is running, and you ca
 If you want go to production just run `npm run build` or `yarn run build` and start the server via the `start` script.
 
 ### Contributing
-Feel free to open an issue on GitHub or send pull requests, when encountering issues or want to add some features. If you have any questions email [peters@teckdigital.de](mailto:peters@teckdigital.de) or [slaar@teckdigital.de](mailto:slaar@teckdigital.de).
+Feel free to open an issue on GitHub or send pull requests, when encountering issues or wanting to add some features. If you have any questions email [peters@teckdigital.de](mailto:peters@teckdigital.de) or [slaar@teckdigital.de](mailto:slaar@teckdigital.de).
