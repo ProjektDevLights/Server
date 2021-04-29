@@ -24,7 +24,7 @@ export class UpdateLedsDto {
   @IsNumber()
   @IsOptional()
   @IsNotEmpty()
-  @Min(0)
+  @Min(1)
   @Max(30000)
   timeout: number;
 }
