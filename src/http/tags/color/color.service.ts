@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  ServiceUnavailableException
+  ServiceUnavailableException,
 } from "@nestjs/common";
 import { min, uniq } from "lodash";
 import { BlinkLedsDto } from "src/http/lights/color/dto/blink-leds.dto";
@@ -13,7 +13,7 @@ import { TcpService } from "../../../services/tcp/tcp.service";
 import { UtilsService } from "../../../services/utils/utils.service";
 import {
   CustomData,
-  CustomPatternDto
+  CustomPatternDto,
 } from "../../lights/color/dto/custom-pattern.dto";
 
 @Injectable()
@@ -22,7 +22,7 @@ export class ColorService {
     private utilsService: UtilsService,
     private tcpService: TcpService,
     private databaseService: DatabaseEspService,
-  ) { }
+  ) {}
 
   async updateLedsWithTag(
     tag: string,
@@ -57,7 +57,14 @@ export class ColorService {
       },
     );
     this.tcpService.batchSendData(
-      this.utilsService.genJSONforEsp({command: "leds", data: {colors: data.colors, pattern: data.pattern, timeout: data.timeout}}),
+      this.utilsService.genJSONforEsp({
+        command: "leds",
+        data: {
+          colors: data.colors,
+          pattern: data.pattern,
+          timeout: data.timeout,
+        },
+      }),
       newDocs,
     );
     return {
