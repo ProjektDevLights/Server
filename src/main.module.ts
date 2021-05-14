@@ -6,8 +6,12 @@ import { AlarmModule } from "./http/alarm/alarm.module";
 import { EspModule } from "./http/esp/esp.module";
 import { LightsModule } from "./http/lights/lights.module";
 import { TagsModule } from "./http/tags/tags.module";
+import { MainController } from "./main.controller";
+import { MainService } from "./main.service";
 
 @Module({
+  controllers: [MainController],
+  providers: [MainService],
   imports: [
     EspModule,
     MongooseModule.forRoot(config.database.url, {
@@ -27,6 +31,7 @@ import { TagsModule } from "./http/tags/tags.module";
     AlarmModule,
     LightsModule,
     TagsModule,
+    MainModule,
   ],
 })
 export class MainModule {}
