@@ -8,7 +8,6 @@ import { LightsModule } from "./http/lights/lights.module";
 import { TagsModule } from "./http/tags/tags.module";
 import { MainController } from "./main.controller";
 import { MainService } from "./main.service";
-
 @Module({
   controllers: [MainController],
   providers: [MainService],

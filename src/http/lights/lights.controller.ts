@@ -7,7 +7,7 @@ import {
   Patch,
   Post,
   Put,
-  ValidationPipe
+  ValidationPipe,
 } from "@nestjs/common";
 import { Light, PartialLight, StandartResponse } from "../../interfaces";
 import { ColorService } from "./color/color.service";
@@ -15,6 +15,7 @@ import { BlinkLedsDto } from "./color/dto/blink-leds.dto";
 import { CustomPatternDto } from "./color/dto/custom-pattern.dto";
 import { UpdateLedsDto } from "./color/dto/update-leds.dto";
 import { ControlService } from "./control/control.service";
+import { PositionDto } from "./general/dto/position.dto";
 import { GeneralService } from "./general/general.service";
 import UpdateBrightnessDto from "./settings/dto/update-brightness.dto";
 import UpdateCountDto from "./settings/dto/update-count.dto";
@@ -48,6 +49,14 @@ export class LightsController {
     @Body("command") data: string,
   ): Promise<StandartResponse<Light>> {
     return this.generalService.pass(id, data);
+  }
+
+  @Patch(":light/position")
+  async reposition(
+    @Param("light") id: string,
+    @Body(new ValidationPipe()) data: PositionDto,
+  ) {
+    return this.generalService.reposition(id, data.position);
   }
 
   //control service

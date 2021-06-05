@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
+import { sortBy } from "lodash";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { TcpService } from "src/services/tcp/tcp.service";
+import { EspUtilsService } from "src/services/utils/esp/esp.service";
 import { Light, StandartResponse } from "../../../interfaces";
 import { EspDocument } from "../../../schemas/esp.schema";
 
@@ -9,16 +11,17 @@ export class GeneralService {
   constructor(
     private tcpService: TcpService,
     private databaseService: DatabaseEspService,
+    private espUtilsService: EspUtilsService,
   ) {}
 
   async getAll(): Promise<StandartResponse<Light[]>> {
     let esps: Light[] = DatabaseEspService.espDocsToLights(
-      await this.databaseService.getEsps()
+      await this.databaseService.getEsps(),
     );
     return {
       message: "List of all lights",
       count: esps.length,
-      object: esps,
+      object: sortBy(esps, "position"),
     };
   }
 
@@ -36,6 +39,14 @@ export class GeneralService {
     this.tcpService.sendData(data, doc.ip);
     return {
       message: "Succesfully passed data!",
+      object: DatabaseEspService.espDocToLight(doc),
+    };
+  }
+
+  async reposition(id: string, pos: number): Promise<StandartResponse<Light>> {
+    const doc: EspDocument = await this.espUtilsService.repositionESP(id, pos);
+    return {
+      message: "Succesfulley repositioned light!",
       object: DatabaseEspService.espDocToLight(doc),
     };
   }

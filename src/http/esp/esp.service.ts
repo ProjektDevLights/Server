@@ -2,12 +2,16 @@ import { Injectable } from "@nestjs/common";
 import { EspDocument } from "src/schemas/esp.schema";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { NothingChangedException } from "../../exceptions/nothing-changed.exception";
+import { EspUtilsService } from "../../services/utils/esp/esp.service";
 import { SetupDto } from "./dto/setup.dto";
 import { UpdateDto } from "./dto/update.dto";
 
 @Injectable()
 export class EspService {
-  constructor(private databaseService: DatabaseEspService) {}
+  constructor(
+    private databaseService: DatabaseEspService,
+    private espUtilsService: EspUtilsService,
+  ) {}
 
   async setup(data: SetupDto): Promise<string> {
     const ips: string[] = await this.databaseService
@@ -47,7 +51,10 @@ export class EspService {
         tags: [],
         isOn: true,
         brightness: 255,
+        position: 0,
       });
+
+      this.espUtilsService.repositionESP(id, 0);
     } catch (e) {
       return "Something went wrong!";
     }

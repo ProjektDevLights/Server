@@ -212,6 +212,7 @@ export class DatabaseEspService {
       tags: doc.tags,
       leds: doc.leds,
       count: doc.count,
+      position: doc.position,
     };
   }
 

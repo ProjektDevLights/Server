@@ -2,13 +2,14 @@ import {
   MiddlewareConsumer,
   Module,
   NestModule,
-  RequestMethod
+  RequestMethod,
 } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { LightValidationMiddleware } from "src/middlewares/light-validation.middleware";
 import { DatabaseModule } from "src/services/database/database.module";
 import { Esp, EspSchema } from "../../schemas/esp.schema";
 import { TcpModule } from "../../services/tcp/tcp.module";
+import { EspUtilsService } from "../../services/utils/esp/esp.service";
 import { UtilsService } from "../../services/utils/utils.service";
 import { ColorService } from "./color/color.service";
 import { ControlService } from "./control/control.service";
@@ -24,6 +25,7 @@ import { SettingsService } from "./settings/settings.service";
     ControlService,
     UtilsService,
     GeneralService,
+    EspUtilsService,
   ],
   imports: [
     DatabaseModule,

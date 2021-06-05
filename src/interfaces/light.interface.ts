@@ -8,4 +8,5 @@ export default interface Light {
   brightness: number;
   tags?: string[];
   isOn: boolean;
+  position: number;
 }
