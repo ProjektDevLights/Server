@@ -6,6 +6,8 @@ import {
 } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { LightValidationMiddleware } from "src/middlewares/light-validation.middleware";
+import { CronModule } from "src/services/cron/cron.module";
+import { CronService } from "src/services/cron/cron.service";
 import { DatabaseModule } from "src/services/database/database.module";
 import { Esp, EspSchema } from "../../schemas/esp.schema";
 import { TcpModule } from "../../services/tcp/tcp.module";
@@ -24,10 +26,12 @@ import { SettingsService } from "./settings/settings.service";
     ControlService,
     UtilsService,
     GeneralService,
+    CronService,
   ],
   imports: [
     DatabaseModule,
     TcpModule,
+    CronModule,
     MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }]),
   ],
 })

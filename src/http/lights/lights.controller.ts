@@ -15,6 +15,7 @@ import { BlinkLedsDto } from "./color/dto/blink-leds.dto";
 import { CustomPatternDto } from "./color/dto/custom-pattern.dto";
 import { UpdateLedsDto } from "./color/dto/update-leds.dto";
 import { ControlService } from "./control/control.service";
+import ScheduleOffDto from "./control/dto/schedule-off.dto";
 import { GeneralService } from "./general/general.service";
 import UpdateBrightnessDto from "./settings/dto/update-brightness.dto";
 import UpdateCountDto from "./settings/dto/update-count.dto";
@@ -29,7 +30,7 @@ export class LightsController {
     private controlService: ControlService,
     private settingsService: SettingsService,
     private colorService: ColorService,
-  ) {}
+  ) { }
 
   //general service
   @Get("")
@@ -59,6 +60,16 @@ export class LightsController {
   @Patch(":light/off")
   async turnOff(@Param("light") id: string): Promise<StandartResponse<Light>> {
     return this.controlService.off(id);
+  }
+
+  @Patch(":light/off/schedule")
+  async scheduleOff(@Param("light") id: string, @Body(new ValidationPipe()) data: ScheduleOffDto): Promise<StandartResponse<Light>> {
+    return this.controlService.scheduleOff(id, data);
+  }
+
+  @Delete(":light/off/schedule")
+  async deleteSchedule(@Param("light") id: string): Promise<StandartResponse<Light>> {
+    return this.controlService.deleteScheduleOff(id);
   }
 
   @Post(":light/restart")
