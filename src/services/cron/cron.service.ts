@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { SchedulerRegistry } from "@nestjs/schedule";
 import { CronJob } from "cron";
 
@@ -29,8 +29,12 @@ export class CronService {
     return fail < 2;
   }
 
-  getCron(name: string): CronJob {
-    return this.scheduler.getCronJob(name);
+  getCron(name: string): CronJob | undefined {
+    try {
+      return this.scheduler.getCronJob(name);
+    } catch {
+      return undefined;
+    }
   }
 
   // consider not throwing error, because it gets propagated to user, better use boolean (see delete cron)
@@ -63,6 +67,6 @@ export class CronService {
       }
       jobArr.push(this.scheduler.getCronJob(key));
     });
-    return jobArr; 
+    return jobArr;
   }
 }

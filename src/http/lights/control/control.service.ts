@@ -1,10 +1,5 @@
-import {
-  Injectable,
-  NotAcceptableException,
-  ServiceUnavailableException,
-} from "@nestjs/common";
+import { Injectable, NotAcceptableException } from "@nestjs/common";
 import moment from "moment";
-import { CustomException } from "src/exceptions/custom-exception.exception";
 import { CronService } from "src/services/cron/cron.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { UtilsService } from "src/services/utils/utils.service";
@@ -65,7 +60,7 @@ export class ControlService {
     };
   }
 
-  private callback = async (name: string) => {
+  private offCallback = async (name: string) => {
     let esp: EspDocument = await this.databaseService.getEspWithId(
       name.split("-")[1],
     );
@@ -77,10 +72,7 @@ export class ControlService {
       );
 
       await this.databaseService.updateEspWithId(esp.uuid, { isOn: false });
-    } catch {
-      console.log("The light is not plugged in or started yet.");
-    }
-    //console.log(this.cronService.getCron(name));
+    } catch {}
     this.cronService.deleteCron(name);
   };
 
@@ -92,31 +84,27 @@ export class ControlService {
 
     const minute = data.minute;
 
-    let date = new Date();
-    date = moment(date)
-      .add(minute, "minutes")
-      .toDate();
+    const date = moment().add(minute, "minutes");
 
     let cronPattern = `${date
-      .getMinutes()
-      .toString()} ${date.getHours().toString()} * * *`;
+      .minutes()
+      .toString()} ${date.hours().toString()} * * *`;
 
     try {
+      if (this.cronService.getCron(`off-${oldDoc.uuid}`)) {
+        this.cronService.deleteCron(`off-${oldDoc.uuid}`);
+      }
       this.cronService.addCron(
         `off-${oldDoc.uuid}`,
         cronPattern,
-        this.callback,
+        this.offCallback,
       );
     } catch {
-      throw new NotAcceptableException(
-        "There is already one timer for turning off this light running",
-      );
+      throw new NotAcceptableException("Something went wrong");
     }
 
     return {
-      message: `The light will turn off in ${minute} ${
-        minute > 1 ? "minutes" : "minute"
-      }!`,
+      message: `The light will turn off in ${date.fromNow(true)}!`,
       object: DatabaseEspService.espDocToLight(oldDoc),
     };
   }

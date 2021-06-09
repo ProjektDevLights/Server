@@ -24,7 +24,7 @@ export class EspUtilsService {
 
     const greater = filter(esps, (e: EspDocument) => e.position >= pos);
     for (const e of greater) {
-      this.databaseEspService.updateEspWithId(e.uuid, {
+      await this.databaseEspService.updateEspWithId(e.uuid, {
         position: e.position + 1,
       });
     }

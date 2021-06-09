@@ -70,7 +70,7 @@ export class LightsController {
   async turnOff(@Param("light") id: string): Promise<StandartResponse<Light>> {
     return this.controlService.off(id);
   }
-  @Patch(":light/off/schedule")
+  @Post(":light/off/schedule")
   async scheduleOff(
     @Param("light") id: string,
     @Body(new ValidationPipe()) data: ScheduleOffDto,
