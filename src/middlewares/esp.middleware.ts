@@ -1,4 +1,4 @@
-import { Injectable, NestMiddleware } from "@nestjs/common";
+import { ForbiddenException, Injectable, NestMiddleware } from "@nestjs/common";
 
 @Injectable()
 export class EspMiddleware implements NestMiddleware {
