@@ -1,6 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotAcceptableException } from "@nestjs/common";
+import moment from "moment";
 import { NothingChangedException } from "src/exceptions/nothing-changed.exception";
+import ScheduleOffDto from "src/http/lights/control/dto/schedule-off.dto";
+import { CronService } from "src/services/cron/cron.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
+import { UtilsService } from "src/services/utils/utils.service";
 import { Light, PartialLight, StandartResponse } from "../../../interfaces";
 import { EspDocument } from "../../../schemas/esp.schema";
 import { TcpService } from "../../../services/tcp/tcp.service";
@@ -10,7 +14,9 @@ export class ControlService {
   constructor(
     private databaseService: DatabaseEspService,
     private tcpService: TcpService,
-  ) {}
+    private utilsService: UtilsService,
+    private cronService: CronService
+  ) { }
 
   async onTags(tag: string): Promise<StandartResponse<Light[]>> {
     const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(
@@ -67,6 +73,69 @@ export class ControlService {
     };
   }
 
+  private offCallback = async (name: string) => {
+    let esps: EspDocument[] = await this.databaseService.getEspsWithTag(
+      name.split("-")[1],
+    );
+
+    try {
+      this.tcpService.batchSendData(
+        this.utilsService.genJSONforEsp({ command: "off" }),
+        esps,
+      );
+
+      await this.databaseService.updateEspsWithTag(name.split("-")[1], { isOn: false });
+    } catch { }
+    this.cronService.deleteCron(name);
+  };
+
+
+  async scheduleOff(
+    tag: string,
+    data: ScheduleOffDto,
+  ): Promise<StandartResponse<Light[]>> {
+    const oldDocs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
+
+    const minute = data.minute;
+
+    const date = moment().add(minute, "minutes");
+
+    let cronPattern = `${date
+      .minutes()
+      .toString()} ${date.hours().toString()} * * *`;
+
+    try {
+      if (this.cronService.getCron(`off-${tag}`)) {
+        this.cronService.deleteCron(`off-${tag}`);
+      }
+      this.cronService.addCron(
+        `off-${tag}`,
+        cronPattern,
+        this.offCallback,
+      );
+    } catch {
+      throw new NotAcceptableException("Something went wrong");
+    }
+
+    return {
+      message: `The light will turn off in ${date.fromNow(true)}!`,
+      object: DatabaseEspService.espDocsToLights(oldDocs),
+    };
+  }
+
+  async deleteScheduleOffTag(tag: string): Promise<StandartResponse<any>> {
+    try {
+      this.cronService.getCron(`off-${tag}`);
+      this.cronService.deleteCron(`off-${tag}`);
+    } catch (error) {
+      throw new NotAcceptableException("There is no timer set for this light");
+    }
+    return {
+      message: "Successfully deleted timer for this light",
+      object: null,
+    };
+  }
+
   async restartWithTag(tag: string): Promise<StandartResponse<PartialLight[]>> {
     const docs: EspDocument[] = await this.databaseService.getEspsWithTag(tag);
 
@@ -92,4 +161,6 @@ export class ControlService {
       object: DatabaseEspService.espDocsToPartialLights(docs),
     };
   }
+
+
 }

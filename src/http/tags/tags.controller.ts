@@ -12,6 +12,7 @@ import { Light, PartialLight, StandartResponse } from "../../interfaces";
 import { BlinkLedsDto } from "../lights/color/dto/blink-leds.dto";
 import { CustomPatternDto } from "../lights/color/dto/custom-pattern.dto";
 import { UpdateLedsDto } from "../lights/color/dto/update-leds.dto";
+import ScheduleOffDto from "../lights/control/dto/schedule-off.dto";
 import UpdateBrightnessDto from "../lights/settings/dto/update-brightness.dto";
 import { ColorService } from "./color/color.service";
 import { ControlService } from "./control/control.service";
@@ -25,7 +26,7 @@ export class TagsController {
     private controlService: ControlService,
     private colorService: ColorService,
     private settingsService: SettingsService,
-  ) {}
+  ) { }
 
   //general service
 
@@ -50,6 +51,18 @@ export class TagsController {
   @Patch(":tag/off")
   async offTags(@Param("tag") tag: string): Promise<StandartResponse<Light[]>> {
     return this.controlService.offTags(tag);
+  }
+
+  @Post(":tag/off/schedule")
+  async scheduleOffTag(@Param("tag") tag: string, @Body(new ValidationPipe()) data: ScheduleOffDto) {
+    return this.controlService.scheduleOff(tag, data);
+  }
+
+  @Delete(":tag/off/schedule")
+  async deleteSchedule(
+    @Param("tag") tag: string,
+  ): Promise<StandartResponse<Light>> {
+    return this.controlService.deleteScheduleOffTag(tag);
   }
 
   @Post(":tag/restart")

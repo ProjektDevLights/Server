@@ -1,6 +1,8 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { TagValidationMiddleware } from 'src/middlewares/tag-validation.middleware';
+import { CronModule } from 'src/services/cron/cron.module';
+import { CronService } from 'src/services/cron/cron.service';
 import { DatabaseModule } from 'src/services/database/database.module';
 import { DatabaseEspService } from 'src/services/database/esp/database-esp.service';
 import { Alarm, AlarmSchema } from '../../schemas/alarm.schema';
@@ -15,11 +17,11 @@ import { TagsController } from './tags.controller';
 
 @Module({
   controllers: [TagsController],
-  providers: [ColorService, ControlService, UtilsService, GeneralService, SettingsService],
-  imports: [ DatabaseModule, TcpModule, MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }, { name: Alarm.name, schema: AlarmSchema }])]
+  providers: [ColorService, ControlService, CronService, UtilsService, GeneralService, SettingsService],
+  imports: [DatabaseModule, TcpModule, CronModule, MongooseModule.forFeature([{ name: Esp.name, schema: EspSchema }, { name: Alarm.name, schema: AlarmSchema }])]
 })
 export class TagsModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(TagValidationMiddleware).forRoutes({ path: "/tags/:tag(.*)", method: RequestMethod.ALL });
   }
-} 
+}
