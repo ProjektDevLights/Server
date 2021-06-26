@@ -1,8 +1,8 @@
-import { IsNumber, IsPositive } from "class-validator";
+import { IsNumber, IsPositive, Max } from "class-validator";
 
 export default class UpdateCountDto {
-
-    @IsPositive()
-    @IsNumber()
-    count: number;
+  @IsPositive()
+  @IsNumber()
+  @Max(1000)
+  count: number;
 }
