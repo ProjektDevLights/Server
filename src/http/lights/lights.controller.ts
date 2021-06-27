@@ -9,7 +9,7 @@ import {
   Put,
   ValidationPipe,
 } from "@nestjs/common";
-import { Light, PartialLight, StandartResponse } from "../../interfaces";
+import { Alarm, Light, PartialLight, StandartResponse } from "../../interfaces";
 import { ColorService } from "./color/color.service";
 import { BlinkLedsDto } from "./color/dto/blink-leds.dto";
 import { CustomPatternDto } from "./color/dto/custom-pattern.dto";
@@ -42,6 +42,13 @@ export class LightsController {
   @Get(":light")
   async get(@Param("light") id: string): Promise<StandartResponse<Light>> {
     return this.generalService.get(id);
+  }
+
+  @Get(":light/alarms")
+  async getLightAlarms(
+    @Param("light") id: string,
+  ): Promise<StandartResponse<Alarm[]>> {
+    return this.generalService.getLightAlarms(id);
   }
 
   @Post(":light/pass")

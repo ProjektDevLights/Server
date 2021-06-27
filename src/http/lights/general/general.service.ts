@@ -1,9 +1,11 @@
 import { Injectable } from "@nestjs/common";
-import { sortBy } from "lodash";
+import { filter, map, sortBy } from "lodash";
+import { AlarmDocument } from "src/schemas/alarm.schema";
+import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { TcpService } from "src/services/tcp/tcp.service";
 import { EspUtilsService } from "src/services/utils/esp/esp.service";
-import { Light, StandartResponse } from "../../../interfaces";
+import { Alarm, Light, StandartResponse } from "../../../interfaces";
 import { EspDocument } from "../../../schemas/esp.schema";
 
 @Injectable()
@@ -11,6 +13,7 @@ export class GeneralService {
   constructor(
     private tcpService: TcpService,
     private databaseService: DatabaseEspService,
+    private alarmDatabaseService: DatabaseAlarmService,
     private espUtilsService: EspUtilsService,
   ) {}
 
@@ -31,6 +34,23 @@ export class GeneralService {
       object: DatabaseEspService.espDocToLight(
         await this.databaseService.getEspWithId(id),
       ),
+    };
+  }
+
+  async getLightAlarms(id: string): Promise<StandartResponse<Alarm[]>> {
+    const allDocs = await this.alarmDatabaseService.getAlarms();
+
+    const docs: AlarmDocument[] = [];
+
+    allDocs.forEach((doc: AlarmDocument) => {
+      let uuids = map(doc.esps, "uuid");
+      if (uuids.includes(id)) docs.push(doc);
+    });
+
+    return {
+      message: "List of alarms this light have",
+      count: docs.length,
+      object: DatabaseAlarmService.alarmDocsToAlarm(docs),
     };
   }
 

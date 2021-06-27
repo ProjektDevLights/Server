@@ -97,8 +97,9 @@ export class SettingsService {
     const newTags: string[] = [];
 
     data.tags.forEach((tag: string) => {
-      if (!oldTags.includes(tag)) {
-        newTags.push(tag);
+      let editedTag = tag.toLowerCase().replace(/\s+/g, "");
+      if (!oldTags.includes(editedTag)) {
+        newTags.push(editedTag);
       }
     });
 
