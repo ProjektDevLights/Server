@@ -16,7 +16,7 @@ export class SettingsService {
     private utilsService: UtilsService,
     private tcpService: TcpService,
     private databaseService: DatabaseEspService,
-  ) {}
+  ) { }
 
   async update(
     id: string,
@@ -97,7 +97,7 @@ export class SettingsService {
     const newTags: string[] = [];
 
     data.tags.forEach((tag: string) => {
-      let editedTag = tag.toLowerCase().replace(/\s+/g, "");
+      let editedTag = tag.toLowerCase().replace(/([^a-z0-9])+/g, "");
       if (!oldTags.includes(editedTag)) {
         newTags.push(editedTag);
       }

@@ -6,7 +6,7 @@ import { DatabaseEspService } from "../../database/esp/database-esp.service";
 
 @Injectable()
 export class EspUtilsService {
-  constructor(private databaseEspService: DatabaseEspService) {}
+  constructor(private databaseEspService: DatabaseEspService) { }
   async repositionESP(id: string, pos: number): Promise<EspDocument> {
     let esp = await this.databaseEspService.getEspWithId(id);
     if (pos < 0)
@@ -14,7 +14,7 @@ export class EspUtilsService {
         "Position must be greater than or equal 0",
       );
 
-    if (pos === esp.position) throw new NothingChangedException();
+
     const esps: EspDocument[] = filter(
       await this.databaseEspService.getEsps(),
       (e: EspDocument) => e.uuid != id,
@@ -25,6 +25,7 @@ export class EspUtilsService {
         ? pos
         : max(map(esps, "position")) + 1;
 
+    if (pos === esp.position) throw new NothingChangedException();
     const isNegative = pos - esp.position < 0;
 
     await this.databaseEspService.updateEspWithId(id, { position: pos });
