@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { filter, map, sortBy } from "lodash";
+import { map, sortBy } from "lodash";
 import { AlarmDocument } from "src/schemas/alarm.schema";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
@@ -63,11 +63,15 @@ export class GeneralService {
     };
   }
 
-  async reposition(id: string, pos: number): Promise<StandartResponse<Light>> {
-    const doc: EspDocument = await this.espUtilsService.repositionESP(id, pos);
+  async reposition(
+    id: string,
+    pos: number,
+  ): Promise<StandartResponse<Light[]>> {
+    await this.espUtilsService.repositionESP(id, pos);
+    const docs = await this.databaseService.getEsps();
     return {
       message: "Succesfulley repositioned light!",
-      object: DatabaseEspService.espDocToLight(doc),
+      object: DatabaseEspService.espDocsToLights(docs),
     };
   }
 }

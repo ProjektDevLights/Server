@@ -63,7 +63,7 @@ export class LightsController {
   async reposition(
     @Param("light") id: string,
     @Body(new ValidationPipe()) data: PositionDto,
-  ) {
+  ): Promise<StandartResponse<Light[]>> {
     return this.generalService.reposition(id, data.position);
   }
 
