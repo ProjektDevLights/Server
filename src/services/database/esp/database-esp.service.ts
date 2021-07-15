@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import cachegoose from "cachegoose";
 import { DocumentQuery, Model, UpdateQuery } from "mongoose";
 import { NothingChangedException } from "../../../exceptions/nothing-changed.exception";
+import { LightOutGateway } from "../../../gateways/light-out.gateway";
 import { Light, PartialLight } from "../../../interfaces";
 import { Esp, EspDocument } from "../../../schemas/esp.schema";
 
@@ -16,7 +17,10 @@ type GetReturnM =
 
 @Injectable()
 export class DatabaseEspService {
-  constructor(@InjectModel(Esp.name) private espModel: Model<EspDocument>) {}
+  constructor(
+    @InjectModel(Esp.name) private espModel: Model<EspDocument>,
+    private gateway: LightOutGateway,
+  ) {}
 
   async getEsps(): Promise<EspDocument[]>;
   getEsps(query: boolean): DocumentQuery<EspDocument[], EspDocument>;
@@ -81,6 +85,7 @@ export class DatabaseEspService {
       //@ts-ignore
       .cache(0, "esp-id-" + id)
       .exec();
+    this.gateway.sendSingleChange(updated);
     updated?.tags.forEach((tag: string) => {
       this.clear("tag-" + tag);
     });
@@ -96,7 +101,7 @@ export class DatabaseEspService {
     deleted?.tags.forEach((tag: string) => {
       this.clear("tag-" + tag);
     });
-
+    this.gateway.sendRemove(deleted);
     return deleted;
   }
 
@@ -107,6 +112,7 @@ export class DatabaseEspService {
     });
     await this.clear("tag-");
     const newEsp: EspDocument = await this.espModel.create(data);
+    this.gateway.sendAdd(newEsp);
     this.getEspWithId(newEsp.uuid);
     return newEsp;
   }
