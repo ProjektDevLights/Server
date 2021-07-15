@@ -5,8 +5,7 @@ import { DatabaseEspService } from "../services/database/esp/database-esp.servic
 
 @WebSocketGateway({
   cors: {
-    origin: "http://localhost:8080",
-    methods: ["GET", "POST"],
+    origin: "*",
   },
 })
 export class LightOutGateway {
