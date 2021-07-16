@@ -12,7 +12,8 @@ export class AlarmOutGateway {
   @WebSocketServer()
   private server: Server;
 
-  sendChange(doc: AlarmDocument) {
+  async sendChange(doc: AlarmDocument) {
+    doc = await doc.populate("esps").execPopulate();
     this.server.emit("alarm_change", DatabaseAlarmService.alarmDocToAlarm(doc));
   }
 
@@ -23,11 +24,13 @@ export class AlarmOutGateway {
     );
   }
 
-  sendAdd(doc: AlarmDocument) {
+  async sendAdd(doc: AlarmDocument) {
+    doc = await doc.populate("esps").execPopulate();
     this.server.emit("alarm_add", DatabaseAlarmService.alarmDocToAlarm(doc));
   }
 
-  sendRemove(doc: AlarmDocument) {
+  async sendRemove(doc: AlarmDocument) {
+    doc = await doc.populate("esps").execPopulate();
     this.server.emit("alarm_remove", DatabaseAlarmService.alarmDocToAlarm(doc));
   }
 

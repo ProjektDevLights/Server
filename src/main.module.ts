@@ -8,10 +8,9 @@ import { LightsModule } from "./http/lights/lights.module";
 import { TagsModule } from "./http/tags/tags.module";
 import { MainController } from "./main.controller";
 import { MainService } from "./main.service";
-import { AlarmOutGateway } from './gateways/alarm-out.gateway';
 @Module({
   controllers: [MainController],
-  providers: [MainService, AlarmOutGateway],
+  providers: [MainService],
   imports: [
     EspModule,
     MongooseModule.forRoot(config.database.url, {
