@@ -12,8 +12,15 @@ export class LightOutGateway {
   @WebSocketServer()
   private server: Server;
 
-  sendSingleChange(doc: EspDocument) {
+  sendChange(doc: EspDocument) {
     this.server.emit("light_change", DatabaseEspService.espDocToLight(doc));
+  }
+
+  sendMultipleChange(docs: EspDocument[]) {
+    this.server.emit(
+      "light_change_multiple",
+      DatabaseEspService.espDocsToLights(docs),
+    );
   }
 
   sendAdd(doc: EspDocument) {
@@ -22,5 +29,12 @@ export class LightOutGateway {
 
   sendRemove(doc: EspDocument) {
     this.server.emit("light_remove", DatabaseEspService.espDocToLight(doc));
+  }
+
+  sendRemoveMultiple(docs: EspDocument[]) {
+    this.server.emit(
+      "light_remove_multiple",
+      DatabaseEspService.espDocsToLights(docs),
+    );
   }
 }

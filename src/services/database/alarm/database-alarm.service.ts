@@ -4,6 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import cachegoose from "cachegoose";
 import { Model, UpdateQuery } from "mongoose";
 import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";
+import { AlarmOutGateway } from "../../../gateways/alarm-out.gateway";
 import { Alarm as AlarmInterface } from "../../../interfaces";
 import { DatabaseEspService } from "../esp/database-esp.service";
 
@@ -11,6 +12,7 @@ import { DatabaseEspService } from "../esp/database-esp.service";
 export class DatabaseAlarmService {
   constructor(
     @InjectModel(Alarm.name) private alarmModel: Model<AlarmDocument>,
+    private gateway: AlarmOutGateway,
   ) {}
 
   async getAlarms(): Promise<AlarmDocument[]> {
@@ -44,6 +46,7 @@ export class DatabaseAlarmService {
       //@ts-ignore
       .cache(0, "alarm-id-" + id)
       .exec();
+    this.gateway.sendChange(updated);
     return updated;
   }
 
@@ -53,12 +56,14 @@ export class DatabaseAlarmService {
       .exec();
     this.clear("id-" + id);
     this.clear("all");
+    this.gateway.sendRemove(deleted);
     return deleted;
   }
 
   async addAlarm(alarm: Alarm) {
     await this.clear("all");
     const newAlarm: AlarmDocument = await this.alarmModel.create(alarm);
+    this.gateway.sendAdd(newAlarm);
     return newAlarm;
   }
 

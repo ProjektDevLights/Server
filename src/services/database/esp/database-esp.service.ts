@@ -85,7 +85,7 @@ export class DatabaseEspService {
       //@ts-ignore
       .cache(0, "esp-id-" + id)
       .exec();
-    this.gateway.sendSingleChange(updated);
+    this.gateway.sendChange(updated);
     updated?.tags.forEach((tag: string) => {
       this.clear("tag-" + tag);
     });
@@ -158,7 +158,7 @@ export class DatabaseEspService {
       .exec();
     //@ts-ignore
     const newDocs: EspDocument[] = await this.getEspsWithTag(tag);
-
+    this.gateway.sendMultipleChange(newDocs);
     if (
       JSON.stringify(DatabaseEspService.espDocsToLights(oldDocs)) ==
       JSON.stringify(DatabaseEspService.espDocsToLights(newDocs))
@@ -178,6 +178,7 @@ export class DatabaseEspService {
   async deleteEspsWithTag(tag: string): Promise<boolean> {
     try {
       this.getEspsWithTag(tag).then((deletedEsps: EspDocument[]) => {
+        this.gateway.sendRemoveMultiple(deletedEsps);
         deletedEsps.forEach((esp: EspDocument) => {
           this.clear("id-" + esp.uuid);
         });

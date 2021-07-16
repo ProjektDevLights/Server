@@ -159,7 +159,7 @@ export class AlarmService {
     if (invalids.length > 0) throw new InvalidIdException(invalids);
     const conflicts: Conflict[] = this.getConflictingAlarms(
       data.time,
-      data.days,
+      data.days ?? [0, 1, 2, 3, 4, 5, 6],
       true,
       data.ids,
       allAlarms,
