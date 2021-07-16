@@ -1,7 +1,7 @@
 import { WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server } from "socket.io";
-import { AlarmDocument } from "../schemas/alarm.schema";
-import { DatabaseAlarmService } from "../services/database/alarm/database-alarm.service";
+import { AlarmDocument } from "../../schemas/alarm.schema";
+import { DatabaseAlarmService } from "../../services/database/alarm/database-alarm.service";
 
 @WebSocketGateway({
   cors: {

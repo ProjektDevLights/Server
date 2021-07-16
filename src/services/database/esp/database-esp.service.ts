@@ -4,7 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import cachegoose from "cachegoose";
 import { DocumentQuery, Model, UpdateQuery } from "mongoose";
 import { NothingChangedException } from "../../../exceptions/nothing-changed.exception";
-import { LightOutGateway } from "../../../gateways/light-out.gateway";
+import { LightOutGateway } from "../../../gateways/lights/light-out.gateway";
 import { Light, PartialLight } from "../../../interfaces";
 import { Esp, EspDocument } from "../../../schemas/esp.schema";
 

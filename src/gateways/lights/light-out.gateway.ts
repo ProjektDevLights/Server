@@ -1,7 +1,7 @@
 import { WebSocketGateway, WebSocketServer } from "@nestjs/websockets";
 import { Server } from "socket.io";
-import { EspDocument } from "../schemas/esp.schema";
-import { DatabaseEspService } from "../services/database/esp/database-esp.service";
+import { EspDocument } from "../../schemas/esp.schema";
+import { DatabaseEspService } from "../../services/database/esp/database-esp.service";
 
 @WebSocketGateway({
   cors: {

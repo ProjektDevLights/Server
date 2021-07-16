@@ -4,7 +4,7 @@ import { InjectModel } from "@nestjs/mongoose";
 import cachegoose from "cachegoose";
 import { Model, UpdateQuery } from "mongoose";
 import { Alarm, AlarmDocument } from "src/schemas/alarm.schema";
-import { AlarmOutGateway } from "../../../gateways/alarm-out.gateway";
+import { AlarmOutGateway } from "../../../gateways/alarms/alarm-out.gateway";
 import { Alarm as AlarmInterface } from "../../../interfaces";
 import { DatabaseEspService } from "../esp/database-esp.service";
 

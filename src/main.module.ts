@@ -8,6 +8,7 @@ import { LightsModule } from "./http/lights/lights.module";
 import { TagsModule } from "./http/tags/tags.module";
 import { MainController } from "./main.controller";
 import { MainService } from "./main.service";
+import { GatewaysModule } from './gateways/gateways.module';
 @Module({
   controllers: [MainController],
   providers: [MainService],
@@ -31,6 +32,7 @@ import { MainService } from "./main.service";
     LightsModule,
     TagsModule,
     MainModule,
+    GatewaysModule,
   ],
 })
 export class MainModule {}

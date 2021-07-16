@@ -16,12 +16,13 @@ export class SettingsService {
     private utilsService: UtilsService,
     private tcpService: TcpService,
     private databaseService: DatabaseEspService,
-  ) { }
+  ) {}
 
   async update(
     id: string,
     data: UpdateInfoDto,
   ): Promise<StandartResponse<Light>> {
+    console.log(data);
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
     const newDoc: EspDocument = await this.databaseService.updateEspWithId(
       id,

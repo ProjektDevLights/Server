@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { Alarm, AlarmSchema } from "src/schemas/alarm.schema";
-import { AlarmOutGateway } from "../../gateways/alarm-out.gateway";
-import { LightOutGateway } from "../../gateways/light-out.gateway";
+import { AlarmOutGateway } from "../../gateways/alarms/alarm-out.gateway";
+import { LightOutGateway } from "../../gateways/lights/light-out.gateway";
 import { Esp, EspSchema } from "../../schemas/esp.schema";
 import { DatabaseAlarmService } from "./alarm/database-alarm.service";
 import { DatabaseEspService } from "./esp/database-esp.service";
