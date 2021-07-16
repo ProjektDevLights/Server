@@ -24,10 +24,10 @@ export class ControlService {
     if (oldDoc.isOn)
       throw new NothingChangedException("The light is already on");
 
-    /*     this.tcpService.sendData(
+    this.tcpService.sendData(
       this.utilsService.genJSONforEsp({ command: "on" }),
       oldDoc.ip,
-    ); */
+    );
 
     const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, {
       isOn: true,
@@ -45,10 +45,10 @@ export class ControlService {
     if (!oldDoc.isOn)
       throw new NothingChangedException("The light is already off");
 
-    /*     this.tcpService.sendData(
+    this.tcpService.sendData(
       this.utilsService.genJSONforEsp({ command: "off" }),
       oldDoc.ip,
-    ); */
+    );
 
     const newDoc: EspDocument = await this.databaseService.updateEspWithId(id, {
       isOn: false,
