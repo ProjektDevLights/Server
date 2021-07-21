@@ -78,8 +78,10 @@ export class DatabaseEspService {
     await this.clear("id-" + id);
     this.clear("all");
     const deleteCustom: boolean =
-      updateQuery.leds.pattern !== undefined &&
-      updateQuery.leds.pattern !== "custom";
+      (updateQuery.leds?.pattern !== undefined &&
+        updateQuery.leds?.pattern !== "custom") ||
+      (updateQuery.$set.leds?.pattern !== undefined &&
+        updateQuery.$set.leds?.pattern !== "custom");
     if (deleteCustom) {
       updateQuery.$unset = { custom_sequence: true };
     }
