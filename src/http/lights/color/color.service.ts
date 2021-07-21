@@ -44,7 +44,7 @@ export class ColorService {
         "The light is currently in a mode, where changing color is not supported",
         423,
       );
-    /* this.tcpService.sendData(
+    this.tcpService.sendData(
       this.utilsService.genJSONforEsp({
         command: "leds",
         data: {
@@ -54,7 +54,7 @@ export class ColorService {
         },
       }),
       oldDoc.ip,
-    ); */
+    );
 
     const newDoc = await this.databaseService.updateEspWithId(id, {
       leds: {
