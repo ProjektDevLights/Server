@@ -80,8 +80,8 @@ export class DatabaseEspService {
     const deleteCustom: boolean =
       (updateQuery.leds?.pattern !== undefined &&
         updateQuery.leds?.pattern !== "custom") ||
-      (updateQuery.$set.leds?.pattern !== undefined &&
-        updateQuery.$set.leds?.pattern !== "custom");
+      (updateQuery.$set?.leds?.pattern !== undefined &&
+        updateQuery.$set?.leds?.pattern !== "custom");
     if (deleteCustom) {
       updateQuery.$unset = { custom_sequence: true };
     }
@@ -159,8 +159,8 @@ export class DatabaseEspService {
     const deleteCustom: boolean =
       (updateQuery.leds?.pattern !== undefined &&
         updateQuery.leds?.pattern !== "custom") ||
-      (updateQuery.$set.leds?.pattern !== undefined &&
-        updateQuery.$set.leds?.pattern !== "custom");
+      (updateQuery.$set?.leds?.pattern !== undefined &&
+        updateQuery.$set?.leds?.pattern !== "custom");
     if (deleteCustom) {
       updateQuery.$unset = { custom_sequence: true };
     }
