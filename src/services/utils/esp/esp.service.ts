@@ -6,14 +6,13 @@ import { DatabaseEspService } from "../../database/esp/database-esp.service";
 
 @Injectable()
 export class EspUtilsService {
-  constructor(private databaseEspService: DatabaseEspService) { }
+  constructor(private databaseEspService: DatabaseEspService) {}
   async repositionESP(id: string, pos: number): Promise<EspDocument> {
     let esp = await this.databaseEspService.getEspWithId(id);
     if (pos < 0)
       throw new NotAcceptableException(
         "Position must be greater than or equal 0",
       );
-
 
     const esps: EspDocument[] = filter(
       await this.databaseEspService.getEsps(),
@@ -37,7 +36,6 @@ export class EspUtilsService {
         position: isNegative ? e.position + 1 : e.position - 1,
       });
     }
-    //console.log(greater);
     await this.cleanPositions();
     return this.databaseEspService.getEspWithId(id);
   }

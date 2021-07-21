@@ -1,5 +1,6 @@
 import { Prop, raw, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
+import { CustomData } from "../http/lights/color/dto/custom-pattern.dto";
 import Leds from "../interfaces/led.interface";
 
 export type EspDocument = Esp & Document;
@@ -30,6 +31,9 @@ export class Esp {
   )
   leds: Leds;
 
+  @Prop()
+  custom_sequence?: CustomData[];
+
   @Prop({ required: true })
   isOn: boolean;
 
@@ -38,6 +42,9 @@ export class Esp {
 
   @Prop({ required: true })
   position: number;
+
+  @Prop()
+  comment?: string;
 }
 
 export const EspSchema = SchemaFactory.createForClass(Esp);

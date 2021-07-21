@@ -3,7 +3,8 @@ import {
   Injectable,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { min, uniq } from "lodash";
+import { every, map, min, uniq } from "lodash";
+import { NothingChangedException } from "src/exceptions/nothing-changed.exception";
 import { BlinkLedsDto } from "src/http/lights/color/dto/blink-leds.dto";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
 import { UpdateLedsDto } from "../../../http/lights/color/dto/update-leds.dto";
@@ -44,6 +45,18 @@ export class ColorService {
         "At least one light is not on! In order to update with tag please turn them on with '/tags/:tag/on'",
       );
 
+    this.tcpService.batchSendData(
+      this.utilsService.genJSONforEsp({
+        command: "leds",
+        data: {
+          colors: data.colors,
+          pattern: data.pattern,
+          timeout: data.timeout,
+        },
+      }),
+      await this.databaseService.getEspsWithTag(tag),
+    );
+
     const newDocs: EspDocument[] = await this.databaseService.updateEspsWithTag(
       tag,
       {
@@ -56,17 +69,7 @@ export class ColorService {
         },
       },
     );
-    this.tcpService.batchSendData(
-      this.utilsService.genJSONforEsp({
-        command: "leds",
-        data: {
-          colors: data.colors,
-          pattern: data.pattern,
-          timeout: data.timeout,
-        },
-      }),
-      newDocs,
-    );
+
     return {
       message: "Succesfully changed the color of the lights!",
       count: newDocs.length,
@@ -121,18 +124,26 @@ export class ColorService {
       areOn.push(doc.isOn);
     });
 
-    /* if (!areOn.every((val, i) => val === true))
+    if (areOn.every(val => !val))
       throw new ServiceUnavailableException(
-        "At least one light is not on! In order to update with tag please turn them on with '/tags/:tag/on'",
-      ); */
+        "All lights with the tag are off! In order to change this turn them on with '/tags/:tag/on'",
+      );
 
     let colors: string[] = [];
-    data.data.forEach((customData: CustomData) => {
+    data.data.forEach((customData: CustomData, index: number) => {
       colors = colors.concat(customData.leds);
+      data.data[index].leds = this.utilsService.makeValidHexArray(
+        customData.leds,
+      );
     });
+
+    const customSequences = map(docs, (doc: EspDocument) =>
+      JSON.stringify(doc.custom_sequence),
+    );
+    if (every(customSequences, val => val === JSON.stringify(data.data)))
+      throw new NothingChangedException();
     colors = this.utilsService.makeValidHexArray(colors);
     colors = uniq(colors);
-
     let sendColors: string[] = [];
     data.data.forEach((data: CustomData) => {
       for (let i = 0; i < data.repeat; i++) {
@@ -163,6 +174,7 @@ export class ColorService {
           timeout: undefined,
         },
       },
+      custom_sequence: data.data,
     });
 
     return {

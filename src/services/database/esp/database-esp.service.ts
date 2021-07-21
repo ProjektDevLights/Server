@@ -77,6 +77,13 @@ export class DatabaseEspService {
   ): Promise<EspDocument> {
     await this.clear("id-" + id);
     this.clear("all");
+    const deleteCustom: boolean =
+      updateQuery.leds.pattern !== undefined &&
+      updateQuery.leds.pattern !== "custom";
+    if (deleteCustom) {
+      updateQuery.$unset = { custom_sequence: true };
+    }
+
     const updated: EspDocument = await this.espModel
       .findOneAndUpdate({ uuid: id }, updateQuery, {
         new: true,
@@ -147,6 +154,14 @@ export class DatabaseEspService {
     updateQuery: UpdateQuery<Light>,
   ): Promise<EspDocument[]> {
     const oldDocs: EspDocument[] = await this.getEspsWithTag(tag);
+    const deleteCustom: boolean =
+      (updateQuery.leds?.pattern !== undefined &&
+        updateQuery.leds?.pattern !== "custom") ||
+      (updateQuery.$set.leds?.pattern !== undefined &&
+        updateQuery.$set.leds?.pattern !== "custom");
+    if (deleteCustom) {
+      updateQuery.$unset = { custom_sequence: true };
+    }
     await this.clear("tag-" + tag);
     await this.espModel
       .updateMany(
@@ -157,6 +172,7 @@ export class DatabaseEspService {
       )
       .exec();
     //@ts-ignore
+
     const newDocs: EspDocument[] = await this.getEspsWithTag(tag);
     this.gateway.sendMultipleChange(newDocs);
     if (

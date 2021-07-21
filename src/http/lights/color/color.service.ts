@@ -18,7 +18,7 @@ export class ColorService {
     private databaseService: DatabaseEspService,
     private utilsService: UtilsService,
     private tcpService: TcpService,
-  ) { }
+  ) {}
 
   async updateLeds(
     id: string,
@@ -44,7 +44,7 @@ export class ColorService {
         "The light is currently in a mode, where changing color is not supported",
         423,
       );
-    this.tcpService.sendData(
+    /* this.tcpService.sendData(
       this.utilsService.genJSONforEsp({
         command: "leds",
         data: {
@@ -54,7 +54,7 @@ export class ColorService {
         },
       }),
       oldDoc.ip,
-    );
+    ); */
 
     const newDoc = await this.databaseService.updateEspWithId(id, {
       leds: {
@@ -77,10 +77,8 @@ export class ColorService {
     data.color = this.utilsService.makeValidHex(data.color);
     const doc: EspDocument = await this.databaseService.getEspWithId(id);
 
-
-
     if (!doc.isOn) throw new OffException();
-    
+
     this.tcpService.sendData(
       this.utilsService.genJSONforEsp({
         command: "blink",
@@ -116,6 +114,9 @@ export class ColorService {
         customData.leds,
       );
     });
+    if (JSON.stringify(oldDoc.custom_sequence) == JSON.stringify(data.data))
+      throw new NothingChangedException();
+
     colors = uniq(colors);
 
     let sendColors: string[] = [];
@@ -142,11 +143,11 @@ export class ColorService {
         pattern: "custom",
         timeout: undefined,
       },
+      custom_sequence: data.data,
     });
 
     return {
-      message:
-        "Succesfully applied custom Pattern. (Mind that custom patterns are not saved!)",
+      message: "Succesfully applied custom Pattern!",
       object: {
         light: DatabaseEspService.espDocToPartialLight(newDoc),
         data: data.data,

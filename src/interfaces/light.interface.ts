@@ -1,3 +1,4 @@
+import CustomData from "./custom-data.interface";
 import Leds from "./led.interface";
 
 export default interface Light {
@@ -9,4 +10,6 @@ export default interface Light {
   tags?: string[];
   isOn: boolean;
   position: number;
+  comment?: string;
+  custom_sequence?: CustomData[];
 }

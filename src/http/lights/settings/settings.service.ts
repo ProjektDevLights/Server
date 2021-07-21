@@ -22,7 +22,6 @@ export class SettingsService {
     id: string,
     data: UpdateInfoDto,
   ): Promise<StandartResponse<Light>> {
-    console.log(data);
     const oldDoc: EspDocument = await this.databaseService.getEspWithId(id);
     const newDoc: EspDocument = await this.databaseService.updateEspWithId(
       id,
