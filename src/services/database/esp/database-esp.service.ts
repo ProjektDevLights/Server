@@ -46,6 +46,7 @@ export class DatabaseEspService {
     if (query) {
       return this.espModel.findOne({ uuid: id });
     }
+
     return (
       this.espModel
         .findOne({ uuid: id })
@@ -238,6 +239,8 @@ export class DatabaseEspService {
       leds: doc.leds,
       count: doc.count,
       position: doc.position,
+      custom_sequence: doc.custom_sequence,
+      comment: doc.comment,
     };
   }
 
