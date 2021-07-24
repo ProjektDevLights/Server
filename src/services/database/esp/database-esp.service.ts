@@ -239,8 +239,9 @@ export class DatabaseEspService {
       leds: doc.leds,
       count: doc.count,
       position: doc.position,
-      custom_sequence: doc.custom_sequence,
-      comment: doc.comment,
+      custom_sequence:
+        doc.custom_sequence.length > 0 ? doc.custom_sequence : undefined,
+      comment: doc.comment ?? undefined,
     };
   }
 
