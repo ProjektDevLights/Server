@@ -13,7 +13,7 @@ export class DatabaseAlarmService {
   constructor(
     @InjectModel(Alarm.name) private alarmModel: Model<AlarmDocument>,
     private gateway: AlarmOutGateway,
-  ) {}
+  ) { }
 
   async getAlarms(): Promise<AlarmDocument[]> {
     return await this.alarmModel
@@ -41,6 +41,14 @@ export class DatabaseAlarmService {
   async updateAlarm(id: string, updateQuery: UpdateQuery<Alarm>) {
     await this.clear("id-" + id);
     this.clear("all");
+    const deleteCustom: boolean =
+      (updateQuery.leds?.pattern !== undefined &&
+        updateQuery.leds?.pattern !== "custom") ||
+      (updateQuery.$set?.leds?.pattern !== undefined &&
+        updateQuery.$set?.leds?.pattern !== "custom");
+    if (deleteCustom) {
+      updateQuery.$unset = { custom_sequence: true };
+    }
     const updated: AlarmDocument = await this.alarmModel
       .findByIdAndUpdate(id, updateQuery, { new: true })
       //@ts-ignore
@@ -80,7 +88,9 @@ export class DatabaseAlarmService {
       name: doc.name,
       isOn: doc.isOn,
       id: doc._id,
-      color: doc.color,
+      leds: doc.leds,
+      custom_sequence:
+        doc.custom_sequence.length > 0 ? doc.custom_sequence : undefined,
       time: doc.time,
       days: doc.days,
       //@ts-ignore

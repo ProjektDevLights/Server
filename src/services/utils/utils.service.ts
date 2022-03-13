@@ -17,7 +17,7 @@ export class UtilsService {
     private databaseServiceEsp: DatabaseEspService,
     private databaseServiceAlarm: DatabaseAlarmService,
     private tcpService: TcpService,
-  ) {}
+  ) { }
 
   hexToRgb(hex: string): string {
     hex = this.makeValidHex(hex);
@@ -127,8 +127,8 @@ export class UtilsService {
       case "plain":
         data.colors.length !== 1
           ? errors.push(
-              "colors should be of length 1, when using pattern 'plain'",
-            )
+            "colors should be of length 1, when using pattern 'plain'",
+          )
           : undefined;
         data.timeout
           ? errors.push("timeout should be empty, when using pattern 'plain'")
@@ -137,25 +137,25 @@ export class UtilsService {
       case "gradient":
         data.colors.length !== 2
           ? errors.push(
-              "colors should be of length 2, when using pattern 'gradient'",
-            )
+            "colors should be of length 2, when using pattern 'gradient'",
+          )
           : undefined;
         data.timeout
           ? errors.push(
-              "timeout should be empty, when using pattern 'gradient'",
-            )
+            "timeout should be empty, when using pattern 'gradient'",
+          )
           : undefined;
         break;
       case "runner":
         data.colors.length !== 1
           ? errors.push(
-              "colors should be of length 1, when using pattern 'runner'",
-            )
+            "colors should be of length 1, when using pattern 'runner'",
+          )
           : undefined;
         !data.timeout
           ? errors.push(
-              "timeout must not be empty, when using pattern 'runner'",
-            )
+            "timeout must not be empty, when using pattern 'runner'",
+          )
           : undefined;
         break;
       case "rainbow":
@@ -164,20 +164,20 @@ export class UtilsService {
           : undefined;
         !data.timeout
           ? errors.push(
-              "timeout must not be empty, when using pattern 'rainbow'",
-            )
+            "timeout must not be empty, when using pattern 'rainbow'",
+          )
           : undefined;
         break;
       case "fading":
         data.colors.length !== 0
           ? errors.push(
-              "colors should be of length 0, when using pattern 'fading'",
-            )
+            "colors should be of length 0, when using pattern 'fading'",
+          )
           : undefined;
         !data.timeout
           ? errors.push(
-              "timeout must not be empty, when using pattern 'fading'",
-            )
+            "timeout must not be empty, when using pattern 'fading'",
+          )
           : undefined;
         break;
       default:
@@ -188,6 +188,27 @@ export class UtilsService {
         ? errors
         : errors[0]
       : undefined;
+  }
+
+  async fadeBrightness(ip: string, time: number = 60 * 1000, delay: number = 5 * 1000) {
+    let runs: number = 254;
+    // brightness from 0 to 255 
+    /**
+     * start 0 brightness 0
+     * end 
+     */
+    let brightness = 2;
+    for (let i = 0; i < runs; i++) {
+      this.tcpService.sendData(
+        this.genJSONforEsp({
+          command: "brightness",
+          data: brightness,
+        }),
+        ip,
+      );
+      brightness++;
+      await this.delay(delay);
+    }
   }
 
   async fading(

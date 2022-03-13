@@ -18,7 +18,7 @@ export class ColorService {
     private databaseService: DatabaseEspService,
     private utilsService: UtilsService,
     private tcpService: TcpService,
-  ) {}
+  ) { }
 
   async updateLeds(
     id: string,
@@ -121,9 +121,9 @@ export class ColorService {
 
     let sendColors: string[] = [];
 
-    data.data.forEach((data: CustomData) => {
-      for (let i = 0; i < data.repeat; i++) {
-        sendColors = sendColors.concat(data.leds);
+    data.data.forEach((d: CustomData) => {
+      for (let i = 0; i < d.repeat; i++) {
+        sendColors = sendColors.concat(d.leds);
       }
     });
 

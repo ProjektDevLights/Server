@@ -1,16 +1,16 @@
 import {
-  ArrayNotEmpty,
-  IsHexColor,
-  IsInt,
+  ArrayNotEmpty, IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   Matches,
   Max,
-  Min,
+  Min
 } from "class-validator";
+import { Leds } from "src/interfaces";
 import { IsNotMultiLine } from "../../../decorators/is-not-multiline.decorator";
 import { IsRightTimeFormat } from "../../../decorators/is-time-format.decorator";
+import { CustomData } from "../../lights/color/dto/custom-pattern.dto";
 
 export class AlarmDto {
   @IsRightTimeFormat()
@@ -22,9 +22,12 @@ export class AlarmDto {
   @IsInt({ each: true })
   days?: number[] = [];
 
-  @IsNotEmpty()
-  @IsHexColor()
-  color: string;
+  @IsOptional()
+  @IsNotEmpty({ each: true })
+  leds?: Leds
+
+  @IsOptional()
+  custom_sequence?: CustomData[]
 
   @ArrayNotEmpty()
   @IsString({ each: true })

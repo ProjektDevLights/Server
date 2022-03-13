@@ -1,17 +1,16 @@
 import {
-  ArrayNotEmpty,
-  IsBoolean,
-  IsHexColor,
-  IsInt,
+  IsBoolean, IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
   Matches,
   Max,
-  Min,
+  Min
 } from "class-validator";
 import { IsNotMultiLine } from "src/decorators/is-not-multiline.decorator";
 import { IsRightTimeFormat } from "src/decorators/is-time-format.decorator";
+import { Leds } from "src/interfaces";
+import { CustomData } from "../../lights/color/dto/custom-pattern.dto";
 
 export class EditAlarmsDto {
   @IsOptional()
@@ -29,8 +28,11 @@ export class EditAlarmsDto {
   days?: number[] = [];
 
   @IsOptional()
-  @IsHexColor()
-  color?: string;
+  leds?: Leds
+
+  @IsOptional()
+  custom_sequence?: CustomData[]
+
 
   @IsOptional()
   @IsNotEmpty()

@@ -9,6 +9,6 @@ async function bootstrap() {
   app.enableShutdownHooks();
   app.register(require('middie'))
   //app.use(LoggerMiddleware);
-  await app.listen(config.port,'0.0.0.0');
+  await app.listen(config.port, '0.0.0.0');
 }
 bootstrap();

@@ -11,7 +11,7 @@ export class EspService {
   constructor(
     private databaseService: DatabaseEspService,
     private espUtilsService: EspUtilsService,
-  ) {}
+  ) { }
 
   async setup(data: SetupDto): Promise<string> {
     const ips: string[] = await this.databaseService

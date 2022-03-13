@@ -16,7 +16,7 @@ export class SettingsService {
     private utilsService: UtilsService,
     private tcpService: TcpService,
     private databaseService: DatabaseEspService,
-  ) {}
+  ) { }
 
   async update(
     id: string,

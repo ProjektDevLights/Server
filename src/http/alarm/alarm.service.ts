@@ -5,9 +5,9 @@ import { AlarmConflictException } from "src/exceptions/alarm-conflict.exception"
 import { InvalidIdException } from "src/exceptions/invalid-id.exception";
 import { DatabaseAlarmService } from "src/services/database/alarm/database-alarm.service";
 import { DatabaseEspService } from "src/services/database/esp/database-esp.service";
-import tinycolor from "tinycolor2";
 import { NothingChangedException } from "../../exceptions/nothing-changed.exception";
 import { Alarm, Light, StandartResponse, Time } from "../../interfaces";
+import CustomData from "../../interfaces/custom-data.interface";
 import { AlarmDocument } from "../../schemas/alarm.schema";
 import { CronService } from "../../services/cron/cron.service";
 import { TcpService } from "../../services/tcp/tcp.service";
@@ -29,7 +29,7 @@ export class AlarmService {
     private tcpService: TcpService,
     private utilsService: UtilsService,
     private cronService: CronService,
-  ) {}
+  ) { }
 
   async rescheduleJobs(): Promise<void> {
     const alarms: AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
@@ -61,48 +61,67 @@ export class AlarmService {
           esp.uuid,
         );
         const oldLight: Light = DatabaseEspService.espDocToLight(oldDoc);
-        this.tcpService.sendData(
-          this.utilsService.genJSONforEsp({
-            command: "leds",
-            data: { colors: ["#000000"], pattern: "plain", noFade: true },
-          }),
-          oldDoc.ip,
-        );
+
         this.tcpService.sendData(
           this.utilsService.genJSONforEsp({ command: "on" }),
           oldDoc.ip,
         );
         this.tcpService.sendData(
-          this.utilsService.genJSONforEsp({ command: "brightness", data: 255 }),
+          this.utilsService.genJSONforEsp({ command: "brightness", data: 1 }),
           oldDoc.ip,
         );
 
-        const newDoc = await this.databaseServiceEsp.updateEspWithId(
+
+        if (alarm.leds.pattern == "custom" && alarm.custom_sequence.length > 0) {
+          let sendColors: string[] = [];
+
+          alarm.custom_sequence.forEach((d: CustomData) => {
+            for (let i = 0; i < d.repeat; i++) {
+              sendColors = sendColors.concat(d.leds);
+            }
+          });
+          this.tcpService.sendData(
+            this.utilsService.genJSONforEsp({ command: "custom", data: sendColors }),
+            oldDoc.ip,
+          );
+        } else {
+          this.tcpService.sendData(this.utilsService.genJSONforEsp({
+            command: "leds",
+            data: {
+              colors: alarm.leds.colors,
+              pattern: alarm.leds.pattern,
+            },
+          }), oldDoc.ip);
+        }
+
+        await this.databaseServiceEsp.updateEspWithId(
           oldLight.id,
           {
             leds: {
-              colors: ["#000000"],
               pattern: "waking",
+              colors: this.utilsService.makeValidHexArray(alarm.leds.colors),
             },
+
             brightness: 255,
             isOn: true,
           },
         );
+        if (alarm.leds.pattern === "custom" && alarm.custom_sequence != null) {
+          await this.databaseServiceEsp.updateEspWithId(oldLight.id, { custom_sequence: alarm.custom_sequence });
+        }
 
-        await this.utilsService.fading(
-          oldDoc.ip,
-          tinycolor("#000000"),
-          tinycolor(alarm.color),
-          5000 * 60,
-          (5000 * 60) / 255,
-        );
+        await this.utilsService.fadeBrightness(oldDoc.ip, 1000 * 60,
+          (5000 * 60) / 254);
+
         this.databaseServiceEsp.updateEspWithId(oldLight.id, {
           leds: {
-            colors: [alarm.color],
-            pattern: "plain",
+            pattern: alarm.leds.pattern,
+            colors: this.utilsService.makeValidHexArray(alarm.leds.colors),
           },
+          brightness: 255,
+          isOn: true,
         });
-      } catch {}
+      } catch { }
     });
   };
 
@@ -122,7 +141,7 @@ export class AlarmService {
             Math.round(
               Math.abs(
                 moment(alarm.time, "hh:mm").unix() / 60 -
-                  moment(time, "hh:mm").unix() / 60,
+                moment(time, "hh:mm").unix() / 60,
               ),
             ) < 5
           ) {
@@ -155,6 +174,12 @@ export class AlarmService {
   async scheduleAlarm(data: AlarmDto): Promise<StandartResponse<Alarm>> {
     const allAlarms: AlarmDocument[] = await this.databaseServiceAlarm.getAlarms();
 
+    if (data.leds == null && data.custom_sequence == null) {
+      throw new BadRequestException(
+        `Alarms should either have a leds prop or a custom sequence`,
+      );
+    }
+
     const invalids = await this.validateIds(data.ids);
     if (invalids.length > 0) throw new InvalidIdException(invalids);
     const conflicts: Conflict[] = this.getConflictingAlarms(
@@ -166,6 +191,26 @@ export class AlarmService {
     );
     if (conflicts.length > 0) {
       throw new AlarmConflictException(conflicts);
+    }
+    let colors: string[] = [];
+    if (data.custom_sequence != null && data.custom_sequence != undefined) {
+
+      data.custom_sequence.forEach((customData: CustomData, index: number) => {
+        colors = colors.concat(
+          this.utilsService.makeValidHexArray(customData.leds),
+        );
+        data.custom_sequence[index].leds = this.utilsService.makeValidHexArray(
+          customData.leds,
+        );
+      });
+
+      let sendColors: string[] = [];
+
+      data.custom_sequence.forEach((d: CustomData) => {
+        for (let i = 0; i < d.repeat; i++) {
+          sendColors = sendColors.concat(d.leds);
+        }
+      });
     }
 
     const splitTime: string[] = data.time.split(":");
@@ -181,7 +226,11 @@ export class AlarmService {
     const alarmId: string = (
       await this.databaseServiceAlarm.addAlarm({
         time: data.time,
-        color: data.color,
+        leds: data.custom_sequence ? {
+          colors: colors,
+          pattern: "custom"
+        } : data.leds,
+        custom_sequence: data.custom_sequence,
         cronPattern: cronPattern,
         days: daysString.split(",").map(x => +x),
         esps: espIds,
@@ -226,7 +275,7 @@ export class AlarmService {
     const alarmDoc = await this.databaseServiceAlarm.getAlarmWithId(id);
     if (
       this.checkEquality(data, {
-        color: alarmDoc.color,
+        leds: alarmDoc.leds,
         days: alarmDoc.days,
         ids: map(alarmDoc.esps, "uuid"),
         name: alarmDoc.name,
@@ -263,6 +312,33 @@ export class AlarmService {
     if (data.isOn === false) {
       this.cronService.deleteCron(`alarm-${alarmDoc.id}`);
     }
+    let leds;
+    if (data.custom_sequence) {
+
+      if (data.leds != null) {
+        throw new BadRequestException(
+          `Alarms should either have a leds prop or a custom sequence`,
+        );
+      }
+
+      let colors: string[] = [];
+      data.custom_sequence.forEach((customData: CustomData, index: number) => {
+        colors = colors.concat(
+          this.utilsService.makeValidHexArray(customData.leds),
+        );
+        data.custom_sequence[index].leds = this.utilsService.makeValidHexArray(
+          customData.leds,
+        );
+      });
+      if (JSON.stringify(alarmDoc.custom_sequence) == JSON.stringify(data.custom_sequence))
+        throw new NothingChangedException();
+
+      leds = {
+        colors,
+        pattern: "custom",
+      };
+    }
+
     //schedule with new pattern
     if (
       ((data.time && data.time != alarmDoc.time) ||
@@ -305,7 +381,9 @@ export class AlarmService {
         time: data.time ?? alarmDoc.time,
         isOn: data.isOn ?? alarmDoc.isOn,
         days: data.days ?? alarmDoc.days,
-        color: data.color ?? alarmDoc.color,
+        leds: leds && data.custom_sequence ? leds : data.leds ?? alarmDoc.leds,
+        //custom_sequence: data.custom_sequence ? data.custom_sequence : alarmDoc.custom_sequence ?? undefined,
+        custom_sequence: data.custom_sequence ? data.custom_sequence : data.leds?.pattern !== "custom" ? undefined : alarmDoc.custom_sequence ?? undefined,
         cronPattern: cronPattern ?? alarmDoc.cronPattern,
       })
     ).id;
