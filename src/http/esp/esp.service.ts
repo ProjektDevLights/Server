@@ -42,7 +42,7 @@ export class EspService {
 
     const name = "(new) Devlight";
     try {
-      this.databaseService.addEsp({
+      await this.databaseService.addEsp({
         uuid: id,
         count: 150,
         name: name,
@@ -54,7 +54,7 @@ export class EspService {
         position: 0,
       });
 
-      this.espUtilsService.repositionESP(id, 0);
+      await this.espUtilsService.repositionESP(id, 0);
     } catch (e) {
       return "Something went wrong!";
     }
