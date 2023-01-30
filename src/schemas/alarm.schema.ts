@@ -14,6 +14,7 @@ export class Alarm {
     raw({
       colors: { type: [String] },
       pattern: { type: String },
+      timeout: { type: Number}
     }),
   )
   leds: Leds;

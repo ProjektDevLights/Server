@@ -45,7 +45,8 @@ export class AlarmService {
   }
 
   private onApplicationBootstrap() {
-    this.rescheduleJobs();
+    this.rescheduleJobs()
+    
   }
 
   // executed when alarm is firing
@@ -90,6 +91,7 @@ export class AlarmService {
             data: {
               colors: alarm.leds.colors,
               pattern: alarm.leds.pattern,
+              timeout: alarm.leds.timeout
             },
           }), oldDoc.ip);
         }
@@ -110,13 +112,17 @@ export class AlarmService {
           await this.databaseServiceEsp.updateEspWithId(oldLight.id, { custom_sequence: alarm.custom_sequence });
         }
 
-        await this.utilsService.fadeBrightness(oldDoc.ip, 1000 * 60,
-          (5000 * 60) / 254);
+        
+        if(alarm.leds.pattern !== "rainbow") {
+          await this.utilsService.fadeBrightness(oldDoc.ip, 1000 * 60,
+            (5000 * 60) / 254);
+        }
 
         this.databaseServiceEsp.updateEspWithId(oldLight.id, {
           leds: {
             pattern: alarm.leds.pattern,
             colors: this.utilsService.makeValidHexArray(alarm.leds.colors),
+            timeout: alarm.leds.timeout ?? undefined
           },
           brightness: 255,
           isOn: true,
@@ -228,7 +234,7 @@ export class AlarmService {
         time: data.time,
         leds: data.custom_sequence ? {
           colors: colors,
-          pattern: "custom"
+          pattern: "custom",
         } : data.leds,
         custom_sequence: data.custom_sequence,
         cronPattern: cronPattern,

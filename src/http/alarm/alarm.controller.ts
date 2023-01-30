@@ -16,7 +16,7 @@ import { AlarmService } from "./alarm.service";
 import { AlarmDto } from "./dto/alarm.dto";
 import { EditAlarmsDto } from "./dto/edit-alarm.dto";
 
-@Controller("alarm")
+@Controller("alarms")
 export class AlarmController {
   constructor(private alarmService: AlarmService) {}
 
