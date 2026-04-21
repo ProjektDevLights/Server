@@ -1,3 +1,6 @@
+> [!WARNING]
+> The DevLights project is deprecated and no longer maintained since July 2021.
+
 <p align="center"><img alt="Logo" src="https://i.postimg.cc/vHgyC8nG/logo.png" height="250" /> </p>
 
 ### Description
